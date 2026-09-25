@@ -21,12 +21,21 @@ ml-sync: ## Синхронизировать зависимости ML чере�
 ml-run: ## Запустить FastAPI сервис инференса на :8000
 	cd ml && uv run uvicorn src.api.server:app --reload --port 8000
 
-check: ## Проверить компиляцию Go и сборку фронтенда
+ml-test: ## Запустить тесты ML сервиса
+	cd ml && uv run pytest
+
+check: ## Проверить компиляцию Go, сборку фронтенда и тесты ML
 	@echo "==> Проверка Go..."
-	cd backend && go build -o /dev/null ./cmd/server
+	@if command -v go >/dev/null 2>&1; then \
+		cd backend && go build -o /dev/null ./cmd/server && echo "    Go компиляция успешна"; \
+	else \
+		echo "    Go не установлен локально (запуск выполняется в Docker)"; \
+	fi
 	@echo "==> Проверка Frontend..."
 	cd frontend && npm run build
-	@echo "==> Все проверки пройдены успешно!"
+	@echo "==> Проверка ML тестов..."
+	cd ml && uv run pytest
+	@echo "==> Все доступные проверки пройдены успешно!"
 
 docker-build: ## Собрать все Docker-образы проекта
 	docker compose build

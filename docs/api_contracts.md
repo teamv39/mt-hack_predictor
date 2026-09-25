@@ -143,3 +143,106 @@
   "recommendation_hold_sec": 150
 }
 ```
+
+---
+
+### 2.2. `POST /predict/batch`
+Высокопроизводительный пакетный инференс для одновременного прогноза по нескольким бортам маршрута.
+
+**Тело запроса:**
+```json
+{
+  "vehicles": [
+    {
+      "vehicle_id": "1042",
+      "route_id": "m3",
+      "current_delay_sec": 720.0,
+      "current_headway_sec": 120.0,
+      "historical_avg_speed": 18.4,
+      "cumulative_delay_prev_stops": 420.0,
+      "weather_factor": 1.2,
+      "hour_of_day": 17,
+      "day_of_week": 4
+    }
+  ]
+}
+```
+
+**Ответ (200 OK):**
+```json
+{
+  "predictions": [
+    {
+      "vehicle_id": "1042",
+      "predicted_delay_sec": 840.0,
+      "bunching_risk_probability": 0.89,
+      "incident_predicted_in_min": 22.0,
+      "severity": "CRITICAL",
+      "factors": [
+        {
+          "feature": "traffic_congestion",
+          "title": "Затор на Бауманской ул.",
+          "weight": 65.0,
+          "impact_score": 0.65
+        }
+      ],
+      "recommendation_hold_sec": 150
+    }
+  ],
+  "total": 1,
+  "inference_time_ms": 2.45,
+  "model_version": "catboost-0.2.0"
+}
+```
+
+---
+
+### 2.3. `GET /health`
+Проверка работоспособности сервиса, uptime и статуса загрузки моделей машинного обучения.
+
+**Ответ (200 OK):**
+```json
+{
+  "status": "ok",
+  "service": "ml-inference",
+  "version": "0.2.0",
+  "uptime_sec": 142.5,
+  "models": {
+    "mode": "catboost",
+    "regressor_loaded": true,
+    "classifier_loaded": true,
+    "shap_ready": true,
+    "regressor_path": "/app/data/models/catboost_delay_regressor.cbm",
+    "classifier_path": "/app/data/models/catboost_bunching_classifier.cbm",
+    "active_features": [
+      "current_delay_sec",
+      "current_headway_sec",
+      "historical_avg_speed",
+      "cumulative_delay_prev_stops",
+      "weather_factor",
+      "hour_sin",
+      "hour_cos",
+      "day_of_week",
+      "is_weekend",
+      "delay_to_headway_ratio"
+    ]
+  }
+}
+```
+
+---
+
+### 2.4. `POST /models/reload`
+Горячая перезагрузка весов обученных моделей с диска без простоя и перезапуска контейнера.
+
+**Ответ (200 OK):**
+```json
+{
+  "mode": "catboost",
+  "regressor_loaded": true,
+  "classifier_loaded": true,
+  "shap_ready": true,
+  "regressor_path": "/app/data/models/catboost_delay_regressor.cbm",
+  "classifier_path": "/app/data/models/catboost_bunching_classifier.cbm"
+}
+```

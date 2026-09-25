@@ -49,15 +49,19 @@
 
 ---
 
-## ✅ Фаза 3 — ML Inference Service (DONE — каркас)
+## ✅ Фаза 3 — ML Inference Service (DONE — Production-Ready)
 
 | # | Задача | Статус | Файл |
 |---|--------|--------|------|
-| 3.1 | FastAPI сервер с Pydantic-валидацией | ✅ Done | `ml/src/api/server.py` |
-| 3.2 | `/predict` эндпоинт: delay regression + bunching risk + SHAP | ✅ Done | server.py |
-| 3.3 | Baseline ML pipeline (CatBoost, TimeSeriesSplit, SHAP) | ✅ Done | `ml/src/features/baseline_pipeline.py` |
-| 3.4 | `pyproject.toml` с uv, зависимости | ✅ Done | `ml/pyproject.toml` |
-| 3.5 | Dockerfile (Python 3.12 + uv) | ✅ Done | `ml/Dockerfile` |
+| 3.1 | Модульная архитектура сервиса и `pydantic-settings` конфиги | ✅ Done | `ml/src/core/config.py`, `logging.py` |
+| 3.2 | Pydantic v2 схемы валидации телеметрии, XAI SHAP, Holding | ✅ Done | `ml/src/schemas/` |
+| 3.3 | Инференс CatBoost (.cbm) с нативным расчетом TreeSHAP (<1мс) | ✅ Done | `ml/src/models/catboost_model.py` |
+| 3.4 | Heuristic Fallback предиктор на базе формул Велдинга/Ньюэлла | ✅ Done | `ml/src/models/fallback.py` |
+| 3.5 | ModelManager с поддержкой Hot-Reloading (`/models/reload`) | ✅ Done | `ml/src/models/manager.py` |
+| 3.6 | REST API: `/health`, `/predict`, `/predict/batch`, `/models/info` | ✅ Done | `ml/src/api/server.py`, `routes.py` |
+| 3.7 | Модульные и интеграционные тесты (pytest, 10/10 тестов) | ✅ Done | `ml/tests/` |
+| 3.8 | Скрипт обучения с TimeSeriesSplit и Huber Loss | ✅ Done | `ml/src/models/train.py` |
+| 3.9 | Готовые baseline-веса моделей CatBoost в `data/models/` | ✅ Done | `data/models/*.cbm` |
 
 ---
 

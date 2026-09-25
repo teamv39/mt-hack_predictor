@@ -63,6 +63,8 @@ htmlcov/
 .mypy_cache/
 .ruff_cache/
 .ipynb_checkpoints/
+catboost_info/
+**/catboost_info/
 
 # Datasets & Large Archives (competition data, emulator images)
 dataset/
@@ -78,6 +80,7 @@ data/processed/*
 !data/processed/.gitkeep
 data/models/*
 !data/models/.gitkeep
+dataset
 *.parquet
 *.h5
 *.pkl
