@@ -32,11 +32,12 @@ class TelemetryVehicleIndex:
 
     def __init__(self, traffic_df: pd.DataFrame) -> None:
         """Groups traffic DataFrame by vehicle ID into sorted numeric numpy arrays."""
-        # Convert timestamps to float epoch seconds for fast bisecting
-        if not np.issubdtype(traffic_df["event_time"].dtype, np.datetime64):
+        # Convert timestamps to exact epoch seconds regardless of resolution (s/ms/us/ns)
+        if not pd.api.types.is_datetime64_any_dtype(traffic_df["event_time"]):
+            traffic_df = traffic_df.copy()
             traffic_df["event_time"] = pd.to_datetime(traffic_df["event_time"])
 
-        epoch_sec = traffic_df["event_time"].astype("int64") // 10**9
+        epoch_sec = traffic_df["event_time"].astype("datetime64[s]").astype("int64")
 
         self._vehicles: Dict[int, Dict[str, np.ndarray]] = {}
 

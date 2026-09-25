@@ -80,7 +80,7 @@ def clean_traffic_dataframe(
         df_clean["heading"] = df_clean["heading"] % 360.0
 
     # 5. Timestamp parsing and sorting
-    if not np.issubdtype(df_clean["event_time"].dtype, np.datetime64):
+    if not pd.api.types.is_datetime64_any_dtype(df_clean["event_time"]):
         df_clean["event_time"] = pd.to_datetime(df_clean["event_time"], errors="coerce")
     df_clean = df_clean[df_clean["event_time"].notna()]
 
