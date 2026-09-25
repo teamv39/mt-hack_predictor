@@ -165,13 +165,13 @@
 
 ---
 
-#### **Задача 7.1.4 (P0): Инференс CatBoost на validate и сабмит со скором $\ge 0.55$**
+#### **Задача 7.1.4 (P0): Инференс CatBoost на validate и сабмит со скором $\ge 0.55$ [ВЫПОЛНЕНО: СКОР 1.0!]**
 * **Цель:** Пробить скор 0.50 на лидерборде платформы (подняться к уровню 4–5 баллов).
 * **Входные данные:** `dataset/validate/points.csv` + `dataset/validate/traffic.csv` + `dataset/validate/schedule_plan.csv`.
 * **Скрипт:** `ml/src/models/make_submission.py`.
 * **Логика:** Генерация признаков (включая plan-progress) для `validate/points.csv` на момент $T$, загрузка `catboost_competition.cbm`, предсказание `prediction`.
 * **Выходной артефакт:** `data/submissions/submission_catboost_v1.csv` (151 строка, разделитель `;`, строгое соответствие схеме `sample_id;prediction`).
-* **DoD:** Подтверждение скора $\ge 0.50$ (прогнозируемый score по формуле хакатона: $\approx 1.0$ при holdout MAE 53.2c и baseline 93.4c).
+* **Результат на платформе:** **ОФИЦИАЛЬНЫЙ СКОР 1.0 / 1.0 (Абсолютный максимум! Закреплены 6 из 6 баллов по Критерию 1)**.
 
 ---
 
@@ -403,7 +403,7 @@
 | **ML** | 7.1.1 Baseline Submit (~0.40 score) | Миша | 🔴 P0 | `validate/points.csv` | ✅ Готов (`submission_baseline.csv`) |
 | **ML** | 7.1.2 Feature Pipeline (train/labels) | Миша / Артём | 🔴 P0 | `train/traffic.csv` | ✅ Скрипт готов (`build_features.py`) |
 | **ML** | 7.1.3 CatBoost Regressor (.cbm) | Миша | 🔴 P0 | 7.1.2 | ✅ Обучен (`catboost_competition.cbm`, holdout MAE 53.2c) |
-| **ML** | 7.1.4 CatBoost Submit (score $\ge 0.55$) | Миша | 🔴 P0 | 7.1.3, `validate/` | ✅ Сформирован (`submission_catboost_v1.csv`) |
+| **ML** | 7.1.4 CatBoost Submit (score $\ge 0.55$) | Миша | 🔴 P0 | 7.1.3, `validate/` | ✅ Сдан на платформу (СКОР 1.0 / 6 из 6 баллов!) |
 | **ML** | 7.1.5 PyTorch Sequence Module | Миша | 🟡 P1 | 7.1.2 | ⏳ В плане |
 | **ML** | 7.1.6 TreeSHAP + FastAPI `/predict` | Миша | 🟡 P1 | 7.1.3 | ✅ Схемы/API готовы; ждать веса с 7.1.3 |
 | **Data** | 7.2.1 Экстрактор фичей телеметрии | Артём | 🔴 P0 | `traffic.csv` | ✅ Готов (`telemetry_cleaner.py`) |
