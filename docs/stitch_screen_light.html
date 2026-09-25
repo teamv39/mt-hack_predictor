@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Executive Situational Transit Command Dashboard (Moscow Transport & TsODD) - Light Theme</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            moscow: {
+              red: '#DC2626',
+              redHover: '#B91C1C',
+              lightRed: '#FEE2E2',
+            },
+            transit: {
+              green: '#059669',
+              greenHover: '#047857',
+              lightGreen: '#ECFDF5',
+              amber: '#D97706',
+              lightAmber: '#FEF3C7',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .tabular-nums { font-variant-numeric: tabular-nums; }
+    @keyframes pulseSlow {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(1.04); }
+    }
+    .pulse-warning {
+      animation: pulseSlow 2.5s infinite ease-in-out;
+    }
+    /* Custom light scrollbars */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased h-screen w-screen overflow-hidden select-none flex flex-col">
+
+  <!-- 1. TOP HEADER (56px) -->
+  <header class="h-14 bg-white border-b border-slate-200 shadow-sm z-30 flex items-center justify-between px-4 flex-shrink-0">
+    <div class="flex items-center gap-3">
+      <!-- Square Moscow Red button with hamburger menu -->
+      <button class="w-8 h-8 rounded-lg bg-moscow-red hover:bg-moscow-redHover text-white flex items-center justify-center transition-colors shadow-sm focus:outline-none">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
+      <!-- Moscow Transport Emblem & Title -->
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-full bg-moscow-red flex items-center justify-center text-white font-bold text-xs shadow-sm">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18m9-9H3m15.364-6.364l-12.728 12.728m12.728 0L4.636 5.636"/>
+          </svg>
+        </div>
+        <span class="font-bold text-sm tracking-tight text-slate-900">Московский транспорт</span>
+      </div>
+
+      <div class="h-4 w-[1px] bg-slate-200"></div>
+
+      <!-- TsODD Emblem & Title -->
+      <div class="flex items-center gap-2">
+        <div class="w-6 h-6 rounded-full border-2 border-moscow-red flex items-center justify-center text-[10px] font-black text-moscow-red">
+          Ц
+        </div>
+        <span class="font-bold text-xs tracking-wider text-slate-700">ЦОДД</span>
+        <span class="text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">Ситуационный Центр</span>
+      </div>
+    </div>
+
+    <!-- Center/Right KPI Badges and Real-time Clock -->
+    <div class="flex items-center gap-3">
+      <!-- Digital Real-time Clock -->
+      <div class="font-mono font-bold text-sm tracking-wider bg-slate-50 text-slate-800 border border-slate-200 px-3 py-1 rounded-md tabular-nums flex items-center gap-1.5 shadow-2xs">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+        <span>00:52:43</span>
+        <span class="text-[10px] text-slate-400 font-sans font-semibold">MSK</span>
+      </div>
+
+      <!-- KPI 1: Punctuality Badge -->
+      <div class="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-200/80 rounded-full text-xs font-semibold text-emerald-800 shadow-2xs">
+        <div class="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-bold">
+          ✓
+        </div>
+        <span>77% Punctuality</span>
+      </div>
+
+      <!-- KPI 2: Active Incidents Badge -->
+      <div class="flex items-center gap-1.5 px-3 py-1 bg-rose-50 border border-rose-200/80 rounded-full text-xs font-semibold text-rose-800 shadow-2xs">
+        <span class="text-xs">⚠️</span>
+        <span>1 Active Incidents</span>
+      </div>
+
+      <!-- Live Sync status -->
+      <div class="hidden xl:flex items-center gap-1.5 text-xs text-slate-500 pl-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+        <span class="font-mono text-[11px]">Telematics LIVE (18ms)</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- 2. MAIN WORKSPACE / GIS VIEWPORT -->
+  <main class="relative flex-1 w-full h-[calc(100vh-56px)] overflow-hidden bg-[#f4f6f8]">
+
+    <!-- CartoDB Positron Style Map Layer (Crisp Light Vector Representation) -->
+    <div class="absolute inset-0 w-full h-full overflow-hidden">
+      <!-- SVG Map Canvas -->
+      <svg class="w-full h-full object-cover" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <!-- Grid pattern for subtle urban fabric -->
+          <pattern id="city-blocks" width="40" height="40" patternUnits="userSpaceOnUse">
+            <rect width="39" height="39" fill="#f8fafc" stroke="#e2e8f0" stroke-width="0.75" />
+          </pattern>
+          <!-- Congestion amber hatch -->
+          <pattern id="amberHatch" width="8" height="8" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+            <line x1="0" y1="0" x2="0" y2="8" stroke="#f59e0b" stroke-width="1.8" stroke-opacity="0.35" />
+          </pattern>
+          <!-- Congestion red hatch -->
+          <pattern id="redHatch" width="8" height="8" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+            <line x1="0" y1="0" x2="0" y2="8" stroke="#ef4444" stroke-width="2" stroke-opacity="0.4" />
+          </pattern>
+          <!-- Marker filters -->
+          <filter id="mapShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#0f172a" flood-opacity="0.16" />
+          </filter>
+        </defs>
+
+        <!-- Base Landmass -->
+        <rect width="100%" height="100%" fill="#F8FAFC" />
+        <rect width="100%" height="100%" fill="url(#city-blocks)" opacity="0.6" />
+
+        <!-- Moscow Urban Parks / Green spaces (Soft subtle pastel green) -->
+        <path d="M 220 180 Q 280 140 360 200 T 420 320 Q 340 360 260 300 Z" fill="#E2F2E9" opacity="0.8" />
+        <path d="M 850 80 Q 980 60 1080 140 T 1150 260 Q 1020 280 920 200 Z" fill="#E2F2E9" opacity="0.8" />
+        <path d="M 1250 480 Q 1380 440 1480 560 T 1360 700 Q 1240 660 1210 550 Z" fill="#E2F2E9" opacity="0.8" />
+
+        <!-- Waterways: Moskva River & Yauza River (Soft delicate pastel blue) -->
+        <!-- Yauza River -->
+        <path d="M 980 0 C 950 140, 880 260, 830 360 C 780 460, 810 520, 840 590 C 870 660, 930 730, 950 900" 
+              fill="none" stroke="#BAE6FD" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M 980 0 C 950 140, 880 260, 830 360 C 780 460, 810 520, 840 590 C 870 660, 930 730, 950 900" 
+              fill="none" stroke="#7DD3FC" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" opacity="0.8" />
+
+        <!-- Moskva River (Main curving blue artery) -->
+        <path d="M 100 880 C 260 840, 410 790, 520 680 C 640 560, 710 510, 850 590 C 990 670, 1140 680, 1320 620 C 1440 580, 1550 560, 1600 580" 
+              fill="none" stroke="#BAE6FD" stroke-width="48" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M 100 880 C 260 840, 410 790, 520 680 C 640 560, 710 510, 850 590 C 990 670, 1140 680, 1320 620 C 1440 580, 1550 560, 1600 580" 
+              fill="none" stroke="#7DD3FC" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" />
+
+        <!-- Road Network: Ring Roads & Radials (Delicate slate/gray strokes) -->
+        <!-- Garden Ring / Third Ring Road curves -->
+        <circle cx="800" cy="450" r="320" fill="none" stroke="#E2E8F0" stroke-width="7" />
+        <circle cx="800" cy="450" r="320" fill="none" stroke="#CBD5E1" stroke-width="3" stroke-dasharray="8 6" opacity="0.6" />
+        <circle cx="800" cy="450" r="540" fill="none" stroke="#E2E8F0" stroke-width="9" />
+        
+        <!-- Radial Major Avenues -->
+        <line x1="200" y1="200" x2="1400" y2="700" stroke="#E2E8F0" stroke-width="6" />
+        <line x1="250" y1="750" x2="1350" y2="150" stroke="#E2E8F0" stroke-width="6" />
+        <line x1="800" y1="0" x2="800" y2="900" stroke="#E2E8F0" stroke-width="6" />
+        <line x1="0" y1="450" x2="1600" y2="450" stroke="#E2E8F0" stroke-width="6" />
+
+        <!-- Secondary Street Grid -->
+        <path d="M 400 150 L 1200 150 M 400 300 L 1200 300 M 400 600 L 1200 600 M 400 750 L 1200 750" stroke="#F1F5F9" stroke-width="3" />
+        <path d="M 500 100 L 500 800 M 700 100 L 700 800 M 900 100 L 900 800 M 1100 100 L 1100 800" stroke="#F1F5F9" stroke-width="3" />
+
+        <!-- District Labels (CartoDB Positron Typography) -->
+        <text x="730" y="380" fill="#94A3B8" font-size="13" font-weight="700" letter-spacing="3" font-family="sans-serif">БАСМАННЫЙ</text>
+        <text x="960" y="310" fill="#94A3B8" font-size="13" font-weight="700" letter-spacing="3" font-family="sans-serif">СОКОЛЬНИКИ</text>
+        <text x="930" y="520" fill="#94A3B8" font-size="13" font-weight="700" letter-spacing="3" font-family="sans-serif">ЛЕФОРТОВО</text>
+        <text x="610" y="550" fill="#94A3B8" font-size="13" font-weight="700" letter-spacing="3" font-family="sans-serif">ТАГАНСКИЙ</text>
+        <text x="890" y="690" fill="#0284C7" font-size="11" font-weight="600" letter-spacing="2" opacity="0.6">р. Яуза</text>
+
+        <!-- Colored Traffic / Congestion Polygonal Sectors -->
+        <!-- Sector 1: Amber Warning Zone (Moderate congestion) -->
+        <polygon points="560,340 710,320 740,430 590,460" fill="#FEF3C7" fill-opacity="0.6" stroke="#F59E0B" stroke-width="1.5" stroke-dasharray="4 2" />
+        <polygon points="560,340 710,320 740,430 590,460" fill="url(#amberHatch)" />
+
+        <!-- Sector 2: Red Critical Congestion Zone (Severe bottleneck on Baumanskaya segment) -->
+        <polygon points="760,400 930,370 960,490 790,520" fill="#FEE2E2" fill-opacity="0.65" stroke="#EF4444" stroke-width="2" />
+        <polygon points="760,400 930,370 960,490 790,520" fill="url(#redHatch)" />
+
+        <!-- ROUTE m3 PATH (Bold Emerald Green Line with Arrowheads) -->
+        <!-- Inactive/Clear segments -->
+        <path id="routeM3_full" d="M 420 300 L 590 350 L 720 380 L 805 440 L 920 460 L 1050 430 L 1180 390" 
+              fill="none" stroke="#059669" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" />
+        
+        <!-- Congested segment along m3 (Baumanskaya to Semenovskaya) -->
+        <path d="M 720 380 L 805 440 L 920 460" 
+              fill="none" stroke="#DC2626" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 0" />
+
+        <!-- Directional Green Arrowheads on route -->
+        <g fill="#059669">
+          <!-- Arrow 1 -->
+          <polygon points="510,322 516,331 506,329" transform="rotate(18 510 326)" />
+          <!-- Arrow 2 -->
+          <polygon points="650,361 656,370 646,368" transform="rotate(16 650 365)" />
+          <!-- Arrow 3 (red zone) -->
+          <polygon points="860,446 866,455 856,453" fill="#DC2626" transform="rotate(14 860 450)" />
+          <!-- Arrow 4 -->
+          <polygon points="985,442 991,451 981,449" transform="rotate(-15 985 445)" />
+          <!-- Arrow 5 -->
+          <polygon points="1110,406 1116,415 1106,413" transform="rotate(-20 1110 410)" />
+        </g>
+
+        <!-- Bus Stops along route m3 (Emerald green rounded markers) -->
+        <!-- Stop 1: Покровка -->
+        <g transform="translate(590, 350)" filter="url(#mapShadow)">
+          <rect x="-10" y="-10" width="20" height="20" rx="5" fill="#059669" stroke="#FFFFFF" stroke-width="2" />
+          <circle cx="0" cy="0" r="3" fill="#FFFFFF" />
+          <!-- Tooltip badge -->
+          <rect x="-35" y="-28" width="70" height="15" rx="3" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1" />
+          <text x="0" y="-17" text-anchor="middle" font-size="9" font-weight="600" fill="#334155">ул. Покровка</text>
+        </g>
+
+        <!-- Stop 2: м. Бауманская (Critical Station) -->
+        <g transform="translate(805, 440)" filter="url(#mapShadow)">
+          <rect x="-14" y="-14" width="28" height="28" rx="6" fill="#DC2626" stroke="#FFFFFF" stroke-width="2.5" />
+          <!-- Metro icon / Bus icon -->
+          <text x="0" y="4" text-anchor="middle" font-size="12" font-weight="900" fill="#FFFFFF">М</text>
+          
+          <rect x="-48" y="-32" width="96" height="18" rx="4" fill="#1E293B" />
+          <text x="0" y="-19" text-anchor="middle" font-size="10" font-weight="700" fill="#FFFFFF">м. Бауманская</text>
+        </g>
+
+        <!-- Stop 3: Бакунинская -->
+        <g transform="translate(920, 460)" filter="url(#mapShadow)">
+          <rect x="-10" y="-10" width="20" height="20" rx="5" fill="#059669" stroke="#FFFFFF" stroke-width="2" />
+          <circle cx="0" cy="0" r="3" fill="#FFFFFF" />
+          <rect x="-38" y="-28" width="76" height="15" rx="3" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1" />
+          <text x="0" y="-17" text-anchor="middle" font-size="9" font-weight="600" fill="#334155">Бакунинская ул.</text>
+        </g>
+
+        <!-- Stop 4: м. Электрозаводская -->
+        <g transform="translate(1050, 430)" filter="url(#mapShadow)">
+          <rect x="-11" y="-11" width="22" height="22" rx="5" fill="#059669" stroke="#FFFFFF" stroke-width="2" />
+          <circle cx="0" cy="0" r="3" fill="#FFFFFF" />
+          <rect x="-45" y="-28" width="90" height="15" rx="3" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1" />
+          <text x="0" y="-17" text-anchor="middle" font-size="9" font-weight="600" fill="#334155">Электрозаводская</text>
+        </g>
+
+        <!-- CRITICAL VISUAL CUE: Bus Bunching Risk Zone (Between #1043 & #2198) -->
+        <g transform="translate(850, 410)">
+          <!-- Pulsing Red Interval Dash Line -->
+          <line x1="-30" y1="40" x2="35" y2="40" stroke="#DC2626" stroke-width="3" stroke-dasharray="4 3" class="pulse-warning" />
+          <!-- Warning banner on map -->
+          <rect x="-85" y="10" width="170" height="22" rx="11" fill="#FEF2F2" stroke="#DC2626" stroke-width="1.5" filter="url(#mapShadow)" />
+          <circle cx="-68" cy="21" r="5" fill="#DC2626" />
+          <text x="-56" y="25" font-size="9.5" font-weight="700" fill="#DC2626">Сжатие интервала Δt: 2.1 мин</text>
+        </g>
+
+        <!-- ACTIVE BUS MARKER 1: Leader Bus #1043 (Held at Baumanskaya) -->
+        <g transform="translate(820, 452)" filter="url(#mapShadow)">
+          <!-- Circular Vehicle Marker -->
+          <circle cx="0" cy="0" r="16" fill="#059669" stroke="#FFFFFF" stroke-width="3" />
+          <svg x="-8" y="-8" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5">
+            <rect x="3" y="4" width="18" height="13" rx="2"></rect>
+            <circle cx="7" cy="18" r="2"></circle>
+            <circle cx="17" cy="18" r="2"></circle>
+            <path d="M3 10h18"></path>
+          </svg>
+          <!-- Callout Badge -->
+          <rect x="20" y="-24" width="108" height="24" rx="6" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5" />
+          <circle cx="28" cy="-12" r="3.5" fill="#059669" />
+          <text x="36" y="-8" font-size="11" font-weight="800" fill="#0F172A">№1043</text>
+          <text x="82" y="-8" font-size="10" font-weight="600" fill="#059669">Лидер (0m)</text>
+        </g>
+
+        <!-- ACTIVE BUS MARKER 2: Trailing Bus #2198 (Rapidly catching up - High Risk) -->
+        <g transform="translate(760, 412)" filter="url(#mapShadow)">
+          <!-- Pulsing ring -->
+          <circle cx="0" cy="0" r="22" fill="#FEE2E2" opacity="0.7" class="pulse-warning" />
+          <!-- Circular Red Marker -->
+          <circle cx="0" cy="0" r="16" fill="#DC2626" stroke="#FFFFFF" stroke-width="3" />
+          <svg x="-8" y="-8" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5">
+            <rect x="3" y="4" width="18" height="13" rx="2"></rect>
+            <circle cx="7" cy="18" r="2"></circle>
+            <circle cx="17" cy="18" r="2"></circle>
+            <path d="M3 10h18"></path>
+          </svg>
+          <!-- Urgent Badge -->
+          <rect x="-124" y="-28" width="118" height="26" rx="6" fill="#DC2626" />
+          <text x="-115" y="-12" font-size="11" font-weight="800" fill="#FFFFFF">№2198</text>
+          <text x="-70" y="-12" font-size="10.5" font-weight="600" fill="#FEE2E2">+12m Задержка</text>
+        </g>
+
+        <!-- Route Indicator Pill at Western Origin -->
+        <g transform="translate(420, 290)" filter="url(#mapShadow)">
+          <rect x="-24" y="-12" width="48" height="24" rx="12" fill="#059669" />
+          <text x="0" y="4.5" text-anchor="middle" font-size="12" font-weight="800" fill="#FFFFFF">м3</text>
+        </g>
+      </svg>
+    </div>
+
+    <!-- Map Floating Tools (Top-Right of Map) -->
+    <div class="absolute top-4 right-[412px] flex flex-col gap-2 z-10">
+      <div class="bg-white/95 backdrop-blur-md rounded-xl shadow-lg border border-slate-200/80 p-1 flex flex-col">
+        <button class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-700 font-bold text-lg transition-colors">+</button>
+        <div class="h-[1px] bg-slate-100 mx-1"></div>
+        <button class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-700 font-bold text-lg transition-colors">−</button>
+      </div>
+
+      <div class="bg-white/95 backdrop-blur-md rounded-xl shadow-lg border border-slate-200/80 p-1 flex flex-col">
+        <button class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-700 transition-colors" title="Слои светофоров и трафика">
+          <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+          </svg>
+        </button>
+        <button class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-700 transition-colors" title="Камеры ЦОДД">
+          <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- 3. LEFT FLOATING PANEL (340px) - 'AlertRadar' -->
+    <section class="absolute top-4 left-4 w-[340px] max-h-[calc(100vh-140px)] z-20 flex flex-col bg-white rounded-2xl shadow-xl border border-slate-200/80 overflow-hidden backdrop-blur-md">
+      <!-- Radar Header -->
+      <div class="p-3.5 border-b border-slate-100 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 rounded-lg bg-red-50 text-moscow-red flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <span class="font-bold text-slate-900 text-sm tracking-tight">AlertRadar</span>
+          <span class="bg-red-100 text-moscow-red text-[11px] font-bold px-1.5 py-0.5 rounded-full">3</span>
+        </div>
+
+        <!-- Three dots menu -->
+        <button class="text-slate-400 hover:text-slate-600 p-1 rounded-md hover:bg-slate-100 transition-colors">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Tab bar -->
+      <div class="flex border-b border-slate-100 px-3 bg-slate-50/60">
+        <button class="py-2.5 px-3 text-xs font-bold text-slate-900 border-b-2 border-emerald-600 flex items-center gap-1.5">
+          <span>Current alerts</span>
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+        </button>
+        <button class="py-2.5 px-3 text-xs font-semibold text-slate-400 hover:text-slate-600 transition-colors">
+          Analysis
+        </button>
+      </div>
+
+      <!-- Alert Cards List -->
+      <div class="p-3 space-y-2.5 overflow-y-auto flex-1">
+        
+        <!-- Alert 1 (Medium - Amber) -->
+        <div class="p-3 rounded-xl border border-amber-200 bg-amber-50/40 hover:bg-amber-50/70 transition-all cursor-pointer">
+          <div class="flex items-center justify-between mb-1.5">
+            <div class="flex items-center gap-1.5">
+              <span class="text-amber-600 text-xs">⚠️</span>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-600">bus bunching</span>
+            </div>
+            <!-- Medium Amber Badge Pill -->
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FEF3C7] text-[#D97706] border border-amber-300">
+              Medium
+            </span>
+          </div>
+          <p class="text-xs text-slate-700 leading-snug font-medium">
+            Current string current Moscow - route <strong class="text-slate-900">м3</strong> interval compression
+          </p>
+          <div class="mt-2 flex items-center justify-between text-[11px] text-slate-400">
+            <span>Прогноз: Т+8 мин</span>
+            <span class="text-amber-700 font-semibold font-mono">68% ML Risk</span>
+          </div>
+        </div>
+
+        <!-- Alert 2 (High - Moscow Red, Active Selected) -->
+        <div class="p-3 rounded-xl border-2 border-moscow-red bg-rose-50/50 shadow-sm relative cursor-pointer">
+          <!-- Active Selection Indicator -->
+          <div class="absolute -left-1 top-4 bottom-4 w-1 bg-moscow-red rounded-r"></div>
+          
+          <div class="flex items-center justify-between mb-1.5">
+            <div class="flex items-center gap-1.5">
+              <span class="text-moscow-red text-xs">⚠️</span>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-moscow-red">bus bunching</span>
+            </div>
+            <!-- High Red Badge Pill -->
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FEE2E2] text-[#DC2626] border border-rose-300">
+              High
+            </span>
+          </div>
+          <p class="text-xs text-slate-900 leading-snug font-semibold">
+            Severe bunching risk: Board <span class="bg-red-100 text-moscow-red px-1 rounded">#2198</span> catching up to <span class="bg-emerald-100 text-emerald-800 px-1 rounded">#1043</span> on Baumanskaya segment
+          </p>
+          <div class="mt-2.5 pt-2 border-t border-rose-200/60 flex items-center justify-between text-[11px]">
+            <span class="text-slate-500 font-mono">Δt: 2.1 мин (Норма: 8 мин)</span>
+            <span class="text-moscow-red font-bold font-mono">94% Confidence</span>
+          </div>
+        </div>
+
+        <!-- Alert 3 (High - Interval Collapse) -->
+        <div class="p-3 rounded-xl border border-rose-200 bg-white hover:bg-rose-50/30 transition-all cursor-pointer">
+          <div class="flex items-center justify-between mb-1.5">
+            <div class="flex items-center gap-1.5">
+              <span class="text-moscow-red text-xs">⚠️</span>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-600">bus bunching</span>
+            </div>
+            <!-- High Red Badge Pill -->
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FEE2E2] text-[#DC2626] border border-rose-300">
+              High
+            </span>
+          </div>
+          <p class="text-xs text-slate-700 leading-snug font-medium">
+            Interval collapsed to <strong class="text-rose-700">2.1 min</strong>. 340 passengers affected on Eastern sector
+          </p>
+          <div class="mt-2 flex items-center justify-between text-[11px] text-slate-400">
+            <span>м. Бауманская → Семёновская</span>
+            <span class="text-slate-500 font-mono">Т+15 мин</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Quick Filter Footer -->
+      <div class="p-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs">
+        <span class="text-slate-500">Автообновление: 5 сек</span>
+        <button class="text-emerald-700 font-semibold hover:underline flex items-center gap-1">
+          <span>Свернуть радар</span>
+          <span>«</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 4. RIGHT FLOATING PANEL (380px) - 'Inspector card' -->
+    <aside class="absolute top-4 right-4 w-[380px] max-h-[calc(100vh-100px)] z-20 flex flex-col bg-white rounded-2xl shadow-xl border border-slate-200/80 overflow-hidden backdrop-blur-md">
+      <!-- Inspector Header -->
+      <div class="p-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/40">
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+          </div>
+          <span class="font-bold text-slate-900 text-sm tracking-tight">Inspector card</span>
+        </div>
+
+        <div class="flex items-center gap-1 text-slate-400">
+          <!-- Expand Icon -->
+          <button class="p-1 rounded hover:bg-slate-100 hover:text-slate-600 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+            </svg>
+          </button>
+          <!-- Close X Icon -->
+          <button class="p-1 rounded hover:bg-slate-100 hover:text-slate-600 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Vehicle Title & Status -->
+      <div class="p-3.5 border-b border-slate-100">
+        <div class="flex items-center justify-between mb-1">
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold text-base text-slate-900 tracking-tight">Bus "P1042"</span>
+            <span class="bg-slate-100 text-slate-600 font-mono text-xs px-2 py-0.5 rounded border border-slate-200">Борт №1043 / №2198</span>
+          </div>
+          <span class="text-xs font-bold text-moscow-red bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">Критично</span>
+        </div>
+        <p class="text-xs text-slate-500 font-medium">Real-time telemetry or analysis • Маршрут м3</p>
+      </div>
+
+      <!-- Inspector Scrollable Body -->
+      <div class="p-3.5 space-y-4 overflow-y-auto flex-1">
+
+        <!-- SECTION 1: Recharts Trajectory comparison curve -->
+        <div class="bg-slate-50/70 border border-slate-200/80 rounded-xl p-3">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-slate-800">Recharts Trajectory comparison curve</span>
+            <div class="flex items-center gap-2 text-[10px]">
+              <span class="flex items-center gap-1 text-slate-500">
+                <span class="w-2.5 h-[2px] bg-blue-600 inline-block"></span> Без мер
+              </span>
+              <span class="flex items-center gap-1 text-emerald-700 font-bold">
+                <span class="w-2.5 h-[2px] bg-emerald-600 inline-block"></span> Holding
+              </span>
+            </div>
+          </div>
+
+          <!-- Cartesian Graph SVG (Y: 0, 50, 100, 150; X: 0, 100, 200, 300, 400) -->
+          <div class="w-full h-36 relative">
+            <svg class="w-full h-full" viewBox="0 0 320 130" xmlns="http://www.w3.org/2000/svg">
+              <!-- Grid Lines -->
+              <g stroke="#E2E8F0" stroke-width="1">
+                <line x1="30" y1="20" x2="305" y2="20" />
+                <line x1="30" y1="50" x2="305" y2="50" />
+                <line x1="30" y1="80" x2="305" y2="80" />
+                <line x1="30" y1="110" x2="305" y2="110" />
+              </g>
+
+              <!-- Y-Axis Labels (0, 50, 100, 150) -->
+              <g font-size="9" fill="#94A3B8" font-family="JetBrains Mono" text-anchor="end">
+                <text x="24" y="23">150</text>
+                <text x="24" y="53">100</text>
+                <text x="24" y="83">50</text>
+                <text x="24" y="113">0</text>
+              </g>
+
+              <!-- X-Axis Labels (0, 100, 200, 300, 400) -->
+              <g font-size="9" fill="#94A3B8" font-family="JetBrains Mono" text-anchor="middle">
+                <text x="35" y="124">0</text>
+                <text x="100" y="124">100</text>
+                <text x="168" y="124">200</text>
+                <text x="236" y="124">300</text>
+                <text x="300" y="124">400</text>
+              </g>
+
+              <!-- Blue Curve: Trajectory without action / baseline (steep delay rise) -->
+              <path d="M 35 105 C 100 100, 150 92, 180 65 C 210 38, 250 25, 300 22" 
+                    fill="none" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" />
+              <!-- Points on blue curve -->
+              <circle cx="180" cy="65" r="3.5" fill="#2563EB" stroke="#FFFFFF" stroke-width="1.5" />
+              <circle cx="300" cy="22" r="3.5" fill="#2563EB" stroke="#FFFFFF" stroke-width="1.5" />
+
+              <!-- Green Curve: Optimized trajectory with holding recommendation -->
+              <path d="M 35 105 C 100 102, 150 98, 180 94 C 220 90, 260 84, 300 78" 
+                    fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" />
+              <!-- Points on green curve -->
+              <circle cx="180" cy="94" r="3.5" fill="#059669" stroke="#FFFFFF" stroke-width="1.5" />
+              <circle cx="300" cy="78" r="3.5" fill="#059669" stroke="#FFFFFF" stroke-width="1.5" />
+            </svg>
+          </div>
+          <div class="text-[10px] text-slate-500 text-center mt-1">
+            Эффект регулирования: <span class="font-bold text-emerald-700">−12.5 мин</span> суммарного отклонения
+          </div>
+        </div>
+
+        <!-- SECTION 2: SHAP factor breakdown - Selected sector predictive model -->
+        <div class="bg-slate-50/70 border border-slate-200/80 rounded-xl p-3">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-slate-800">SHAP factor breakdown</span>
+            <span class="text-[10px] text-slate-400 font-mono">CatBoost ML</span>
+          </div>
+          <p class="text-[10.5px] text-slate-500 mb-2.5">Selected sector predictive model (TreeSHAP impact decomposition)</p>
+
+          <!-- Vertical Bar Chart with Gradient Blue Bars -->
+          <div class="w-full h-28 flex items-end justify-between gap-2 px-2 pt-2 border-b border-slate-200">
+            <!-- Feature 1: BUR (Traffic bottleneck) -->
+            <div class="flex-1 flex flex-col items-center h-full justify-end group">
+              <span class="text-[9px] font-mono text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity mb-0.5">+42</span>
+              <div class="w-full bg-gradient-to-t from-blue-700 to-blue-500 rounded-t h-[92%] transition-all hover:brightness-110"></div>
+              <span class="text-[9px] font-mono font-bold text-slate-600 mt-1.5">BUR</span>
+            </div>
+
+            <!-- Feature 2: PHR (Peak passenger load) -->
+            <div class="flex-1 flex flex-col items-center h-full justify-end group">
+              <span class="text-[9px] font-mono text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity mb-0.5">+28</span>
+              <div class="w-full bg-gradient-to-t from-blue-600 to-blue-400 rounded-t h-[68%] transition-all hover:brightness-110"></div>
+              <span class="text-[9px] font-mono font-bold text-slate-600 mt-1.5">PHR</span>
+            </div>
+
+            <!-- Feature 3: SSR (Traffic light phase) -->
+            <div class="flex-1 flex flex-col items-center h-full justify-end group">
+              <span class="text-[9px] font-mono text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity mb-0.5">+19</span>
+              <div class="w-full bg-gradient-to-t from-blue-600 to-sky-400 rounded-t h-[48%] transition-all hover:brightness-110"></div>
+              <span class="text-[9px] font-mono font-bold text-slate-600 mt-1.5">SSR</span>
+            </div>
+
+            <!-- Feature 4: SRP (Speed reduction profile) -->
+            <div class="flex-1 flex flex-col items-center h-full justify-end group">
+              <span class="text-[9px] font-mono text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity mb-0.5">+14</span>
+              <div class="w-full bg-gradient-to-t from-blue-500 to-sky-400 rounded-t h-[38%] transition-all hover:brightness-110"></div>
+              <span class="text-[9px] font-mono font-bold text-slate-600 mt-1.5">SRP</span>
+            </div>
+
+            <!-- Feature 5: CFD (Cumulative fleet delay) -->
+            <div class="flex-1 flex flex-col items-center h-full justify-end group">
+              <span class="text-[9px] font-mono text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity mb-0.5">+11</span>
+              <div class="w-full bg-gradient-to-t from-blue-400 to-sky-300 rounded-t h-[30%] transition-all hover:brightness-110"></div>
+              <span class="text-[9px] font-mono font-bold text-slate-600 mt-1.5">CFD</span>
+            </div>
+
+            <!-- Feature 6: PET (Precipitation & weather) -->
+            <div class="flex-1 flex flex-col items-center h-full justify-end group">
+              <span class="text-[9px] font-mono text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity mb-0.5">+8</span>
+              <div class="w-full bg-gradient-to-t from-blue-400 to-sky-300 rounded-t h-[22%] transition-all hover:brightness-110"></div>
+              <span class="text-[9px] font-mono font-bold text-slate-600 mt-1.5">PET</span>
+            </div>
+
+            <!-- Feature 7: FHR (Fleet headway rating) -->
+            <div class="flex-1 flex flex-col items-center h-full justify-end group">
+              <span class="text-[9px] font-mono text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity mb-0.5">+5</span>
+              <div class="w-full bg-gradient-to-t from-blue-300 to-sky-200 rounded-t h-[15%] transition-all hover:brightness-110"></div>
+              <span class="text-[9px] font-mono font-bold text-slate-600 mt-1.5">FHR</span>
+            </div>
+          </div>
+          <div class="flex items-center justify-between text-[10px] text-slate-500 mt-2 px-1">
+            <span>Ключевой фактор: Затор перегона (BUR)</span>
+            <span class="font-semibold text-blue-700">Влияние: 42%</span>
+          </div>
+        </div>
+
+        <!-- SECTION 3: Smart Recommendation & Primary Action Button -->
+        <div class="bg-emerald-50/60 border-2 border-emerald-500/80 rounded-xl p-3 shadow-sm">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-xs font-bold text-emerald-900 flex items-center gap-1.5">
+              <span>🤖</span> Headway Holding Action
+            </span>
+            <span class="text-[10px] font-extrabold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-300">
+              Эффект 96%
+            </span>
+          </div>
+          <p class="text-xs text-slate-700 leading-snug mb-3">
+            Придержать идущий следом лидер <strong class="text-slate-900">№1043</strong> на остановке «м. Бауманская» на <strong>2.5 минуты</strong>.
+          </p>
+
+          <!-- Primary Emerald Green CTA Button -->
+          <button class="w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold py-3 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-sm focus:outline-none">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>Применить Holding</span>
+          </button>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- 5. BOTTOM FLOATING HORIZON SCRUBBER -->
+    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
+      <div class="bg-white/95 backdrop-blur-md rounded-full shadow-2xl border border-slate-200/90 px-6 py-3 flex items-center gap-5">
+        
+        <!-- Media Controls: Black Play button & Step/rewind button -->
+        <div class="flex items-center gap-2">
+          <button class="w-8 h-8 rounded-full bg-slate-900 hover:bg-slate-800 text-white flex items-center justify-center shadow-sm transition-all focus:outline-none">
+            <svg class="w-3.5 h-3.5 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+          </button>
+          
+          <button class="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-600 flex items-center justify-center transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.334 4zM4.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0011 16V8a1 1 0 00-1.6-.8l-5.334 4z" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="h-6 w-[1px] bg-slate-200"></div>
+
+        <!-- Slider Track with Circular White Thumb at T+15 min -->
+        <div class="flex items-center gap-4">
+          <span class="text-xs font-semibold text-slate-400 font-mono">T+0</span>
+
+          <div class="relative w-72 flex items-center">
+            <!-- Background Track -->
+            <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200/80">
+              <!-- Filled Emerald Track up to T+15 min -->
+              <div class="w-1/3 h-full bg-emerald-600 rounded-full"></div>
+            </div>
+
+            <!-- Circular Thumb at T+15 min (33%) -->
+            <div class="absolute left-1/3 -translate-x-1/2 w-5 h-5 rounded-full bg-white border-2 border-emerald-600 shadow-md cursor-grab flex items-center justify-center hover:scale-110 transition-transform">
+              <div class="w-2 h-2 rounded-full bg-emerald-600"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Time Markers -->
+        <div class="flex items-center gap-3">
+          <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+            T+15 min
+          </span>
+          <span class="text-xs font-medium text-slate-400 hover:text-slate-600 cursor-pointer">
+            T+30 min
+          </span>
+          <span class="text-xs font-medium text-slate-400 hover:text-slate-600 cursor-pointer">
+            T+45 min
+          </span>
+        </div>
+
+        <!-- Next Arrow Button -->
+        <button class="w-7 h-7 rounded-full hover:bg-slate-100 text-slate-600 flex items-center justify-center transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+
+      </div>
+    </div>
+
+    <!-- Bottom Right Subtle Watermark -->
+    <div class="absolute bottom-3 right-4 z-10 text-[11px] font-medium text-slate-400 bg-white/80 backdrop-blur-sm px-2.5 py-1 rounded-md border border-slate-200/60 shadow-2xs">
+      Powered by CartoDB Positron • ЦОДД ГИС
+    </div>
+
+  </main>
+
+</body>
+</html>
