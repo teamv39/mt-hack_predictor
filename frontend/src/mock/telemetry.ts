@@ -3,7 +3,6 @@ export interface ShapFactor {
   delayMinutes: number;
   percent: number;
   color: string;
-  category: 'traffic' | 'weather' | 'lights' | 'boarding';
 }
 
 export interface DelayChartPoint {
@@ -11,7 +10,6 @@ export interface DelayChartPoint {
   plan: number;
   withoutAction: number;
   withHolding: number;
-  isPassed?: boolean;
 }
 
 export interface Recommendation {
@@ -22,42 +20,40 @@ export interface Recommendation {
   stopName: string;
   effectPercent: number;
   text: string;
-  restoredHeadwayMinutes: number;
+  infoText: string;
   applied: boolean;
 }
 
 export interface Vehicle {
   id: string;
+  badgeLabel: string;
+  plateNumber: string;
   model: string;
   routeId: string;
   routeName: string;
   status: 'BUNCHING_RISK' | 'NORMAL' | 'DELAYED';
   delaySeconds: number;
   predictedTerminalDelayMinutes: number;
-  headwaySeconds: number;
-  plannedHeadwaySeconds: number;
   speedKmh: number;
   latitude: number;
   longitude: number;
   heading: number;
   currentStop: string;
   nextStop: string;
-  driver: string;
-  occupancyPercent: number;
-  plateNumber: string;
 }
 
 export interface AlertItem {
   id: string;
   vehicleId: string;
   followingVehicleId?: string;
+  routeNumberBadge: string;
   routeId: string;
-  urgencyMinutes: number;
   urgencyBadge: string;
-  urgencyLevel: 'critical' | 'high' | 'medium';
-  type: 'bunching' | 'interval' | 'delay';
+  urgencyMinutes: number;
   tag: string;
+  tagType: 'bunching' | 'interval' | 'compression';
   title: string;
+  delayLabel: string;
   description: string;
   confidence: number;
   locationName: string;
@@ -74,16 +70,16 @@ export interface StopPoint {
   name: string;
   lat: number;
   lon: number;
-  isRiskZone?: boolean;
-  isHoldingPoint?: boolean;
-  subwayTransfer?: string;
+  color: string;
 }
 
 export interface RouteData {
   routeId: string;
   name: string;
-  normalPolyline: [number, number][];
-  riskPolyline: [number, number][];
+  greenPolyline: [number, number][];
+  orangePolyline: [number, number][];
+  redCorridorPolyline: [number, number][];
+  riskPolygon: [number, number][];
   stops: StopPoint[];
 }
 
@@ -94,42 +90,52 @@ export const MOCK_SYSTEM_METRICS = {
   punctualityRate: 94.8,
   activeIncidentsCount: 3,
   preventedIncidentsCount: 19,
-  modelVersion: "RT-NEURAL v4.2.1",
+  modelVersion: "RT-NEURAL - v4.2.1",
   engineLatencyMs: 3.2,
+  simulationHorizon: "T+45 мин",
+  maeAccuracy: "±1.2 мин",
+  sector: "ВАО / ЦАО (Бауманский куст)",
+  ebt: "4.2 ± 1.8",
+  fps: "23 k/s",
   simulationTime: "14:30",
 };
 
 export const MOCK_STOPS: StopPoint[] = [
-  { id: "s1", name: "Метро Лубянка", lat: 55.7591, lon: 37.6277, subwayTransfer: "Сокольническая" },
-  { id: "s2", name: "Покровские Ворота", lat: 55.7612, lon: 37.6475 },
-  { id: "s3", name: "Доброслободская", lat: 55.7674, lon: 37.6681 },
-  { id: "s4", name: "Метро Бауманская", lat: 55.7724, lon: 37.6791, isHoldingPoint: true, subwayTransfer: "Арбатско-Покровская" },
-  { id: "s5", name: "Бакунинская ул., 84", lat: 55.7773, lon: 37.6942, isRiskZone: true },
-  { id: "s6", name: "Метро Электрозаводская", lat: 55.7818, lon: 37.7052, isRiskZone: true, subwayTransfer: "БКЛ / АПЛ" },
-  { id: "s7", name: "Метро Семёновская", lat: 55.7831, lon: 37.7189, isRiskZone: true, subwayTransfer: "Арбатско-Покровская" },
+  { id: "s1", name: "м. Бауманская", lat: 55.7724, lon: 37.6791, color: "#f97316" },
+  { id: "s2", name: "м. Семёновская", lat: 55.7831, lon: 37.7189, color: "#10b981" },
 ];
 
-// Coordinates for route m3 in Moscow
-export const MOCK_ROUTE_M3: RouteData = {
+// Coordinates around Baumanskaya — Semyonovskaya in Moscow
+export const MOCK_ROUTE_DATA: RouteData = {
   routeId: "м3",
-  name: "Серебряный бор — Метро Семёновская",
-  normalPolyline: [
-    [55.7591, 37.6277],
-    [55.7599, 37.6362],
+  name: "Серебряный бор — Семёновская",
+  greenPolyline: [
     [55.7612, 37.6475],
-    [55.7645, 37.6582],
     [55.7674, 37.6681],
-    [55.7701, 37.6738],
-    [55.7724, 37.6791], // Метро Бауманская
+    [55.7724, 37.6791],
+    [55.7831, 37.7189],
+    [55.7890, 37.7340],
   ],
-  riskPolyline: [
-    [55.7724, 37.6791], // Метро Бауманская
+  orangePolyline: [
+    [55.7550, 37.6700],
+    [55.7650, 37.6750],
+    [55.7724, 37.6791],
+    [55.7800, 37.6830],
+    [55.7950, 37.6900],
+  ],
+  redCorridorPolyline: [
     [55.7745, 37.6854],
-    [55.7773, 37.6942], // Бакунинская 84
+    [55.7773, 37.6942],
     [55.7798, 37.7011],
-    [55.7818, 37.7052], // Электрозаводская
-    [55.7825, 37.7120],
-    [55.7831, 37.7189], // Метро Семёновская
+    [55.7818, 37.7082],
+    [55.7831, 37.7189],
+  ],
+  // Soft peach/coral shaded sector over the problematic stretch
+  riskPolygon: [
+    [55.7730, 37.6820],
+    [55.7810, 37.7250],
+    [55.7860, 37.7220],
+    [55.7780, 37.6790],
   ],
   stops: MOCK_STOPS,
 };
@@ -137,26 +143,24 @@ export const MOCK_ROUTE_M3: RouteData = {
 export const MOCK_VEHICLES: Vehicle[] = [
   {
     id: "P1042",
+    badgeLabel: "P1042 - 13м",
     plateNumber: "В 042 АХ 777",
     model: "ЛиАЗ-6274 (Электробус)",
     routeId: "м3",
     routeName: "Серебряный бор — Семёновская",
     status: "BUNCHING_RISK",
-    delaySeconds: 180, // +3 min current delay
+    delaySeconds: 180,
     predictedTerminalDelayMinutes: 16,
-    headwaySeconds: 95, // 1.5 min headway to next
-    plannedHeadwaySeconds: 480, // 8 min schedule
     speedKmh: 14,
-    latitude: 55.7745,
-    longitude: 37.6854,
-    heading: 65,
-    currentStop: "Бауманская ул.",
-    nextStop: "Бакунинская ул., 84",
-    driver: "Смирнов А. В.",
-    occupancyPercent: 82,
+    latitude: 55.7773,
+    longitude: 37.6942,
+    heading: 68,
+    currentStop: "Бакунинская ул., 84",
+    nextStop: "м. Семёновская",
   },
   {
     id: "P1043",
+    badgeLabel: "P1043 (в норме)",
     plateNumber: "Е 143 СК 777",
     model: "ЛиАЗ-6274 (Электробус)",
     routeId: "м3",
@@ -164,196 +168,140 @@ export const MOCK_VEHICLES: Vehicle[] = [
     status: "NORMAL",
     delaySeconds: 15,
     predictedTerminalDelayMinutes: 2,
-    headwaySeconds: 480,
-    plannedHeadwaySeconds: 480,
     speedKmh: 36,
-    latitude: 55.7701,
-    longitude: 37.6738,
-    heading: 62,
-    currentStop: "Доброслободская",
-    nextStop: "Метро Бауманская",
-    driver: "Кузнецов М. И.",
-    occupancyPercent: 44,
-  },
-  {
-    id: "P2198",
-    plateNumber: "О 198 РР 799",
-    model: "КамАЗ-6282 (Электробус)",
-    routeId: "м7",
-    routeName: "Парк Победы — Карачаровский путепровод",
-    status: "DELAYED",
-    delaySeconds: 540, // +9 min
-    predictedTerminalDelayMinutes: 14,
-    headwaySeconds: 220,
-    plannedHeadwaySeconds: 600,
-    speedKmh: 18,
-    latitude: 55.7512,
-    longitude: 37.6621,
-    heading: 110,
-    currentStop: "Николоямская ул.",
-    nextStop: "Андроньевская пл.",
-    driver: "Васильев Д. П.",
-    occupancyPercent: 91,
-  },
-  {
-    id: "P1055",
-    plateNumber: "Т 055 ММ 777",
-    model: "ЛиАЗ-6274 (Электробус)",
-    routeId: "т25",
-    routeName: "Проспект Буденного — Метро Лубянка",
-    status: "NORMAL",
-    delaySeconds: 30,
-    predictedTerminalDelayMinutes: 1,
-    headwaySeconds: 420,
-    plannedHeadwaySeconds: 420,
-    speedKmh: 31,
-    latitude: 55.7612,
-    longitude: 37.6475,
-    heading: 240,
-    currentStop: "Покровские Ворота",
-    nextStop: "Метро Лубянка",
-    driver: "Алексеев П. С.",
-    occupancyPercent: 53,
+    latitude: 55.7740,
+    longitude: 37.6820,
+    heading: 65,
+    currentStop: "м. Бауманская",
+    nextStop: "Бакунинская ул., 84",
   },
 ];
 
 export const MOCK_ALERTS: AlertItem[] = [
   {
-    id: "alert_m3_001",
+    id: "alert_1042",
     vehicleId: "P1042",
     followingVehicleId: "P1043",
+    routeNumberBadge: "40",
     routeId: "м3",
-    urgencyMinutes: 22,
     urgencyBadge: "ЧЕРЕЗ 22 МИН",
-    urgencyLevel: "critical",
-    type: "bunching",
+    urgencyMinutes: 22,
     tag: "РИСК Пачкования",
-    title: "Борт №1042 (+14 мин отставание)",
-    description: "Прогноз сближения с идущим следом бортом №1043 через 4 остановки. Интервал сократится до 1.5 мин на перегоне Бауманская — Семёновская.",
+    tagType: "bunching",
+    title: "Борт №1042",
+    delayLabel: "+14 мин отставание",
+    description: "Опережение на 1.2 мин, на 14 мин на перегоне отставание — Семёновская. Идущий следом борт №1043 догонит через 4 остановок.",
     confidence: 94,
     locationName: "м. Бауманская → Семёновская",
-    latitude: 55.7724,
-    longitude: 37.6791,
+    latitude: 55.7773,
+    longitude: 37.6942,
     category: "bunching",
     shapFactors: [
       {
-        title: "Затор на перегоне Бакунинская",
-        delayMinutes: 5.0,
+        title: "Затор: Бауманская — Электрозаводская",
+        delayMinutes: -5.0,
         percent: 45,
         color: "#ef4444",
-        category: "traffic",
       },
       {
         title: "Посадка пассажиров (осадки / дождь)",
         delayMinutes: 3.0,
         percent: 25,
-        color: "#2563eb",
-        category: "weather",
+        color: "#0284c7",
       },
       {
-        title: "Светофорное регулирование ТТК",
+        title: "Светофорное регулирование ТТК-ДД",
         delayMinutes: 1.5,
         percent: 18,
         color: "#8b5cf6",
-        category: "lights",
-      },
-      {
-        title: "Интенсивность посадки на ТПУ",
-        delayMinutes: 1.0,
-        percent: 12,
-        color: "#f59e0b",
-        category: "boarding",
       },
     ],
     delayChartData: [
-      { stop: "Лубянка", plan: 0, withoutAction: 0, withHolding: 0, isPassed: true },
-      { stop: "Покровка", plan: 0, withoutAction: 1.2, withHolding: 1.2, isPassed: true },
-      { stop: "Бауманская", plan: 0, withoutAction: 3.0, withHolding: 3.0, isPassed: true },
-      { stop: "Бакунинская", plan: 0, withoutAction: 8.5, withHolding: 3.8 },
-      { stop: "Электрозавод.", plan: 0, withoutAction: 12.8, withHolding: 3.2 },
-      { stop: "Семёновская", plan: 0, withoutAction: 16.0, withHolding: 2.5 },
+      { stop: "Покровка", plan: 10, withoutAction: 15, withHolding: 15 },
+      { stop: "Доброслободская", plan: 20, withoutAction: 45, withHolding: 30 },
+      { stop: "м. Бауманская", plan: 30, withoutAction: 85, withHolding: 52 },
+      { stop: "м. Семёновская", plan: 45, withoutAction: 145, withHolding: 58 },
     ],
     recommendation: {
-      id: "rec_m3_1042",
-      targetVehicleId: "1043",
+      id: "rec_1042",
+      targetVehicleId: "№1043",
       durationSeconds: 150,
       durationMinutes: 2.5,
-      stopName: "Метро Бауманская",
+      stopName: "«Метро Бауманская»",
       effectPercent: 96,
-      text: "Придержать идущий следом борт №1043 на остановке \"Метро Бауманская\" на 2.5 минуты. Интервал восстановится до 7.5 мин.",
-      restoredHeadwayMinutes: 7.5,
+      text: "Придержать идущий следом Борт №1043 на остановке «Метро Бауманская» на 2.5 минуты.",
+      infoText: "Интервал восстановится с 2 мин до расчетных 7.5 мин. Пачкование будет устранено на всей линии.",
       applied: false,
     },
   },
   {
-    id: "alert_m7_002",
+    id: "alert_2198",
     vehicleId: "P2198",
+    routeNumberBadge: "137",
     routeId: "м7",
-    urgencyMinutes: 14,
     urgencyBadge: "ЧЕРЕЗ 14 МИН",
-    urgencyLevel: "critical",
-    type: "interval",
-    tag: "Срыв интервала",
-    title: "Борт №2198 (+9 мин)",
-    description: "Нарастающее отставание по трассе Таганской площади. Риск выпадения борта из расчетного расписания на Карачаровском направлении.",
-    confidence: 88,
-    locationName: "Таганская площадь",
+    urgencyMinutes: 14,
+    tag: "РИСК Интервала",
+    tagType: "interval",
+    title: "Борт №2198",
+    delayLabel: "+9 мин",
+    description: "Затор на ул. Николоямская, прогрессирующий срыв интервала 10 мин на выезде на Энтузиастов проспект.",
+    confidence: 94,
+    locationName: "ул. Николоямская",
     latitude: 55.7512,
     longitude: 37.6621,
     category: "critical",
     shapFactors: [
       {
-        title: "Плотный трафик Таганский тоннель",
+        title: "Плотный трафик Таганский узел",
         delayMinutes: 4.8,
         percent: 52,
         color: "#ef4444",
-        category: "traffic",
       },
       {
-        title: "Сбой фазы светофора (ЦОДД Т-12)",
+        title: "Светофорный цикл (ЦОДД Т-12)",
         delayMinutes: 2.5,
         percent: 28,
         color: "#8b5cf6",
-        category: "lights",
       },
       {
-        title: "Увеличенный пассажиропоток",
+        title: "Пассажиропоток",
         delayMinutes: 1.7,
         percent: 20,
         color: "#f59e0b",
-        category: "boarding",
       },
     ],
     delayChartData: [
-      { stop: "Китай-город", plan: 0, withoutAction: 2.0, withHolding: 2.0, isPassed: true },
-      { stop: "Солянка", plan: 0, withoutAction: 4.5, withHolding: 4.5, isPassed: true },
-      { stop: "Таганская", plan: 0, withoutAction: 9.0, withHolding: 5.0 },
-      { stop: "Нижегородская", plan: 0, withoutAction: 14.0, withHolding: 4.2 },
+      { stop: "Покровка", plan: 10, withoutAction: 20, withHolding: 18 },
+      { stop: "Доброслободская", plan: 25, withoutAction: 60, withHolding: 35 },
+      { stop: "м. Бауманская", plan: 40, withoutAction: 110, withHolding: 48 },
+      { stop: "м. Семёновская", plan: 50, withoutAction: 135, withHolding: 55 },
     ],
     recommendation: {
-      id: "rec_m7_2198",
-      targetVehicleId: "2198",
+      id: "rec_2198",
+      targetVehicleId: "№2199",
       durationSeconds: 120,
       durationMinutes: 2.0,
-      stopName: "Метро Таганская",
+      stopName: "«Таганская площадь»",
       effectPercent: 89,
-      text: "Корректировка фазы зеленого коридора на узле Таганская + выравнивание интервала борта №2199.",
-      restoredHeadwayMinutes: 8.0,
+      text: "Корректировка зеленого коридора на узле Таганская + выравнивание интервала борта №2199.",
+      infoText: "Интервал восстановится до планового расписания на Карачаровском направлении.",
       applied: false,
     },
   },
   {
-    id: "alert_m3_003",
-    vehicleId: "P1055",
-    routeId: "т25",
-    urgencyMinutes: 8,
-    urgencyBadge: "ЧЕРЕЗ 8 МИН",
-    urgencyLevel: "medium",
-    type: "delay",
-    tag: "Критич. отставание",
-    title: "Борт №1055 (+5 мин)",
-    description: "Локальное замедление в зоне дорожных работ на Старой Басманной ул. Интервал умеренно расширен.",
-    confidence: 79,
+    id: "alert_0814",
+    vehicleId: "P0814",
+    routeNumberBadge: "т88",
+    routeId: "т88",
+    urgencyBadge: "ЧЕРЕЗ 31 МИН",
+    urgencyMinutes: 31,
+    tag: "Сжатие 1.5м",
+    tagType: "compression",
+    title: "Борт №0814",
+    delayLabel: "+6 мин",
+    description: "Сжатие интервала на 1.5 мин перед м. Лубянка из-за светофорного цикла.",
+    confidence: 98,
     locationName: "ул. Старая Басманная",
     latitude: 55.7612,
     longitude: 37.6475,
@@ -364,30 +312,29 @@ export const MOCK_ALERTS: AlertItem[] = [
         delayMinutes: 3.2,
         percent: 60,
         color: "#ef4444",
-        category: "traffic",
       },
       {
         title: "Светофорная задержка",
         delayMinutes: 1.8,
         percent: 40,
         color: "#8b5cf6",
-        category: "lights",
       },
     ],
     delayChartData: [
-      { stop: "Будённого", plan: 0, withoutAction: 0, withHolding: 0, isPassed: true },
-      { stop: "Басманная", plan: 0, withoutAction: 3.2, withHolding: 2.0 },
-      { stop: "Лубянка", plan: 0, withoutAction: 5.4, withHolding: 1.8 },
+      { stop: "Покровка", plan: 10, withoutAction: 15, withHolding: 12 },
+      { stop: "Доброслободская", plan: 20, withoutAction: 35, withHolding: 24 },
+      { stop: "м. Бауманская", plan: 30, withoutAction: 65, withHolding: 35 },
+      { stop: "м. Семёновская", plan: 45, withoutAction: 95, withHolding: 42 },
     ],
     recommendation: {
-      id: "rec_t25_1055",
-      targetVehicleId: "1055",
+      id: "rec_0814",
+      targetVehicleId: "№0815",
       durationSeconds: 90,
       durationMinutes: 1.5,
-      stopName: "Садовая-Черногрязская",
-      effectPercent: 82,
-      text: "Динамический перепуск светофора через систему УДС ЦОДД для опережения затора.",
-      restoredHeadwayMinutes: 6.5,
+      stopName: "«Садовая-Черногрязская»",
+      effectPercent: 92,
+      text: "Динамический перепуск светофора через УДС ЦОДД для опережения затора.",
+      infoText: "Выравнивание шага движения предотвратит накопление пассажиров на ТПУ.",
       applied: false,
     },
   },
@@ -395,10 +342,7 @@ export const MOCK_ALERTS: AlertItem[] = [
 
 export const MOCK_CAMERA = {
   id: "ВА2-842",
-  location: "Бауманская (LIVE)",
-  intersection: "ул. Бауманская / Бакунинская",
-  status: "ONLINE",
-  resolution: "1080p • 25 FPS",
-  streamUrl: "rtsp://cctv.codd.mos.ru/live/va2-842",
-  congestionLevel: "7/10 (Плотный трафик)",
+  location: "Бауманская",
+  status: "LIVE",
+  footerText: "Загрузка событий, Бауманская",
 };
