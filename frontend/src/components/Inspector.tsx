@@ -1,17 +1,11 @@
 import React from "react";
 import {
-  Bus,
-  Clock,
   TrendingUp,
   Cpu,
   CheckCircle2,
-  AlertOctagon,
-  Users,
-  Gauge,
-  UserCheck,
-  ShieldCheck,
-  ArrowRight,
+  X,
   Info,
+  Bot,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -21,7 +15,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
 } from "recharts";
 import { Vehicle, AlertItem } from "../mock/telemetry";
 
@@ -36,195 +29,99 @@ export const Inspector: React.FC<InspectorProps> = ({
   alert,
   onApplyHolding,
 }) => {
-  if (!vehicle) {
-    return (
-      <aside className="w-[380px] xl:w-[420px] h-full flex flex-col bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-lg p-6 items-center justify-center text-slate-400">
-        <Bus size={40} className="mb-2 opacity-50" />
-        <p className="text-sm font-semibold">Выберите борт на карте или из списка</p>
-      </aside>
-    );
-  }
+  if (!vehicle || !alert) return null;
 
-  const recommendation = alert?.recommendation;
-  const isApplied = recommendation?.applied || false;
-  const chartData = alert?.delayChartData || [];
-  const shapFactors = alert?.shapFactors || [];
+  const recommendation = alert.recommendation;
+  const isApplied = recommendation.applied;
+  const chartData = alert.delayChartData;
+  const shapFactors = alert.shapFactors;
 
   return (
-    <aside className="w-[380px] xl:w-[420px] h-full flex flex-col bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-lg overflow-hidden shrink-0 z-20 pointer-events-auto">
-      {/* Panel Header */}
-      <div className="p-3.5 border-b border-slate-100 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
-            <Bus size={15} />
-          </div>
-          <div>
-            <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-              Инспектор борта и Рекомендации
+    <aside className="w-[370px] xl:w-[390px] h-full flex flex-col bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-lg overflow-hidden shrink-0 z-20 pointer-events-auto">
+      {/* 1. Header: Борт P1042, ЛиАЗ-6274 (Электробус), Close Button */}
+      <div className="p-3.5 border-b border-slate-100 flex items-start justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <h2 className="text-base font-black text-blue-600 tracking-tight">
+              Борт {vehicle.id}
             </h2>
-            <p className="text-[10px] text-slate-500 font-medium">
-              Аналитика рейса и предиктивный синтез
-            </p>
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">
+              {vehicle.model}
+            </span>
           </div>
+
+          <p className="text-xs font-bold text-slate-800 mt-1">
+            Рейс: {vehicle.routeId} ({vehicle.routeName})
+          </p>
+
+          <p className="text-xs font-bold text-rose-700 mt-0.5">
+            {isApplied
+              ? "Опоздание 2.5 мин → Прогноз на задержки: +2.5 мин (Штатно)"
+              : "Опоздание 3 мин → Прогноз на задержки: +16 мин"}
+          </p>
         </div>
 
-        <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200/80">
-          {vehicle.routeId} • РЕЙС 101
-        </span>
+        <button className="text-slate-400 hover:text-slate-600 p-1">
+          <X size={16} />
+        </button>
       </div>
 
-      {/* Scrollable Inspector Body */}
-      <div className="flex-1 overflow-y-auto p-3.5 space-y-3.5">
-        {/* 1. Selected Vehicle Card */}
-        <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 shadow-xs">
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-black text-slate-900">
-                  Борт {vehicle.id}
-                </span>
-                <span className="text-xs font-medium text-slate-500">
-                  — {vehicle.model}
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-600 font-medium mt-0.5">
-                Рейс {vehicle.routeId}: {vehicle.routeName}
-              </p>
-            </div>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-600 font-bold shadow-2xs">
-              {vehicle.plateNumber}
-            </span>
-          </div>
-
-          {/* Status banner */}
-          <div
-            className={`mt-2.5 p-2 rounded-lg text-xs font-bold flex items-center justify-between ${
-              isApplied
-                ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                : vehicle.status === "BUNCHING_RISK"
-                ? "bg-rose-50 text-rose-800 border border-rose-200"
-                : "bg-amber-50 text-amber-800 border border-amber-200"
-            }`}
-          >
-            <div className="flex items-center gap-1.5">
-              {isApplied ? (
-                <ShieldCheck size={14} className="text-emerald-600 shrink-0" />
-              ) : (
-                <AlertOctagon size={14} className="text-rose-600 shrink-0" />
-              )}
-              <span>
-                {isApplied
-                  ? "Опоздание 2.5 мин → Прогноз на конечную: +2.5 мин (Штатно)"
-                  : "Опоздание 3 мин → Прогноз на конечную: +16 мин"}
-              </span>
-            </div>
-          </div>
-
-          {/* Micro telemetry telemetry grid */}
-          <div className="grid grid-cols-3 gap-2 mt-2.5">
-            <div className="p-2 rounded-lg bg-white border border-slate-200/70">
-              <div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium">
-                <Clock size={11} />
-                <span>Интервал</span>
-              </div>
-              <div
-                className={`text-xs font-black mt-0.5 ${
-                  isApplied
-                    ? "text-emerald-600"
-                    : vehicle.headwaySeconds < 180
-                    ? "text-rose-600"
-                    : "text-slate-800"
-                }`}
-              >
-                {isApplied ? "7.5 мин" : `${(vehicle.headwaySeconds / 60).toFixed(1)} мин`}
-              </div>
-            </div>
-
-            <div className="p-2 rounded-lg bg-white border border-slate-200/70">
-              <div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium">
-                <Gauge size={11} />
-                <span>Скорость</span>
-              </div>
-              <div className="text-xs font-black text-slate-800 mt-0.5">
-                {vehicle.speedKmh} км/ч
-              </div>
-            </div>
-
-            <div className="p-2 rounded-lg bg-white border border-slate-200/70">
-              <div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium">
-                <Users size={11} />
-                <span>Загрузка</span>
-              </div>
-              <div className="text-xs font-black text-slate-800 mt-0.5">
-                {vehicle.occupancyPercent}%
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 2. Recharts LineChart: «План vs Прогноз задержки» */}
-        <div className="p-3.5 rounded-xl bg-white border border-slate-200/80 shadow-xs">
+      {/* 2. Scrollable Body */}
+      <div className="flex-1 overflow-y-auto p-3.5 space-y-3.5 scrollbar-thin">
+        {/* Section 1: ПЛАН VS ПРОГНОЗ ЗАДЕРЖКИ */}
+        <div className="p-3 rounded-xl bg-slate-50/70 border border-slate-200/80 shadow-2xs">
           <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 text-xs font-black text-slate-800 uppercase">
               <TrendingUp size={14} className="text-blue-600" />
-              <h3 className="text-xs font-bold text-slate-900">
-                План vs Прогноз задержки
-              </h3>
+              <span>ПЛАН VS ПРОГНОЗ ЗАДЕРЖКИ</span>
             </div>
-            <span className="text-[10px] text-slate-400 font-medium">
-              По точкам остановок (мин)
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-600">
+              По остановкам
             </span>
           </div>
 
-          <div className="w-full h-44 -ml-2">
+          {/* Recharts LineChart matching screenshot */}
+          <div className="w-full h-36 -ml-3">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+              <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                 <XAxis
                   dataKey="stop"
                   tick={{ fontSize: 9, fill: "#64748b" }}
-                  axisLine={{ stroke: "#e2e8f0" }}
+                  axisLine={{ stroke: "#cbd5e1" }}
                   tickLine={false}
                 />
                 <YAxis
+                  ticks={[0, 50, 100, 150]}
+                  domain={[0, 160]}
                   tick={{ fontSize: 9, fill: "#64748b" }}
                   axisLine={false}
                   tickLine={false}
-                  unit=" м"
                 />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "#ffffff",
                     borderColor: "#e2e8f0",
                     borderRadius: "8px",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                     fontSize: "11px",
-                    fontWeight: 600,
+                    fontWeight: 700,
                   }}
-                  formatter={(value: any, name: any) => [
-                    `${value} мин`,
+                  formatter={(val: any, name: any) => [
+                    `${val} с`,
                     name === "plan"
                       ? "План"
                       : name === "withoutAction"
-                      ? "Без мер"
+                      ? "Прогноз без мер"
                       : "С рекомендацией ИИ",
                   ]}
                 />
-                <Legend
-                  verticalAlign="top"
-                  height={24}
-                  iconSize={8}
-                  wrapperStyle={{ fontSize: "10px", paddingBottom: "4px" }}
-                />
 
-                {/* Plan: dashed blue line */}
+                {/* Plan: Gray / subtle blue */}
                 <Line
                   type="monotone"
                   dataKey="plan"
-                  name="План"
-                  stroke="#3b82f6"
+                  stroke="#94a3b8"
                   strokeWidth={2}
-                  strokeDasharray="4 4"
                   dot={false}
                 />
 
@@ -232,59 +129,70 @@ export const Inspector: React.FC<InspectorProps> = ({
                 <Line
                   type="monotone"
                   dataKey="withoutAction"
-                  name="Без мер"
                   stroke="#ef4444"
-                  strokeWidth={isApplied ? 1.5 : 2.5}
-                  strokeOpacity={isApplied ? 0.35 : 1}
+                  strokeWidth={2.5}
                   dot={{ r: 3, fill: "#ef4444" }}
                 />
 
-                {/* With AI Recommendation: emerald stabilization */}
+                {/* With AI Holding: flat green/teal line */}
                 <Line
                   type="monotone"
                   dataKey="withHolding"
-                  name="С рекомендацией ИИ"
                   stroke="#10b981"
-                  strokeWidth={isApplied ? 2.5 : 2}
-                  strokeDasharray={isApplied ? "" : "3 3"}
-                  dot={{ r: 3, fill: "#10b981" }}
+                  strokeWidth={2}
+                  dot={false}
                 />
               </LineChart>
             </ResponsiveContainer>
           </div>
+
+          {/* Custom Legend matching screenshot */}
+          <div className="flex items-center justify-between text-[10px] text-slate-600 mt-2 px-1 border-t border-slate-200/60 pt-1.5">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+              <span>План (график)</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-xs bg-rose-500"></span>
+              <span className="font-bold text-rose-700">Прогноз (без мер)</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span className="font-bold text-emerald-700">С рекомендацией ИИ</span>
+            </div>
+          </div>
         </div>
 
-        {/* 3. Explainable AI: SHAP Factor Analysis */}
-        <div className="p-3.5 rounded-xl bg-white border border-slate-200/80 shadow-xs">
-          <div className="flex items-center justify-between mb-2.5">
-            <div className="flex items-center gap-1.5">
-              <Cpu size={14} className="text-amber-500" />
-              <h3 className="text-xs font-bold text-slate-900">
-                Факторный анализ задержки (SHAP)
-              </h3>
+        {/* Section 2: ФАКТОРНЫЙ АНАЛИЗ ЗАДЕРЖКИ (SHAP) */}
+        <div className="p-3 rounded-xl bg-slate-50/70 border border-slate-200/80 shadow-2xs">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5 text-xs font-black text-slate-800 uppercase">
+              <Cpu size={14} className="text-blue-600" />
+              <span>ФАКТОРНЫЙ АНАЛИЗ ЗАДЕРЖКИ (SHAP)</span>
             </div>
-            <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
-              XAI
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-200/70">
+              +12.0 мин
             </span>
           </div>
 
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             {shapFactors.map((factor, idx) => (
               <div key={idx} className="space-y-1">
                 <div className="flex items-center justify-between text-[11px]">
-                  <span className="font-medium text-slate-700">{factor.title}</span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-slate-800">
-                      +{factor.delayMinutes.toFixed(1)} мин
+                  <span className="font-medium text-slate-700 truncate max-w-[210px]">
+                    {factor.title}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <span className="font-bold text-slate-900">
+                      {factor.delayMinutes > 0 ? `+${factor.delayMinutes.toFixed(1)}` : factor.delayMinutes.toFixed(1)}
                     </span>
-                    <span className="text-[10px] text-slate-400 font-semibold">
+                    <span className="text-[10px] text-slate-500 font-bold">
                       ({factor.percent}%)
                     </span>
                   </div>
                 </div>
 
-                {/* Progress bar */}
-                <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-700"
                     style={{
@@ -298,61 +206,49 @@ export const Inspector: React.FC<InspectorProps> = ({
           </div>
         </div>
 
-        {/* 4. Prescriptive Analytics: Algorithm Recommendation */}
-        {recommendation && (
-          <div
-            className={`p-3.5 rounded-xl border transition-all ${
+        {/* Section 3: Рекомендация алгоритма matching screenshot */}
+        <div className="p-3 rounded-xl bg-sky-50/60 border border-sky-200 shadow-sm">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="flex items-center gap-1.5 text-xs font-black text-blue-900">
+              <Bot size={15} className="text-blue-600" />
+              <span>Рекомендация алгоритма</span>
+            </div>
+            <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+              ЭФФЕКТ: {recommendation.effectPercent}%
+            </span>
+          </div>
+
+          {/* Operational Action Sub-label */}
+          <div className="text-[9px] font-black text-slate-500 uppercase tracking-wider mb-1">
+            ОПЕРАТИВНОЕ ДЕЙСТВИЕ:
+          </div>
+
+          {/* Main Action Instruction */}
+          <p className="text-xs font-black text-slate-900 leading-snug">
+            {recommendation.text}
+          </p>
+
+          {/* Info callout matching screenshot */}
+          <div className="mt-2 p-2 rounded-lg bg-white/80 border border-sky-100 flex items-start gap-1.5 text-[11px] text-slate-600 leading-snug">
+            <Info size={14} className="text-sky-600 shrink-0 mt-0.5" />
+            <span>{recommendation.infoText}</span>
+          </div>
+
+          {/* Full-width Big Green CTA Button */}
+          <button
+            onClick={() => !isApplied && onApplyHolding(alert.id)}
+            disabled={isApplied}
+            className={`w-full mt-3 py-2.5 px-4 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all shadow-md ${
               isApplied
-                ? "bg-emerald-50/80 border-emerald-300 shadow-sm"
-                : "bg-gradient-to-br from-white to-blue-50/40 border-blue-200 shadow-md ring-1 ring-blue-500/10"
+                ? "bg-emerald-600 text-white cursor-default shadow-emerald-500/20"
+                : "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/30 hover:shadow-lg cursor-pointer active:scale-[0.99]"
             }`}
           >
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-1.5">
-                <ShieldCheck size={15} className={isApplied ? "text-emerald-600" : "text-blue-600"} />
-                <h3 className="text-xs font-bold text-slate-900">
-                  Рекомендация алгоритма (Holding)
-                </h3>
-              </div>
-              <span
-                className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-                  isApplied
-                    ? "bg-emerald-200/70 text-emerald-800"
-                    : "bg-emerald-100 text-emerald-800"
-                }`}
-              >
-                Эффект: {recommendation.effectPercent}%
-              </span>
-            </div>
-
-            <p className="text-xs text-slate-700 leading-relaxed font-medium">
-              {recommendation.text}
-            </p>
-
-            {/* Action CTA Button */}
-            <button
-              onClick={() => !isApplied && onApplyHolding(alert?.id || "")}
-              disabled={isApplied}
-              className={`w-full mt-3 py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-md ${
-                isApplied
-                  ? "bg-emerald-600 text-white cursor-default shadow-emerald-500/20"
-                  : "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/40 active:scale-[0.99] cursor-pointer"
-              }`}
-            >
-              {isApplied ? (
-                <>
-                  <CheckCircle2 size={16} />
-                  <span>✓ Применено и передано в АСУ-РДС</span>
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 size={16} />
-                  <span>✓ Применить и передать в АСУ</span>
-                </>
-              )}
-            </button>
-          </div>
-        )}
+            <CheckCircle2 size={16} />
+            <span>{isApplied ? "✓ Применено и передано в АСУ" : "✓ Применить и передать в АСУ"}</span>
+          </button>
+        </div>
       </div>
     </aside>
   );
