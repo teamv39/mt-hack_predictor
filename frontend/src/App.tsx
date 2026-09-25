@@ -49,7 +49,7 @@ export default function App() {
       />
 
       {/* 2. Main Dashboard Workspace */}
-      <main className="relative flex-1 w-full h-full overflow-hidden">
+      <main className="relative flex-1 min-h-0 w-full overflow-hidden">
         {/* Fullscreen Interactive Map */}
         <div className="absolute inset-0 w-full h-full z-0">
           <MapView

@@ -106,7 +106,7 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
       </div>
 
       {/* 3. Predictive Alert Cards List */}
-      <div className="p-3 flex flex-col gap-3 overflow-y-auto max-h-[calc(100vh-160px)] scrollbar-thin">
+      <div className="flex-1 p-3 flex flex-col gap-3 overflow-y-auto scrollbar-thin">
         {filteredAlerts.map((alert) => {
           const isSelected = alert.id === selectedAlertId;
 
