@@ -334,8 +334,8 @@ export const MapView: React.FC<MapViewProps> = ({
         </button>
       </div>
 
-      {/* Floating Bottom-Left CCTV Widget matching screenshot */}
-      <div className="absolute bottom-5 left-4 z-20 pointer-events-auto">
+      {/* Floating Bottom-Left CCTV Widget (Positioned clear of left panel) */}
+      <div className="absolute bottom-5 left-[390px] z-20 pointer-events-auto">
         <div className="w-64 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-lg overflow-hidden">
           {/* Header */}
           <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between">

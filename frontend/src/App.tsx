@@ -49,23 +49,24 @@ export default function App() {
       />
 
       {/* 2. Main Dashboard Workspace */}
-      <main className="relative flex-1 w-full overflow-hidden">
-        {/* Fullscreen Interactive Map with CartoDB Positron & Floating Widgets */}
-        <MapView
-          route={route}
-          vehicles={vehicles}
-          alert={selectedAlert}
-          selectedVehicleId={selectedVehicleId}
-          onSelectVehicle={handleSelectVehicle}
-          flyToTarget={flyToTarget}
-          timeStep={timeStep}
-          onTimeStepChange={(step) => controlSimulation("step", step)}
-          camera={camera}
-        />
+      <main className="relative flex-1 w-full h-full overflow-hidden">
+        {/* Fullscreen Interactive Map */}
+        <div className="absolute inset-0 w-full h-full z-0">
+          <MapView
+            route={route}
+            vehicles={vehicles}
+            alert={selectedAlert}
+            selectedVehicleId={selectedVehicleId}
+            onSelectVehicle={handleSelectVehicle}
+            flyToTarget={flyToTarget}
+            timeStep={timeStep}
+            onTimeStepChange={(step) => controlSimulation("step", step)}
+            camera={camera}
+          />
+        </div>
 
-        {/* Floating Side Panels Overlay (Glassmorphism & Cards with 20px edge margin) */}
-        <div className="absolute top-4 bottom-4 left-5 right-5 pointer-events-none flex justify-between gap-6 z-10">
-          {/* Left Column: Center of Incidents / Alert Radar */}
+        {/* Floating Left Panel (Alert Radar) */}
+        <div className="absolute top-4 bottom-6 left-4 z-10 pointer-events-none flex flex-col">
           <AlertRadar
             alerts={alerts}
             selectedAlertId={selectedAlertId}
@@ -75,8 +76,10 @@ export default function App() {
             activeFilter={activeFilter}
             setActiveFilter={setActiveFilter}
           />
+        </div>
 
-          {/* Right Column: Fleet Inspector & DSS Prescriptive Recommendations */}
+        {/* Floating Right Panel (Inspector) */}
+        <div className="absolute top-4 bottom-6 right-4 z-10 pointer-events-none flex flex-col">
           <Inspector
             vehicle={selectedVehicle}
             alert={selectedAlert}
