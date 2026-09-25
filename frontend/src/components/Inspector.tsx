@@ -235,6 +235,52 @@ export const Inspector: React.FC<InspectorProps> = ({
             <span>{recommendation.infoText}</span>
           </div>
 
+          {/* Infrastructure Safeguard Badges */}
+          <div className="mt-2.5 pt-2 border-t border-sky-100 flex flex-wrap gap-1.5 text-[10px]">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white font-medium text-slate-700 border border-slate-200 shadow-2xs">
+              <span className="text-emerald-500 font-bold">✓</span> Заездной карман: Есть
+            </span>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white font-medium text-slate-700 border border-slate-200 shadow-2xs">
+              <span className="text-emerald-500 font-bold">✓</span> Смежные линии: 1 (Свободно)
+            </span>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white font-medium text-slate-700 border border-slate-200 shadow-2xs">
+              <span className="text-blue-500 font-bold">⏱</span> Демпфер: max 180с
+            </span>
+          </div>
+
+          {/* Passenger Cabin Media Screen Live Preview */}
+          <div className="mt-3 p-2.5 rounded-xl bg-slate-900 text-white shadow-inner border border-slate-800">
+            <div className="flex items-center justify-between text-[10px] pb-1.5 mb-1.5 border-b border-slate-800 text-slate-400 font-bold tracking-wide uppercase">
+              <span className="flex items-center gap-1.5 text-amber-400">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                </span>
+                ТАБЛО САЛОНА (БОРТ №{vehicle.badgeLabel})
+              </span>
+              <span className="text-emerald-400 font-mono text-[11px] font-bold">
+                {isApplied ? "СТОЯНКА: 02:18" : "В ДВИЖЕНИИ"}
+              </span>
+            </div>
+
+            <div className="text-[11px] leading-tight font-medium text-slate-200">
+              {isApplied ? (
+                <>
+                  <div className="text-amber-300 font-bold text-[12px] mb-1">
+                    ⚠️ Техническая стоянка для выравнивания интервала
+                  </div>
+                  <div className="text-[10px] text-slate-300">
+                    АСУ-РДС • Двери разблокированы для выхода • До м. Бауманская 4 мин
+                  </div>
+                </>
+              ) : (
+                <div className="text-slate-400 text-[10px]">
+                  Режим штатного информирования: «Следующая остановка: ул. Бауманская»
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Full-width Big Green CTA Button */}
           <button
             onClick={() => !isApplied && onApplyHolding(alert.id)}
