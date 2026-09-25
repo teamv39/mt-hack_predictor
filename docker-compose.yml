@@ -28,12 +28,25 @@ services:
       - "9201:9201"
     volumes:
       - ./data:/app/data:ro
+      - ./dataset:/app/dataset:ro
     environment:
       - PORT=8080
       - NDTP_PORT=9201
       - ML_SERVICE_URL=http://ml:8000
     depends_on:
       - ml
+    restart: unless-stopped
+    networks:
+      - mt-network
+
+  # Official NDTP Telemetry Stream Emulator (Port :18080)
+  ndtp-emu:
+    image: ndtp-telemetry-emulator:1.0
+    container_name: mt-predictor-ndtp-emu
+    ports:
+      - "18080:18080"
+    depends_on:
+      - backend
     restart: unless-stopped
     networks:
       - mt-network
