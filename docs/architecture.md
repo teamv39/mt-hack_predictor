@@ -51,13 +51,13 @@ graph TD
     SHAP --> FastAPI
 
     FeatureGen -->|Стрим телеметрии| Feeder
-    Feeder -->|POST /predict с фичами| FastAPI
-    FastAPI -->|Прогноз + SHAP веса| DecEngine
-    DecEngine -->|Готовые алерты & рекомендации| Broadcaster
+    Feeder -->|"POST /predict с фичами"| FastAPI
+    FastAPI -->|"Прогноз + SHAP веса"| DecEngine
+    DecEngine -->|"Готовые алерты & рекомендации"| Broadcaster
 
-    Broadcaster -->|WebSocket stream (JSON)| Frontend
-    Frontend -->|POST /recommendations/:id/apply| Broadcaster
-    Broadcaster -->|Команда на борт / в АСУ-РДС| ActionCTA
+    Broadcaster -->|"WebSocket stream (JSON)"| MapBox
+    Inspector -->|"POST /recommendations/:id/apply"| Broadcaster
+    Broadcaster -->|"Команда на борт / в АСУ-РДС"| ActionCTA
 ```
 
 ---
