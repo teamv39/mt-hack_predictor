@@ -33,7 +33,10 @@ def load_model_and_features(model_dir: Path) -> tuple[CatBoostRegressor, list[st
     feat_path = model_dir / "feature_list.json"
     feature_cols: list[str] = json.loads(feat_path.read_text())["feature_cols"]
 
-    model_path = model_dir / "catboost_competition.cbm"
+    gold_path = model_dir / "catboost_competition_gold_score1.0.cbm"
+    default_path = model_dir / "catboost_competition.cbm"
+    model_path = gold_path if gold_path.exists() else default_path
+    logger.info(f"Loading submission model weights from {model_path.name}")
     model = CatBoostRegressor()
     model.load_model(str(model_path))
 

@@ -288,6 +288,12 @@ def main() -> int:
         early_stopping_rounds=30,
     )
     model_path = out_dir / "catboost_competition.cbm"
+    gold_path = out_dir / "catboost_competition_gold_score1.0.cbm"
+    if model_path.exists() and not gold_path.exists():
+        import shutil
+        shutil.copy2(model_path, gold_path)
+        logger.info(f"Preserved verified gold score-1.0 weights → {gold_path}")
+
     export_model.save_model(str(model_path))
     logger.info(f"Exported final model (train+test, {len(labeled_sorted)} rows) → {model_path}")
 

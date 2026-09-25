@@ -1,8 +1,10 @@
-"""Training pipeline for CatBoost delay regressor (official MAE target).
+"""DEMO-ONLY: synthetic m3_scenario.json pipeline for legacy DSS bunching classifier
+and fallback delay regressor. Production training on the official competition dataset
+is src/models/train_competition.py.
 
-Optional bunching classifier is retained for live DSS only and is not part
-of the offline score. Feature engineering must respect anti-leakage:
-for moment T only traffic with event_time ≤ T and cur_dev_s may be used.
+Trains on synthetic scenario frames, applies TimeSeriesSplit validation, and
+exports legacy 13-feature models (catboost_delay_regressor.cbm and
+catboost_bunching_classifier.cbm) used by live DSS and fallback chains.
 """
 
 from __future__ import annotations
@@ -16,9 +18,14 @@ from catboost import CatBoostClassifier, CatBoostRegressor
 from sklearn.metrics import mean_absolute_error
 from sklearn.model_selection import TimeSeriesSplit
 
-from ..core.config import get_settings
-from ..core.logging import setup_logger
-from ..features.extractor import MODEL_FEATURE_NAMES
+try:
+    from ..core.config import get_settings
+    from ..core.logging import setup_logger
+    from ..features.extractor import LEGACY_FEATURE_NAMES
+except ImportError:
+    from src.core.config import get_settings
+    from src.core.logging import setup_logger
+    from src.features.extractor import LEGACY_FEATURE_NAMES
 
 logger = setup_logger("ml_trainer")
 
@@ -177,7 +184,7 @@ def train_and_export_models(
     df = engineer_training_features(df_raw)
     df = df.sort_values(by=["tick", "tr_id"]).reset_index(drop=True)
 
-    X = df[MODEL_FEATURE_NAMES]
+    X = df[LEGACY_FEATURE_NAMES]
     y_reg = df["target_delay_s"].astype(float)
     y_clf = df["target_bunching"].astype(int) if "target_bunching" in df.columns else pd.Series(np.zeros(len(df), dtype=int))
 

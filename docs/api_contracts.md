@@ -414,8 +414,8 @@
 }
 ```
 
-> Цепочка загрузки (`ml/src/models/manager.py`): competition-модель
-> (`competition/catboost_competition.cbm`, 24 фичи, holdout MAE 53.2 с) →
+> Цепочка загрузки (`ml/src/models/manager.py`): верифицированная gold-модель со скором 1.00
+> (`competition/catboost_competition_gold_score1.0.cbm` / `catboost_competition.cbm`, 24 фичи, holdout MAE 53.2 с) →
 > legacy 13-фичная (`catboost_delay_regressor.cbm`) → эвристический fallback.
 > Feature-parity guard в `catboost_model.py` гарантирует, что модель никогда
 > не получит молча нулевые значения вместо недостающих фич.

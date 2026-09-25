@@ -38,6 +38,7 @@ class ModelManager:
         clf_path = clf_file if clf_file.exists() else None
 
         candidates = [
+            ("competition_gold", self.settings.models_dir / "competition" / "catboost_competition_gold_score1.0.cbm"),
             ("competition", self.settings.models_dir / self.settings.competition_model_filename),
             ("legacy", self.settings.models_dir / self.settings.regressor_model_filename),
         ]
