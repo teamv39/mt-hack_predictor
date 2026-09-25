@@ -248,7 +248,7 @@
 
 ### 👑 7.3 — Go Backend Core & Ingestion (Денис) · Критерии 3 и 5
 
-#### **Задача 7.3.1 (P0): NDTP TCP Ingestion Server (Порт :9201)**
+#### **Задача 7.3.1 (P0): NDTP TCP Ingestion Server (Порт :9201) [ВЫПОЛНЕНО]**
 * **Цель:** Принимать живой бинарный поток пакетов от эмулятора `ndtp-telemetry-emulator` по официальной спецификации [docs/ndtp_emulator_spec.md](ndtp_emulator_spec.md).
 * **Файлы:**
   * `backend/internal/ndtp/server.go` — TCP listener на порту `0.0.0.0:9201`, менеджер горутин на каждое входящее TCP-соединение от терминала.
@@ -271,7 +271,7 @@
 
 ---
 
-#### **Задача 7.3.2 (P0): Интеграция с ML инференсом и асинхронный батчинг**
+#### **Задача 7.3.2 (P0): Интеграция с ML инференсом и асинхронный батчинг [ВЫПОЛНЕНО]**
 * **Цель:** Запрашивать предикты у Python-модели без блокировки сетевого цикла Go.
 * **Файл:** `backend/internal/mlclient/client.go`.
 * **Логика:**
@@ -282,7 +282,7 @@
 
 ---
 
-#### **Задача 7.3.3 (P0): Интерактивная спецификация Swagger / OpenAPI**
+#### **Задача 7.3.3 (P0): Интерактивная спецификация Swagger / OpenAPI [ВЫПОЛНЕНО]**
 * **Цель:** Выполнить прямое требование Критерия 3 (*«API работает: Swagger отвечает на пробный запрос»*).
 * **Файлы:** `backend/internal/api/swagger.go` + `docs/swagger.json`.
 * **Эндпоинт:** `GET /swagger` и `GET /swagger/doc.json`.
@@ -290,7 +290,7 @@
 
 ---
 
-#### **Задача 7.3.4 (P1): Полная оркестрация через Docker Compose с эмулятором**
+#### **Задача 7.3.4 (P1): Полная оркестрация через Docker Compose с эмулятором [ВЫПОЛНЕНО]**
 * **Цель:** Запуск всей демонстрационной инфраструктуры по 1 инструкции для жюри.
 * **Файл:** [docker-compose.yml](file:///Users/shteppinson/dev/hacks/mt-hack_predictor/docker-compose.yml).
 * **Сервисы:** `frontend` (:80, :5173), `backend` (:8080, :9201 TCP), `ml` (:8000), `ndtp-emu` (:18080).
@@ -381,10 +381,10 @@
 | **Data** | 7.2.1 Экстрактор фичей телеметрии | Артём | 🔴 P0 | `traffic.csv` | ⏳ В плане |
 | **Data** | 7.2.2 Map-matching к остановкам | Артём | 🟡 P1 | `schedule.csv` | ⏳ В плане |
 | **Data** | 7.2.3 Расчет Headway и рисков | Артём | 🟡 P1 | 7.2.1 | ⏳ В плане |
-| **Backend** | 7.3.1 NDTP TCP Listener (:9201) | Денис | 🔴 P0 | `ndtp_emulator_spec.md` | ⏳ В плане |
-| **Backend** | 7.3.2 Интеграция с ML + Fallback | Денис | 🔴 P0 | 7.1.6 | ⏳ В плане |
-| **Backend** | 7.3.3 Swagger UI (`/swagger`) | Денис | 🔴 P0 | `backend/main.go` | ⏳ В плане |
-| **Backend** | 7.3.4 Docker Compose со стеком | Денис | 🟡 P1 | 7.3.1, 7.3.3 | ⏳ В плане |
+| **Backend** | 7.3.1 NDTP TCP Listener (:9201) | Денис | 🔴 P0 | `ndtp_emulator_spec.md` | ✅ Реализован (пакеты, CRC, G6CellNav00, unitId) |
+| **Backend** | 7.3.2 Интеграция с ML + Fallback | Денис | 🔴 P0 | 7.1.6 | ✅ Реализован (debounced клиент, graceful fallback) |
+| **Backend** | 7.3.3 Swagger UI (`/swagger`) | Денис | 🔴 P0 | `backend/main.go` | ✅ Реализован (Swagger UI, /swagger/doc.json) |
+| **Backend** | 7.3.4 Docker Compose со стеком | Денис | 🟡 P1 | 7.3.1, 7.3.3 | ✅ Реализован (порты :8080, :9201, :8000, :5173) |
 | **Frontend** | 7.4.1 Карточка инцидента по ТЗ | Кирилл | 🔴 P0 | `Inspector.jsx` | ⏳ В плане |
 | **Frontend** | 7.4.2 Светофорная шкала рисков | Кирилл | 🔴 P0 | `MapView.jsx` | ⏳ В плане |
 | **Frontend** | 7.4.3 Actionable UI (Holding) | Кирилл | 🟡 P1 | `Inspector.jsx` | ⏳ В плане |

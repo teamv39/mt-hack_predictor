@@ -15,7 +15,7 @@ WORKDIR /app
 
 # Copy project definition and install dependencies
 COPY pyproject.toml .python-version ./
-RUN uv pip install --system --no-cache -r pyproject.toml
+RUN uv pip install --system --no-cache --extra-index-url https://download.pytorch.org/whl/cpu -r pyproject.toml
 
 COPY src ./src
 
