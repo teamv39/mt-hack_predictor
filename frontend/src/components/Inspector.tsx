@@ -40,73 +40,70 @@ export const Inspector: React.FC<InspectorProps> = ({
 
   return (
     <aside className="w-[390px] xl:w-[410px] h-full flex flex-col bg-white/95 backdrop-blur-xl rounded-2xl border border-slate-200/90 shadow-2xl overflow-hidden shrink-0 pointer-events-auto ring-1 ring-slate-900/5">
-      {/* 1. Header: Борт P1042, ЛиАЗ-6274 (Электробус), Status Banner */}
-      <div className="p-4 bg-slate-50/80 border-b border-slate-200/80 flex flex-col gap-2">
-        <div className="flex items-start justify-between">
-          <div>
+      {/* Scrollable Container with 4 Distinct Card Blocks */}
+      <div className="flex flex-col gap-3 p-3 overflow-y-auto max-h-[calc(100vh-140px)] scrollbar-thin">
+        {/* 1. Блок борта (Header card) */}
+        <div className="bg-white rounded-xl p-3.5 border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-black text-blue-600 tracking-tight">
+              <h2 className="text-base font-extrabold text-slate-900">
                 Борт {vehicle.id}
               </h2>
-              <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-slate-200 text-slate-800">
+              <span className="bg-blue-50 text-blue-700 text-xs font-semibold px-2 py-0.5 rounded-md border border-blue-200/60">
                 {vehicle.model}
               </span>
             </div>
-            <p className="text-xs font-bold text-slate-700 mt-0.5">
-              Рейс: {vehicle.routeId} ({vehicle.routeName})
-            </p>
+            <button className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors">
+              <X size={15} />
+            </button>
           </div>
 
-          <button className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-200/50 transition-colors">
-            <X size={16} />
-          </button>
+          <p className="text-xs text-slate-500 mt-1">
+            Рейс: {vehicle.routeId} ({vehicle.routeName})
+          </p>
+
+          {/* Status banner */}
+          <div
+            className={`mt-2 p-2 rounded-lg text-xs font-medium flex items-center gap-1.5 ${
+              isApplied
+                ? "bg-emerald-50/80 border border-emerald-200 text-emerald-800"
+                : "bg-amber-50/80 border border-amber-200 text-amber-800"
+            }`}
+          >
+            {isApplied ? (
+              <>
+                <ShieldCheck size={15} className="text-emerald-600 shrink-0" />
+                <span>Опоздание 2.5 мин → Прогноз на задержки: +2.5 мин (Штатно)</span>
+              </>
+            ) : (
+              <>
+                <AlertTriangle size={15} className="text-amber-600 shrink-0" />
+                <span>Опоздание 3 мин → Прогноз на задержки: +16 мин</span>
+              </>
+            )}
+          </div>
         </div>
 
-        {/* High contrast Status Banner */}
-        <div
-          className={`p-2.5 rounded-xl border text-xs font-bold flex items-center gap-2 shadow-2xs ${
-            isApplied
-              ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-              : "bg-rose-50 text-rose-800 border-rose-200"
-          }`}
-        >
-          {isApplied ? (
-            <>
-              <ShieldCheck size={16} className="text-emerald-600 shrink-0" />
-              <span>Опоздание 2.5 мин → Прогноз: +2.5 мин (Штатно)</span>
-            </>
-          ) : (
-            <>
-              <AlertTriangle size={16} className="text-rose-600 shrink-0" />
-              <span>Опоздание 3 мин → Прогноз на задержки: +16 мин</span>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* 2. Scrollable Body with Cleanly Separated Cards */}
-      <div className="flex-1 overflow-y-auto p-3.5 space-y-3.5 scrollbar-thin">
-        {/* Section 1: Card «ПЛАН VS ПРОГНОЗ ЗАДЕРЖКИ» */}
-        <div className="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-xs font-black text-slate-900 uppercase tracking-tight">
-              <TrendingUp size={15} className="text-blue-600" />
+        {/* 2. Блок «План vs Прогноз» (Chart card) */}
+        <div className="bg-white rounded-xl p-3.5 border border-slate-200 shadow-sm">
+          <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <TrendingUp size={14} className="text-blue-600" />
               <span>ПЛАН VS ПРОГНОЗ ЗАДЕРЖКИ</span>
             </div>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600">
+            <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
               По остановкам
             </span>
           </div>
 
-          {/* Recharts LineChart */}
-          <div className="w-full h-[155px] -ml-2 pt-1">
-            <ResponsiveContainer width="100%" height={155}>
+          <div className="w-full h-[160px] -ml-2">
+            <ResponsiveContainer width="100%" height={160}>
               <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                 <XAxis
                   dataKey="stop"
                   tick={{ fontSize: 9, fill: "#64748b", fontWeight: 600 }}
-                  axisLine={{ stroke: "#cbd5e1" }}
+                  axisLine={{ stroke: "#e2e8f0" }}
                   tickLine={false}
                 />
                 <YAxis
@@ -135,17 +132,17 @@ export const Inspector: React.FC<InspectorProps> = ({
                   ]}
                 />
 
-                {/* Plan Line */}
+                {/* Plan Line: with dots */}
                 <Line
                   type="monotone"
                   dataKey="plan"
                   stroke="#94a3b8"
                   strokeWidth={2}
                   strokeDasharray="4 4"
-                  dot={false}
+                  dot={{ r: 3, fill: "#94a3b8" }}
                 />
 
-                {/* Without DSS: Red curve */}
+                {/* Without DSS: Red curve with dots */}
                 <Line
                   type="monotone"
                   dataKey="withoutAction"
@@ -154,84 +151,82 @@ export const Inspector: React.FC<InspectorProps> = ({
                   dot={{ r: 3, fill: "#ef4444" }}
                 />
 
-                {/* With AI Holding: Green line */}
+                {/* With AI Holding: Green line with dots */}
                 <Line
                   type="monotone"
                   dataKey="withHolding"
                   stroke="#10b981"
-                  strokeWidth={2.5}
+                  strokeWidth={2}
                   dot={{ r: 3, fill: "#10b981" }}
                 />
               </LineChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Legend */}
-          <div className="flex items-center justify-between text-[10px] text-slate-600 border-t border-slate-100 pt-2 px-1">
+          {/* Compact Legend at bottom */}
+          <div className="flex items-center justify-between text-[10px] text-slate-500 border-t border-slate-100 pt-2 px-1 mt-1">
             <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-1 bg-slate-400 rounded-full"></span>
-              <span className="font-medium">План (график)</span>
+              <span className="w-2 h-2 bg-slate-400 rounded-full"></span>
+              <span>План</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 bg-rose-500 rounded-xs"></span>
-              <span className="font-bold text-rose-700">Прогноз (без мер)</span>
+              <span className="w-2 h-2 bg-rose-500 rounded-xs"></span>
+              <span className="font-bold text-rose-600">Прогноз (без мер)</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full"></span>
-              <span className="font-bold text-emerald-700">С рекомендацией ИИ</span>
+              <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
+              <span className="font-bold text-emerald-600">С рекомендацией ИИ</span>
             </div>
           </div>
         </div>
 
-        {/* Section 2: Card «ФАКТОРНЫЙ АНАЛИЗ ЗАДЕРЖКИ (SHAP)» */}
-        <div className="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs space-y-2.5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-xs font-black text-slate-900 uppercase tracking-tight">
-              <Cpu size={15} className="text-blue-600" />
-              <span>ФАКТОРНЫЙ АНАЛИЗ ЗАДЕРЖКИ (SHAP)</span>
+        {/* 3. Блок «Факторный анализ (SHAP)» (XAI card) */}
+        <div className="bg-white rounded-xl p-3.5 border border-slate-200 shadow-sm">
+          <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <Cpu size={14} className="text-blue-600" />
+              <span>ФАКТОРНЫЙ АНАЛИЗ (SHAP)</span>
             </div>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-200">
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200">
               +12.0 мин
             </span>
           </div>
 
-          <div className="space-y-2.5 pt-1">
-            {shapFactors.map((factor, idx) => (
-              <div key={idx} className="space-y-1">
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="font-semibold text-slate-800 truncate max-w-[220px]">
-                    {factor.title}
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <span className="font-black text-slate-900">
-                      {factor.delayMinutes > 0 ? `+${factor.delayMinutes.toFixed(1)}` : factor.delayMinutes.toFixed(1)}
-                    </span>
-                    <span className="text-[10px] text-slate-500 font-bold">
-                      ({factor.percent}%)
+          <div className="space-y-2.5 mt-2">
+            {shapFactors.map((factor, idx) => {
+              let barColor = "bg-rose-500";
+              const titleLower = factor.title.toLowerCase();
+              if (titleLower.includes("посадк") || titleLower.includes("пассажир") || titleLower.includes("осадк")) {
+                barColor = "bg-sky-500";
+              } else if (titleLower.includes("светофор") || titleLower.includes("регулирован") || titleLower.includes("ттк")) {
+                barColor = "bg-indigo-500";
+              }
+
+              return (
+                <div key={idx}>
+                  <div className="flex justify-between text-xs font-medium text-slate-700 mb-1">
+                    <span className="truncate max-w-[220px]">{factor.title}</span>
+                    <span className="font-semibold text-slate-900 shrink-0">
+                      {factor.delayMinutes > 0 ? `+${factor.delayMinutes.toFixed(1)}` : factor.delayMinutes.toFixed(1)} мин ({factor.percent}%)
                     </span>
                   </div>
+                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full ${barColor} rounded-full transition-all duration-700`}
+                      style={{ width: `${factor.percent}%` }}
+                    />
+                  </div>
                 </div>
-
-                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200/60">
-                  <div
-                    className="h-full rounded-full transition-all duration-700"
-                    style={{
-                      width: `${factor.percent}%`,
-                      backgroundColor: factor.color,
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
-        {/* Section 3: Card «РЕКОМЕНДАЦИЯ АЛГОРИТМА» */}
-        <div className="p-3.5 rounded-xl bg-gradient-to-br from-emerald-50/80 to-sky-50/60 border border-emerald-300 shadow-sm space-y-2.5">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-xs font-black text-blue-900 uppercase tracking-tight">
-              <Bot size={16} className="text-blue-600" />
+        {/* 4. Блок «Рекомендация алгоритма» (Action card) */}
+        <div className="bg-gradient-to-b from-emerald-50/50 to-white border border-emerald-200 rounded-xl p-3.5 shadow-sm">
+          <div className="flex justify-between items-center text-xs font-bold text-emerald-900">
+            <div className="flex items-center gap-1.5">
+              <Bot size={15} className="text-emerald-700" />
               <span>Рекомендация алгоритма</span>
             </div>
             <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
@@ -239,77 +234,34 @@ export const Inspector: React.FC<InspectorProps> = ({
             </span>
           </div>
 
-          {/* Operational Action Sub-label */}
-          <div className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
-            ОПЕРАТИВНОЕ ДЕЙСТВИЕ ДИСПЕТЧЕРА:
-          </div>
+          <p className="text-xs font-semibold text-slate-800 mt-1.5 leading-snug">
+            {recommendation.text}
+          </p>
 
-          {/* Main Action Instruction Callout */}
-          <div className="p-2.5 rounded-xl bg-white/95 border border-slate-200/90 shadow-2xs">
-            <p className="text-xs font-black text-slate-900 leading-relaxed">
-              {recommendation.text}
-            </p>
-          </div>
-
-          {/* Info Impact Explanation */}
-          <div className="p-2 rounded-lg bg-emerald-100/60 border border-emerald-200/70 flex items-start gap-1.5 text-[11px] text-emerald-900 leading-snug">
-            <Info size={14} className="text-emerald-700 shrink-0 mt-0.5" />
+          <div className="mt-2 p-2 rounded-lg bg-emerald-50/80 border border-emerald-100 flex items-start gap-1.5 text-[11px] text-emerald-900 leading-snug">
+            <Info size={13} className="text-emerald-700 shrink-0 mt-0.5" />
             <span>{recommendation.infoText}</span>
           </div>
+
           {/* Infrastructure Safeguard Badges */}
-          <div className="mt-2.5 pt-2 border-t border-sky-100 flex flex-wrap gap-1.5 text-[10px]">
+          <div className="mt-2.5 pt-2 border-t border-emerald-100 flex flex-wrap gap-1.5 text-[10px]">
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white font-medium text-slate-700 border border-slate-200 shadow-2xs">
               <span className="text-emerald-500 font-bold">✓</span> Заездной карман: Есть
             </span>
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white font-medium text-slate-700 border border-slate-200 shadow-2xs">
-              <span className="text-emerald-500 font-bold">✓</span> Смежные линии: 1 (Свободно)
+              <span className="text-emerald-500 font-bold">✓</span> Смежные линии: Свободно
             </span>
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white font-medium text-slate-700 border border-slate-200 shadow-2xs">
               <span className="text-blue-500 font-bold">⏱</span> Демпфер: max 180с
             </span>
           </div>
 
-          {/* Passenger Cabin Media Screen Live Preview */}
-          <div className="mt-3 p-2.5 rounded-xl bg-slate-900 text-white shadow-inner border border-slate-800">
-            <div className="flex items-center justify-between text-[10px] pb-1.5 mb-1.5 border-b border-slate-800 text-slate-400 font-bold tracking-wide uppercase">
-              <span className="flex items-center gap-1.5 text-amber-400">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-                </span>
-                ТАБЛО САЛОНА (БОРТ №{vehicle.badgeLabel})
-              </span>
-              <span className="text-emerald-400 font-mono text-[11px] font-bold">
-                {isApplied ? "СТОЯНКА: 02:18" : "В ДВИЖЕНИИ"}
-              </span>
-            </div>
-
-            <div className="text-[11px] leading-tight font-medium text-slate-200">
-              {isApplied ? (
-                <>
-                  <div className="text-amber-300 font-bold text-[12px] mb-1">
-                    ⚠️ Техническая стоянка для выравнивания интервала
-                  </div>
-                  <div className="text-[10px] text-slate-300">
-                    АСУ-РДС • Двери разблокированы для выхода • До м. Бауманская 4 мин
-                  </div>
-                </>
-              ) : (
-                <div className="text-slate-400 text-[10px]">
-                  Режим штатного информирования: «Следующая остановка: ул. Бауманская»
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Full-width Juicy CTA Button */}
+          {/* Full-width Big Button */}
           <button
             onClick={() => !isApplied && onApplyHolding(alert.id)}
             disabled={isApplied}
-            className={`w-full mt-2 flex items-center justify-center gap-2 font-bold py-2.5 px-4 rounded-xl shadow-md transition-all ${
-              isApplied
-                ? "bg-emerald-700 text-white cursor-default shadow-emerald-700/30"
-                : "bg-emerald-600 hover:bg-emerald-700 text-white active:scale-95 cursor-pointer shadow-emerald-600/30 hover:shadow-lg"
+            className={`w-full mt-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 rounded-lg shadow-sm flex items-center justify-center gap-2 transition-all active:scale-95 ${
+              isApplied ? "bg-emerald-700 text-white cursor-default shadow-none" : "cursor-pointer"
             }`}
           >
             <CheckCircle2 size={16} />

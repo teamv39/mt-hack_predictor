@@ -5,8 +5,6 @@ import {
   SlidersHorizontal,
   Clock,
   X,
-  MapPin,
-  AlertTriangle,
 } from "lucide-react";
 import { AlertItem } from "../mock/telemetry";
 
@@ -108,7 +106,7 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
       </div>
 
       {/* 3. Predictive Alert Cards List */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3 scrollbar-thin">
+      <div className="flex flex-col gap-3 p-3 overflow-y-auto max-h-[calc(100vh-160px)] scrollbar-thin">
         {filteredAlerts.map((alert) => {
           const isSelected = alert.id === selectedAlertId;
 
@@ -116,70 +114,54 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
             <div
               key={alert.id}
               onClick={() => onSelectAlert(alert)}
-              className={`p-3.5 rounded-xl border transition-all cursor-pointer text-left ${
+              className={`bg-white/95 rounded-xl p-3.5 shadow-sm border transition-all cursor-pointer ${
                 isSelected
-                  ? "bg-blue-50/50 border-blue-500 shadow-md ring-2 ring-blue-500/20"
-                  : "bg-slate-50/70 hover:bg-white border-slate-200/90 shadow-2xs hover:shadow-md"
+                  ? "border-blue-500 ring-2 ring-blue-500/20 shadow-md bg-blue-50/30"
+                  : "border-slate-200/80 hover:shadow-md hover:border-blue-400"
               }`}
             >
-              {/* Badge Strip */}
-              <div className="flex items-center gap-1.5 mb-2 flex-wrap">
-                {/* Clock / Urgency Badge */}
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100/90 text-amber-900 border border-amber-200/80">
-                  <Clock size={11} className="text-amber-700" />
-                  {alert.urgencyBadge}
+              {/* Upper row: Time badge on left, incident type on right */}
+              <div className="flex items-center justify-between mb-2">
+                <span className="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border border-amber-200/60">
+                  <Clock size={12} className="text-amber-700" />
+                  <span>{alert.urgencyBadge}</span>
                 </span>
 
-                {/* Route Badge */}
-                <span className="px-1.5 py-0.5 rounded bg-sky-100 text-sky-800 font-black text-[10px] border border-sky-200">
-                  {alert.routeNumberBadge}
-                </span>
-
-                {/* Risk Tag */}
                 <span
-                  className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                  className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                     alert.tagType === "bunching"
-                      ? "bg-rose-100 text-rose-800 border-rose-200"
+                      ? "bg-rose-100 text-rose-700 border border-rose-200/60"
                       : alert.tagType === "interval"
-                      ? "bg-sky-100 text-sky-800 border-sky-200"
-                      : "bg-teal-100 text-teal-800 border-teal-200"
+                      ? "bg-sky-100 text-sky-700 border border-sky-200/60"
+                      : "bg-emerald-100 text-emerald-700 border border-emerald-200/60"
                   }`}
                 >
                   {alert.tag}
                 </span>
               </div>
 
-              {/* Title & Delay Header */}
-              <div className="flex items-center justify-between gap-1">
-                <h3 className="text-[13px] font-black text-slate-900 tracking-tight">
-                  {alert.title}
-                </h3>
-                <span className="text-xs font-black text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-md">
+              {/* Middle row: Vehicle title + Red Delay Badge */}
+              <div className="text-sm font-bold text-slate-900 flex justify-between items-center">
+                <span>{alert.title}</span>
+                <span className="bg-rose-50 text-rose-700 border border-rose-200 text-xs font-bold px-2 py-0.5 rounded-md">
                   {alert.delayLabel}
                 </span>
               </div>
 
-              {/* Structured Incident Details (Clean separated box) */}
-              <div className="my-2 p-2 rounded-lg bg-white/90 border border-slate-200/70 text-[11px] text-slate-600 leading-snug space-y-1">
-                <div className="flex items-start gap-1.5">
-                  <MapPin size={12} className="text-slate-400 shrink-0 mt-0.5" />
-                  <span className="font-semibold text-slate-700 truncate">{alert.locationName}</span>
-                </div>
-                <div className="flex items-start gap-1.5">
-                  <AlertTriangle size={12} className="text-amber-500 shrink-0 mt-0.5" />
-                  <span className="text-slate-600 leading-snug">{alert.description}</span>
-                </div>
-              </div>
+              {/* Description: Breathable typography, no squeezed font */}
+              <p className="text-xs text-slate-500 leading-relaxed my-2 line-clamp-2">
+                {alert.description}
+              </p>
 
-              {/* Neural Network Confidence Progress Bar */}
-              <div className="pt-1.5 border-t border-slate-200/60">
-                <div className="flex items-center justify-between text-[10px] mb-1 text-slate-600">
-                  <span className="font-semibold text-slate-500">Уверенность нейросети</span>
-                  <span className="font-black text-slate-900">{alert.confidence}%</span>
+              {/* Bottom row: Neural Confidence ML Progress Bar */}
+              <div className="mt-2 pt-2 border-t border-slate-100">
+                <div className="text-[11px] text-slate-400 font-medium flex justify-between items-center">
+                  <span>Уверенность нейросети:</span>
+                  <span className="font-bold text-slate-700">{alert.confidence}%</span>
                 </div>
-                <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mt-1">
                   <div
-                    className="h-full bg-slate-900 rounded-full transition-all duration-500"
+                    className="bg-blue-600 h-full rounded-full transition-all duration-500"
                     style={{ width: `${alert.confidence}%` }}
                   />
                 </div>
@@ -190,7 +172,7 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
       </div>
 
       {/* 4. Bottom Status Strip */}
-      <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-200/80 flex items-center justify-between text-[11px] text-slate-600 font-medium">
+      <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-200/80 flex items-center justify-between text-[11px] text-slate-600 font-medium mt-auto">
         <div className="flex items-center gap-2">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
