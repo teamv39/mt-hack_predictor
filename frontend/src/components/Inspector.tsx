@@ -41,7 +41,7 @@ export const Inspector: React.FC<InspectorProps> = ({
   return (
     <aside className="w-[400px] h-full max-h-[calc(100vh-100px)] flex flex-col bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200 shadow-2xl overflow-hidden pointer-events-auto shrink-0">
       {/* Scrollable Container with 4 Distinct Card Blocks */}
-      <div className="flex flex-col p-3 overflow-y-auto max-h-[calc(100vh-100px)] scrollbar-thin">
+      <div className="flex-1 flex flex-col p-3 overflow-y-auto scrollbar-thin pb-6">
         {/* 1. Блок борта (Header card) */}
         <div className="bg-slate-50/80 rounded-xl p-3 border border-slate-200 mb-2.5">
           <div className="flex items-center justify-between">
@@ -140,6 +140,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                   strokeWidth={2}
                   strokeDasharray="4 4"
                   dot={{ r: 3, fill: "#94a3b8" }}
+                  isAnimationActive={false}
                 />
 
                 {/* Without DSS: Red curve with dots */}
@@ -149,6 +150,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                   stroke="#ef4444"
                   strokeWidth={2.5}
                   dot={{ r: 3, fill: "#ef4444" }}
+                  isAnimationActive={false}
                 />
 
                 {/* With AI Holding: Green line with dots */}
@@ -158,6 +160,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                   stroke="#10b981"
                   strokeWidth={2}
                   dot={{ r: 3, fill: "#10b981" }}
+                  isAnimationActive={false}
                 />
               </LineChart>
             </ResponsiveContainer>
