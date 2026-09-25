@@ -299,3 +299,30 @@ func (m *Matcher) StopsCount() int {
 	defer m.mu.RUnlock()
 	return len(m.allStops)
 }
+
+// GetAllStops returns up to limit stops from the indexed timetable.
+func (m *Matcher) GetAllStops(limit int) []Stop {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	if limit <= 0 || limit > len(m.allStops) {
+		limit = len(m.allStops)
+	}
+	out := make([]Stop, limit)
+	copy(out, m.allStops[:limit])
+	return out
+}
+
+// GetStopsForVehicle returns the chronological sequence of timetable stops for a specific vehicle.
+func (m *Matcher) GetStopsForVehicle(trID string) []Stop {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	stops, ok := m.stopsByTrID[trID]
+	if !ok {
+		return nil
+	}
+	out := make([]Stop, len(stops))
+	copy(out, stops)
+	return out
+}

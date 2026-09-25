@@ -138,6 +138,97 @@
 
 ---
 
+### 1.7. `POST /api/v1/what-if`
+Механизм "What-if" сценарного моделирования (Критерий «Дополнительные фичи»). Рассчитывает влияние регулирующего воздействия на интервалы, время ожидания пассажиров по формуле Велдинга ($E[W]$) и прямой экономический эффект (₽/день).
+
+**Тело запроса:**
+```json
+{
+  "action": "HOLDING",
+  "route_id": "m3",
+  "target_vehicle_id": "1166336",
+  "hold_seconds": 150,
+  "daily_passengers": 25000
+}
+```
+
+**Ответ (200 OK):**
+```json
+{
+  "action": "HOLDING",
+  "target_vehicle_id": "1166336",
+  "baseline_wait_time_min": 7.4,
+  "simulated_wait_time_min": 4.9,
+  "wait_time_reduction_pct": 33.8,
+  "saved_passenger_hours_daily": 1041.7,
+  "economic_benefit_rub_daily": 468750.0,
+  "punctuality_before_pct": 66.7,
+  "punctuality_after_pct": 87.0,
+  "headways_before_sec": [90.0, 870.0, 480.0],
+  "headways_after_sec": [240.0, 720.0, 480.0],
+  "welding_explanation": "По формуле Велдинга E[W] = (H_mean/2)*(1 + Var(H)/H_mean^2), выравнивание интервала сокращает ожидание на 2.5 мин. Экономический эффект: ~468750 ₽/день."
+}
+```
+
+---
+
+### 1.8. `GET /api/v1/metrics/business`
+Бизнес-метрики и пассажирские KPI для Ситуационного центра ЦОДД / Мосгортранса.
+
+**Ответ (200 OK):**
+```json
+{
+  "punctuality_rate_pct": 94.8,
+  "headway_uniformity_pct": 88.5,
+  "average_passenger_wait_min": 4.2,
+  "active_bunched_pairs_count": 0,
+  "prevented_incidents_count": 6,
+  "saved_passenger_hours_daily": 300.0,
+  "economic_savings_rub_daily": 135000.0,
+  "active_tracked_vehicles": 23,
+  "active_alerts_count": 1
+}
+```
+
+---
+
+### 1.9. `GET /api/v1/stops?limit=200`
+Справочник реальных остановочных пунктов Москвы, проиндексированных из эталонного расписания (`schedule_plan.csv`).
+
+**Ответ (200 OK):**
+```json
+[
+  {
+    "ID": "53699433970",
+    "TrID": "122658",
+    "TimeBegin": "2026-01-06T06:36:00Z",
+    "Latitude": 55.8040083,
+    "Longitude": 37.43070705,
+    "Address": "Строгинское ш., д.1",
+    "ManualFill": false
+  }
+]
+```
+
+---
+
+### 1.10. `POST /api/v1/simulation/ndtp/start` & `stop`
+Управление официальным эмулятором бортовых терминалов NDTP (`ndtp-telemetry-emulator:1.0` на `:18080`) в 1 клик для демонстрации жюри.
+
+**Ответ (200 OK):**
+```json
+{
+  "status": "started",
+  "emulator_url": "http://ndtp-emu:18080",
+  "target_host": "backend",
+  "target_port": 9201,
+  "units": [1166336, 122658, 131672],
+  "stream_rate": "3s"
+}
+```
+
+---
+
 ## 2. ML Inference API (Python / FastAPI :8000)
 
 > **Официальный target:** `predicted_delay_sec` ≡ `target_delay_s` (сек, знак: `+` опоздание, `−` опережение).  
