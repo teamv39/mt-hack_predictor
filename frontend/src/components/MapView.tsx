@@ -1,34 +1,37 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import L from "leaflet";
 import {
   Play,
   Pause,
   SkipBack,
   ChevronRight,
+  ChevronLeft,
   Plus,
   Minus,
-  Layers,
   Crosshair,
-  Maximize2,
+  Layers,
+  AlertTriangle,
+  CheckCircle2,
+  Radio,
 } from "lucide-react";
 import { Vehicle, AlertItem, RouteData } from "../mock/telemetry";
+
+// Reliable GIS Canvas tiles (No API Key Required, crystal-clear situational view)
+const ESRI_LIGHT_TILES = "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}";
+const ESRI_DARK_TILES = "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}";
+const HORIZONS = ["Сейчас", "+15 мин", "+30 мин", "+45 мин"];
 
 interface MapViewProps {
   route: RouteData;
   vehicles: Vehicle[];
-  alert: AlertItem | null;
-  selectedVehicleId: string;
+  alert?: AlertItem | null;
+  selectedVehicleId?: string;
   onSelectVehicle: (id: string) => void;
-  flyToTarget: { lat: number; lon: number; zoom?: number } | null;
+  flyToTarget?: { lat: number; lon: number; zoom?: number } | null;
   timeStep: string;
   onTimeStepChange: (step: string) => void;
-  camera?: {
-    id: string;
-    location: string;
-    status: string;
-    footerText: string;
-  };
-  isDarkMode?: boolean;
+  camera?: any;
+  isDarkMode: boolean;
 }
 
 export const MapView: React.FC<MapViewProps> = ({
@@ -40,9 +43,10 @@ export const MapView: React.FC<MapViewProps> = ({
   flyToTarget,
   timeStep,
   onTimeStepChange,
-  isDarkMode = false,
+  camera,
+  isDarkMode,
 }) => {
-  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
 
@@ -51,27 +55,133 @@ export const MapView: React.FC<MapViewProps> = ({
   const vehiclesLayerRef = useRef<L.LayerGroup | null>(null);
   const polygonsLayerRef = useRef<L.LayerGroup | null>(null);
 
-  const [isPlaying, setIsPlaying] = useState<boolean>(true);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
-  // 1. Initialize Leaflet Map with CartoDB Positron / Dark Matter
+  const isHoldingApplied = alert?.recommendation?.applied ?? false;
+
+  // 1. Calculate projected vehicle positions across timeline horizons
+  const displayedVehicles = useMemo(() => {
+    if (timeStep === "Сейчас") {
+      return vehicles;
+    }
+
+    return vehicles.map((veh) => {
+      const is1042 = veh.id.includes("1042");
+      const is1043 = veh.id.includes("1043");
+
+      if (timeStep === "+15 мин") {
+        if (is1042) {
+          return {
+            ...veh,
+            latitude: 55.7808,
+            longitude: 37.7085,
+            speedKmh: 16,
+            currentStop: "Бакунинская ул., 84",
+            nextStop: "м. Электрозаводская",
+          };
+        }
+        if (is1043) {
+          if (isHoldingApplied) {
+            return {
+              ...veh,
+              latitude: 55.7750,
+              longitude: 37.6860,
+              speedKmh: 26,
+              status: "NORMAL" as const,
+              currentStop: "м. Бауманская (Holding отработан)",
+              nextStop: "Бакунинская ул.",
+            };
+          } else {
+            return {
+              ...veh,
+              latitude: 55.7801,
+              longitude: 37.7055, // caught up! bunching
+              speedKmh: 12,
+              status: "BUNCHING_RISK" as const,
+              currentStop: "Бакунинская ул.",
+              nextStop: "м. Электрозаводская",
+            };
+          }
+        }
+      } else if (timeStep === "+30 мин") {
+        if (is1042) {
+          return {
+            ...veh,
+            latitude: 55.7845,
+            longitude: 37.7225,
+            speedKmh: 28,
+            currentStop: "м. Электрозаводская",
+            nextStop: "м. Семёновская",
+          };
+        }
+        if (is1043) {
+          return {
+            ...veh,
+            latitude: isHoldingApplied ? 55.7798 : 55.7838,
+            longitude: isHoldingApplied ? 37.7040 : 37.7205,
+            speedKmh: isHoldingApplied ? 29 : 14,
+            status: isHoldingApplied ? ("NORMAL" as const) : ("BUNCHING_RISK" as const),
+            currentStop: isHoldingApplied ? "Бакунинская ул." : "м. Электрозаводская",
+            nextStop: isHoldingApplied ? "м. Электрозаводская" : "м. Семёновская",
+          };
+        }
+      } else if (timeStep === "+45 мин") {
+        if (is1042) {
+          return {
+            ...veh,
+            latitude: 55.7890,
+            longitude: 37.7340,
+            speedKmh: 22,
+            currentStop: "м. Семёновская (Конечная)",
+            nextStop: "Разворотное кольцо",
+          };
+        }
+        if (is1043) {
+          return {
+            ...veh,
+            latitude: isHoldingApplied ? 55.7848 : 55.7882,
+            longitude: isHoldingApplied ? 37.7230 : 37.7315,
+            speedKmh: 25,
+            status: isHoldingApplied ? ("NORMAL" as const) : ("BUNCHING_RISK" as const),
+            currentStop: isHoldingApplied ? "м. Электрозаводская" : "м. Семёновская",
+            nextStop: "м. Семёновская",
+          };
+        }
+      }
+      return veh;
+    });
+  }, [vehicles, timeStep, isHoldingApplied]);
+
+  // 2. Timeline auto-play timer
+  useEffect(() => {
+    if (!isPlaying) return;
+    const interval = setInterval(() => {
+      const idx = HORIZONS.indexOf(timeStep);
+      const nextIdx = (idx + 1) % HORIZONS.length;
+      onTimeStepChange(HORIZONS[nextIdx]);
+    }, 3500);
+    return () => clearInterval(interval);
+  }, [isPlaying, timeStep, onTimeStepChange]);
+
+  // 3. Initialize Leaflet Map with ESRI Canvas (Light Gray / Dark Gray)
   useEffect(() => {
     if (!mapContainerRef.current || mapInstanceRef.current) return;
 
+    const initialCenter: [number, number] = [55.7745, 37.6850];
+    const initialZoom = 13;
+
     const map = L.map(mapContainerRef.current, {
-      center: [55.7745, 37.6850], // Moscow: Baumanskaya corridor
-      zoom: 13,
+      center: initialCenter,
+      zoom: initialZoom,
       zoomControl: false,
       attributionControl: false,
     });
 
-    const tileUrl = isDarkMode
-      ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-      : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+    const tileUrl = isDarkMode ? ESRI_DARK_TILES : ESRI_LIGHT_TILES;
 
     tileLayerRef.current = L.tileLayer(tileUrl, {
-      maxZoom: 20,
-      subdomains: "abcd",
-      attribution: "© OpenStreetMap / CartoDB / Мосгортранс",
+      maxZoom: 18,
+      attribution: "© OpenStreetMap, Esri, Мосгортранс",
     }).addTo(map);
 
     polygonsLayerRef.current = L.layerGroup().addTo(map);
@@ -81,7 +191,17 @@ export const MapView: React.FC<MapViewProps> = ({
 
     mapInstanceRef.current = map;
 
+    // Invalidate size to guarantee full canvas rendering
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 150);
+
+    const handleResize = () => map.invalidateSize();
+    window.addEventListener("resize", handleResize);
+
     return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", handleResize);
       map.remove();
       mapInstanceRef.current = null;
     };
@@ -90,14 +210,11 @@ export const MapView: React.FC<MapViewProps> = ({
   // Update tilelayer on isDarkMode toggle
   useEffect(() => {
     if (!mapInstanceRef.current || !tileLayerRef.current) return;
-    const newTileUrl = isDarkMode
-      ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-      : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
-
+    const newTileUrl = isDarkMode ? ESRI_DARK_TILES : ESRI_LIGHT_TILES;
     tileLayerRef.current.setUrl(newTileUrl);
   }, [isDarkMode]);
 
-  // 2. Draw Route Polylines, Congestion Polygons, and Stop Markers
+  // 4. Draw Route Polylines, Congestion Polygons, and Stop Markers
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map || !routeLayerRef.current || !stopsLayerRef.current || !polygonsLayerRef.current) return;
@@ -124,7 +241,7 @@ export const MapView: React.FC<MapViewProps> = ({
     L.polygon(amberPolygonCoords, {
       color: "#d97706",
       fillColor: "#fbbf24",
-      fillOpacity: isDarkMode ? 0.25 : 0.18,
+      fillOpacity: isDarkMode ? 0.22 : 0.16,
       weight: 1.5,
       dashArray: "4 4",
     }).addTo(polygonsLayerRef.current);
@@ -132,7 +249,7 @@ export const MapView: React.FC<MapViewProps> = ({
     L.polygon(redCongestionCoords, {
       color: "#dc2626",
       fillColor: "#ef4444",
-      fillOpacity: isDarkMode ? 0.32 : 0.22,
+      fillOpacity: isDarkMode ? 0.28 : 0.2,
       weight: 1.5,
       dashArray: "3 3",
     }).addTo(polygonsLayerRef.current);
@@ -159,7 +276,9 @@ export const MapView: React.FC<MapViewProps> = ({
     const stopsList = [
       { name: "ул. Покровка", coords: [55.7645, 37.6610] as [number, number] },
       { name: "м. Бауманская", coords: [55.7724, 37.6791] as [number, number] },
-      { name: "Электрозаводская", coords: [55.7831, 37.7189] as [number, number] },
+      { name: "Бакунинская ул.", coords: [55.7785, 37.6970] as [number, number] },
+      { name: "м. Электрозаводская", coords: [55.7831, 37.7189] as [number, number] },
+      { name: "м. Семёновская", coords: [55.7890, 37.7340] as [number, number] },
     ];
 
     stopsList.forEach((stop) => {
@@ -193,12 +312,12 @@ export const MapView: React.FC<MapViewProps> = ({
     });
   }, [route, isDarkMode]);
 
-  // 3. Draw Vehicle Markers dynamically from vehicles prop
+  // 5. Draw Vehicle Markers dynamically from displayedVehicles
   useEffect(() => {
     if (!vehiclesLayerRef.current) return;
     vehiclesLayerRef.current.clearLayers();
 
-    vehicles.forEach((veh) => {
+    displayedVehicles.forEach((veh) => {
       const isSelected = veh.id === selectedVehicleId;
       const isBunching = veh.status === "BUNCHING_RISK";
       const isDelayed = veh.status === "DELAYED";
@@ -210,7 +329,7 @@ export const MapView: React.FC<MapViewProps> = ({
         ? `№${cleanId} • Пачкование ${veh.speedKmh} км/ч`
         : isDelayed
         ? `№${cleanId} • +${Math.round(veh.delaySeconds / 60)}м (${veh.speedKmh} км/ч)`
-        : `№${cleanId} (Лидер) • ${veh.speedKmh} км/ч`;
+        : `№${cleanId} • ${veh.speedKmh} км/ч`;
 
       const vehicleIcon = L.divIcon({
         className: `bus-marker-${veh.id}`,
@@ -275,21 +394,27 @@ export const MapView: React.FC<MapViewProps> = ({
       vehiclesLayerRef.current?.addLayer(marker);
     });
 
-    // 4. Headway Connector between trailing bus and leading bus
-    const trailingVeh = vehicles.find((v) => v.status === "BUNCHING_RISK") || vehicles.find((v) => v.id.includes("1042"));
-    const leadingVeh = vehicles.find((v) => v.id.includes("1043")) || vehicles.find((v) => v.status === "NORMAL" && v.id !== trailingVeh?.id);
+    // 6. Headway Connector between trailing bus and leading bus
+    const trailingVeh = displayedVehicles.find((v) => v.id.includes("1043"));
+    const leadingVeh = displayedVehicles.find((v) => v.id.includes("1042"));
 
     if (trailingVeh && leadingVeh) {
+      const isCritical =
+        timeStep === "+15 мин"
+          ? !isHoldingApplied
+          : trailingVeh.status === "BUNCHING_RISK" || leadingVeh.status === "BUNCHING_RISK";
+      const connectorColor = isCritical ? "#ef4444" : "#10b981";
+
       const connectorLine = L.polyline(
         [
           [trailingVeh.latitude, trailingVeh.longitude],
           [leadingVeh.latitude, leadingVeh.longitude],
         ],
         {
-          color: "#ef4444",
-          weight: 2.5,
-          dashArray: "5, 7",
-          opacity: 0.85,
+          color: connectorColor,
+          weight: 3,
+          dashArray: isCritical ? "5, 7" : "4, 6",
+          opacity: 0.9,
         }
       );
       vehiclesLayerRef.current.addLayer(connectorLine);
@@ -297,31 +422,43 @@ export const MapView: React.FC<MapViewProps> = ({
       // Midpoint interval tag
       const midLat = (trailingVeh.latitude + leadingVeh.latitude) / 2;
       const midLon = (trailingVeh.longitude + leadingVeh.longitude) / 2;
+
+      let intervalText = "Δ 1.4 мин • Схлопывание";
+      if (timeStep === "+15 мин") {
+        intervalText = isHoldingApplied
+          ? "Δ 7.5 мин • Такт стабилизирован (Holding)"
+          : "Δ 1.2 мин • Схлопывание (Пачкование)";
+      } else if (timeStep === "+30 мин") {
+        intervalText = isHoldingApplied ? "Δ 8.0 мин • Штатный такт" : "Δ 1.5 мин • Пачкование";
+      } else if (timeStep === "+45 мин") {
+        intervalText = isHoldingApplied ? "Δ 8.5 мин • График в норме" : "Δ 1.8 мин • Нарушение такта";
+      }
+
       const headwayBadge = L.divIcon({
         className: "headway-badge",
         html: `
           <div style="
-            background: #dc2626;
+            background: ${isCritical ? "#dc2626" : "#00875A"};
             color: #ffffff;
             font-size: 10px;
             font-weight: 800;
-            font-family: monospace;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             padding: 2px 8px;
             border-radius: 9999px;
             border: 1.5px solid #ffffff;
-            box-shadow: 0 2px 10px rgba(220, 38, 38, 0.5);
+            box-shadow: 0 2px 10px ${isCritical ? "rgba(220, 38, 38, 0.5)" : "rgba(0, 135, 90, 0.4)"};
             white-space: nowrap;
             transform: translate(-50%, -50%);
           ">
-            Δ 1.4 мин • Схлопывание
+            ${intervalText}
           </div>
         `,
-        iconSize: [140, 24],
-        iconAnchor: [70, 12],
+        iconSize: [200, 24],
+        iconAnchor: [100, 12],
       });
       vehiclesLayerRef.current.addLayer(L.marker([midLat, midLon], { icon: headwayBadge }));
     }
-  }, [vehicles, selectedVehicleId, onSelectVehicle, isDarkMode]);
+  }, [displayedVehicles, selectedVehicleId, onSelectVehicle, isDarkMode, timeStep, isHoldingApplied]);
 
   // FlyTo handler
   useEffect(() => {
@@ -332,6 +469,27 @@ export const MapView: React.FC<MapViewProps> = ({
       });
     }
   }, [flyToTarget]);
+
+  // Track click handler for smooth seeking
+  const handleTrackClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const ratio = Math.max(0, Math.min(1, clickX / rect.width));
+    const stepIdx = Math.round(ratio * (HORIZONS.length - 1));
+    onTimeStepChange(HORIZONS[stepIdx]);
+  };
+
+  const handleNextStep = () => {
+    const idx = HORIZONS.indexOf(timeStep);
+    const nextIdx = Math.min(HORIZONS.length - 1, idx + 1);
+    onTimeStepChange(HORIZONS[nextIdx]);
+  };
+
+  const handlePrevStep = () => {
+    const idx = HORIZONS.indexOf(timeStep);
+    const prevIdx = Math.max(0, idx - 1);
+    onTimeStepChange(HORIZONS[prevIdx]);
+  };
 
   return (
     <div className="relative w-full h-full flex-1 overflow-hidden select-none">
@@ -385,9 +543,48 @@ export const MapView: React.FC<MapViewProps> = ({
       </div>
 
       {/* 3. Floating Bottom Center Horizon Scrubber Capsule */}
-      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
+      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 pointer-events-auto flex flex-col items-center gap-1.5">
+        {/* ML Horizon Mode Indicator Badge */}
+        {timeStep === "+15 мин" ? (
+          <div
+            className={`px-3 py-1 rounded-full text-[11px] font-black flex items-center gap-1.5 shadow-lg border backdrop-blur-md transition-all ${
+              isHoldingApplied
+                ? "bg-emerald-600/90 text-white border-emerald-400"
+                : "bg-red-600/95 text-white border-red-400 animate-pulse"
+            }`}
+          >
+            {isHoldingApplied ? <CheckCircle2 size={13} /> : <AlertTriangle size={13} />}
+            <span>
+              {isHoldingApplied
+                ? "ГОРИЗОНТ T+15 мин: ИНТЕРВАЛ СТАБИЛИЗИРОВАН (HOLDING ПРИМЕНЕН)"
+                : "ГОРИЗОНТ ПРЕДИКТА ML T+15 мин: ПРОГНОЗ СХЛОПЫВАНИЯ ИНТЕРВАЛА"}
+            </span>
+          </div>
+        ) : timeStep === "Сейчас" ? (
+          <div
+            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 shadow border backdrop-blur-md ${
+              isDarkMode
+                ? "bg-slate-800/90 text-emerald-400 border-slate-700"
+                : "bg-white/95 text-emerald-700 border-slate-200"
+            }`}
+          >
+            <Radio size={11} className="animate-pulse text-emerald-500" />
+            <span>ОНЛАЙН ТЕЛЕМЕТРИЯ NDTP • ТЕКУЩИЙ МОМЕНТ</span>
+          </div>
+        ) : (
+          <div
+            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 shadow border backdrop-blur-md ${
+              isDarkMode
+                ? "bg-slate-800/90 text-blue-400 border-slate-700"
+                : "bg-white/95 text-blue-700 border-slate-200"
+            }`}
+          >
+            <span>ПРОГНОЗНЫЙ ГОРИЗОНТ ДВИЖЕНИЯ {timeStep}</span>
+          </div>
+        )}
+
         <div
-          className={`rounded-full border shadow-2xl px-4 py-2 flex items-center gap-3 w-[420px] max-w-[calc(100vw-750px)] backdrop-blur-xl transition-colors ${
+          className={`rounded-2xl border shadow-2xl px-4 py-2.5 flex items-center gap-3 w-[460px] max-w-[calc(100vw-750px)] backdrop-blur-xl transition-colors ${
             isDarkMode
               ? "bg-[#151D2A]/90 border-slate-700/80 text-slate-200 shadow-black/50"
               : "bg-white/95 border-slate-200/90 text-slate-800 shadow-slate-900/10"
@@ -396,27 +593,49 @@ export const MapView: React.FC<MapViewProps> = ({
           {/* Play/Pause Button */}
           <button
             onClick={() => setIsPlaying(!isPlaying)}
-            className={`w-7 h-7 rounded-full flex items-center justify-center transition-all shadow-sm shrink-0 cursor-pointer ${
-              isDarkMode ? "bg-blue-600 hover:bg-blue-500 text-white" : "bg-slate-900 hover:bg-slate-800 text-white"
+            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm shrink-0 cursor-pointer ${
+              isPlaying
+                ? "bg-emerald-600 hover:bg-emerald-500 text-white"
+                : isDarkMode
+                ? "bg-blue-600 hover:bg-blue-500 text-white"
+                : "bg-slate-900 hover:bg-slate-800 text-white"
             }`}
-            title={isPlaying ? "Пауза" : "Воспроизведение"}
+            title={isPlaying ? "Остановить анимацию" : "Запустить просмотр во времени"}
           >
-            {isPlaying ? <Pause size={12} /> : <Play size={12} className="ml-0.5" />}
+            {isPlaying ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
           </button>
 
           {/* Rewind */}
           <button
             onClick={() => onTimeStepChange("Сейчас")}
-            className="text-slate-400 hover:text-slate-200 transition-colors shrink-0 cursor-pointer"
-            title="К текущему моменту"
+            className={`transition-colors shrink-0 cursor-pointer ${
+              timeStep === "Сейчас"
+                ? "text-emerald-500"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+            title="К текущему моменту (Сейчас)"
           >
-            <SkipBack size={13} />
+            <SkipBack size={15} />
+          </button>
+
+          {/* Step Back */}
+          <button
+            onClick={handlePrevStep}
+            className="text-slate-400 hover:text-slate-200 transition-colors shrink-0 cursor-pointer"
+            title="Предыдущий горизонт"
+          >
+            <ChevronLeft size={16} />
           </button>
 
           {/* Time Steps and Track */}
-          <div className="flex-1 flex flex-col gap-1 px-1">
-            {/* Slider track with active thumb */}
-            <div className={`relative w-full h-1.5 rounded-full flex items-center ${isDarkMode ? "bg-slate-700" : "bg-slate-200"}`}>
+          <div className="flex-1 flex flex-col gap-1.5 px-1">
+            {/* Slider track with active thumb - CLICKABLE */}
+            <div
+              onClick={handleTrackClick}
+              className={`relative w-full h-2 rounded-full flex items-center cursor-pointer ${
+                isDarkMode ? "bg-slate-700/80" : "bg-slate-200"
+              }`}
+            >
               <div
                 className="h-full bg-[#00875A] rounded-full transition-all"
                 style={{
@@ -424,14 +643,14 @@ export const MapView: React.FC<MapViewProps> = ({
                     timeStep === "Сейчас"
                       ? "8%"
                       : timeStep === "+15 мин"
-                      ? "45%"
+                      ? "42%"
                       : timeStep === "+30 мин"
                       ? "75%"
                       : "100%",
                 }}
               />
               <div
-                className={`absolute w-3 h-3 rounded-full border-2 border-[#00875A] shadow-md transition-all cursor-pointer ${
+                className={`absolute w-3.5 h-3.5 rounded-full border-2 border-[#00875A] shadow-md transition-all ${
                   isDarkMode ? "bg-slate-900" : "bg-white"
                 }`}
                 style={{
@@ -439,7 +658,7 @@ export const MapView: React.FC<MapViewProps> = ({
                     timeStep === "Сейчас"
                       ? "8%"
                       : timeStep === "+15 мин"
-                      ? "45%"
+                      ? "42%"
                       : timeStep === "+30 мин"
                       ? "75%"
                       : "100%",
@@ -449,13 +668,17 @@ export const MapView: React.FC<MapViewProps> = ({
             </div>
 
             {/* Step buttons row */}
-            <div className="flex justify-between items-center text-[10px] font-semibold pt-0.5">
+            <div className="flex justify-between items-center text-[10px] font-semibold">
               <button
                 onClick={() => onTimeStepChange("Сейчас")}
                 className={`cursor-pointer transition-colors ${
                   timeStep === "Сейчас"
-                    ? isDarkMode ? "text-white font-bold" : "text-slate-900 font-bold"
-                    : isDarkMode ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-800"
+                    ? isDarkMode
+                      ? "text-emerald-400 font-extrabold"
+                      : "text-emerald-700 font-extrabold"
+                    : isDarkMode
+                    ? "text-slate-400 hover:text-slate-200"
+                    : "text-slate-500 hover:text-slate-800"
                 }`}
               >
                 Сейчас
@@ -463,12 +686,14 @@ export const MapView: React.FC<MapViewProps> = ({
 
               <button
                 onClick={() => onTimeStepChange("+15 мин")}
-                className={`px-1.5 py-0.2 rounded-full cursor-pointer transition-all ${
+                className={`px-1.5 py-0.5 rounded cursor-pointer transition-all ${
                   timeStep === "+15 мин"
                     ? isDarkMode
-                      ? "bg-emerald-900/60 text-emerald-300 font-extrabold border border-emerald-600"
-                      : "bg-emerald-100 text-emerald-800 font-extrabold border border-emerald-300"
-                    : isDarkMode ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-800"
+                      ? "bg-amber-900/60 text-amber-300 font-extrabold border border-amber-600"
+                      : "bg-amber-100 text-amber-900 font-extrabold border border-amber-300"
+                    : isDarkMode
+                    ? "text-slate-400 hover:text-slate-200"
+                    : "text-slate-500 hover:text-slate-800"
                 }`}
               >
                 +15м (ML)
@@ -478,8 +703,12 @@ export const MapView: React.FC<MapViewProps> = ({
                 onClick={() => onTimeStepChange("+30 мин")}
                 className={`cursor-pointer transition-colors ${
                   timeStep === "+30 мин"
-                    ? isDarkMode ? "text-white font-bold" : "text-slate-900 font-bold"
-                    : isDarkMode ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-800"
+                    ? isDarkMode
+                      ? "text-white font-extrabold"
+                      : "text-slate-900 font-extrabold"
+                    : isDarkMode
+                    ? "text-slate-400 hover:text-slate-200"
+                    : "text-slate-500 hover:text-slate-800"
                 }`}
               >
                 +30м
@@ -489,8 +718,12 @@ export const MapView: React.FC<MapViewProps> = ({
                 onClick={() => onTimeStepChange("+45 мин")}
                 className={`cursor-pointer transition-colors ${
                   timeStep === "+45 мин"
-                    ? isDarkMode ? "text-white font-bold" : "text-slate-900 font-bold"
-                    : isDarkMode ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-800"
+                    ? isDarkMode
+                      ? "text-white font-extrabold"
+                      : "text-slate-900 font-extrabold"
+                    : isDarkMode
+                    ? "text-slate-400 hover:text-slate-200"
+                    : "text-slate-500 hover:text-slate-800"
                 }`}
               >
                 +45м
@@ -500,17 +733,17 @@ export const MapView: React.FC<MapViewProps> = ({
 
           {/* Next Arrow */}
           <button
-            onClick={() => onTimeStepChange("+30 мин")}
+            onClick={handleNextStep}
             className="text-slate-400 hover:text-slate-200 transition-colors shrink-0 cursor-pointer"
             title="Следующий горизонт"
           >
-            <ChevronRight size={14} />
+            <ChevronRight size={16} />
           </button>
         </div>
 
-        {/* Bottom subtle watermark note */}
-        <div className={`text-[9px] text-center font-medium mt-1 ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
-          {isDarkMode ? "CartoDB Dark Matter" : "CartoDB Positron"} • ЕГКС Мосгортранс
+        {/* Subtle source attribution */}
+        <div className={`text-[9px] text-center font-medium ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
+          Esri Canvas GIS • Прогностический движок СППР Мосгортранс
         </div>
       </div>
     </div>
