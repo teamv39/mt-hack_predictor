@@ -84,7 +84,10 @@
       "hold_stop_name": "целевая остановка",
       "duration_seconds": 120,
       "predicted_impact": "Сглаживание отклонения до прибытия",
-      "applied": false
+      "applied": false,
+      "passenger_announcement": "АСУ-РДС: Техническая стоянка 2.0 мин для выравнивания интервала движения. Спасибо за понимание.",
+      "has_bus_bay": true,
+      "damping_max_limit_sec": 180
     },
     "created_at": "2026-01-06T03:35:00Z"
   }

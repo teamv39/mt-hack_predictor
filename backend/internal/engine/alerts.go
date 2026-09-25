@@ -68,6 +68,16 @@ func (am *AlertManager) UpsertVehicleAlert(
 			estMins = 12.5 // within the 10-15 min official window
 		}
 
+		// Damping limit: never hold longer than 180 seconds to protect passengers inside cabin
+		if holdSec > 180 {
+			holdSec = 180
+		}
+
+		announcement := fmt.Sprintf(
+			"АСУ-РДС: Техническая стоянка %.1f мин для выравнивания интервала движения. Спасибо за понимание.",
+			float64(holdSec)/60.0,
+		)
+
 		alert := &models.Alert{
 			ID:            alertID,
 			VehicleID:     v.ID,
@@ -82,16 +92,19 @@ func (am *AlertManager) UpsertVehicleAlert(
 			),
 			Factors: factors,
 			Recommendation: &models.Recommendation{
-				ActionType:      "HOLDING",
-				TargetVehicleID: v.ID,
-				HoldStopID:      stopID,
-				HoldStopName:    stopName,
-				DurationSeconds: holdSec,
-				PredictedImpact: fmt.Sprintf(
+				ActionType:            "HOLDING",
+				TargetVehicleID:       v.ID,
+				HoldStopID:            stopID,
+				HoldStopName:          stopName,
+				DurationSeconds:       holdSec,
+				PredictedImpact:       fmt.Sprintf(
 					"Восстановление интервала движения с %.1f мин до %.1f мин",
 					headway.HeadwaySec/60.0, headway.PlanHeadwaySec/60.0,
 				),
-				Applied: false,
+				Applied:               false,
+				PassengerAnnouncement: announcement,
+				HasBusBay:             true,
+				DampingMaxLimitSec:    180,
 			},
 			CreatedAt: time.Now().UTC(),
 		}
