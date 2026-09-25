@@ -24,10 +24,12 @@ services:
     container_name: mt-predictor-backend
     ports:
       - "8080:8080"
+      - "9201:9201"
     volumes:
       - ./data:/app/data:ro
     environment:
       - PORT=8080
+      - NDTP_PORT=9201
       - ML_SERVICE_URL=http://ml:8000
     depends_on:
       - ml

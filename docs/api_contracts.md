@@ -108,6 +108,36 @@
 
 ---
 
+### 1.5. `GET /api/v1/ndtp/stats`
+Метрики реального времени сетевого приемника телеметрии NDTP (:9201) и клиента ML-инференса.
+
+**Ответ (200 OK):**
+```json
+{
+  "ndtp_listener": {
+    "running": true,
+    "port": ":9201",
+    "active_connections": 1,
+    "total_accepted": 1,
+    "packets_processed": 1420,
+    "live_units_count": 1
+  },
+  "ml_pipeline": {
+    "url": "http://ml:8000",
+    "successful_calls": 312,
+    "fallback_calls": 0,
+    "graceful_fallback": true
+  }
+}
+```
+
+---
+
+### 1.6. `GET /swagger` & `GET /swagger/doc.json`
+Интерактивная документация OpenAPI 3.0 (Swagger UI), встроенная в Go-сервер (Критерий 3).
+
+---
+
 ## 2. ML Inference API (Python / FastAPI :8000)
 
 > **Официальный target:** `predicted_delay_sec` ≡ `target_delay_s` (сек, знак: `+` опоздание, `−` опережение).  
