@@ -1,10 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import {
-  Settings,
+  AlertTriangle,
+  MoreHorizontal,
+  ChevronDown,
   Search,
-  SlidersHorizontal,
-  Clock,
-  X,
 } from "lucide-react";
 import { AlertItem } from "../mock/telemetry";
 
@@ -27,6 +26,8 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
   activeFilter,
   setActiveFilter,
 }) => {
+  const [activeTab, setActiveTab] = useState<"alerts" | "analytics">("alerts");
+
   const filteredAlerts = alerts.filter((item) => {
     const matchesSearch =
       item.routeNumberBadge.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -40,155 +41,184 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
   });
 
   return (
-    <aside className="w-[360px] h-full max-h-[calc(100vh-100px)] bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200 shadow-2xl overflow-hidden flex flex-col pointer-events-auto shrink-0">
-      {/* 1. Header with Settings Cog & Badge */}
-      <div className="px-4 py-3 bg-slate-50/80 border-b border-slate-200/80 flex items-center justify-between">
+    <aside className="w-[360px] h-full max-h-[calc(100vh-90px)] bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-2xl overflow-hidden flex flex-col pointer-events-auto shrink-0 select-none">
+      {/* 1. Header: Red Dot + AlertRadar + Badge + More Menu */}
+      <div className="px-4 py-3 border-b border-slate-200/80 flex items-center justify-between bg-white shrink-0">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-rose-100 flex items-center justify-center text-rose-600">
-            <Settings size={14} />
-          </div>
-          <h2 className="text-xs font-black text-slate-900 uppercase tracking-wider">
-            Центр инцидентов
+          <span className="w-2.5 h-2.5 rounded-full bg-rose-600 animate-pulse" />
+          <h2 className="text-sm font-extrabold text-slate-900 tracking-tight">
+            AlertRadar
           </h2>
+          <span className="px-1.5 py-0.2 rounded-full bg-rose-100 text-rose-700 font-extrabold text-[10px]">
+            {alerts.length}
+          </span>
         </div>
-        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200/80">
-          3 затемнения
-        </span>
+        <button
+          className="text-slate-400 hover:text-slate-600 p-1 rounded-md hover:bg-slate-100 transition-colors"
+          title="Параметры радара"
+        >
+          <MoreHorizontal size={16} />
+        </button>
       </div>
 
-      {/* 2. Search & Filter Bar */}
-      <div className="p-3 bg-white border-b border-slate-100 flex flex-col gap-2">
-        <div className="relative flex items-center">
-          <Search size={14} className="absolute left-3 text-slate-400" />
+      {/* 2. Tabs: Текущие алерты | Аналитика ML */}
+      <div className="flex h-10 border-b border-slate-200 bg-slate-50 shrink-0 text-xs">
+        <button
+          onClick={() => setActiveTab("alerts")}
+          className={`flex-1 flex items-center justify-center gap-1.5 font-bold transition-all relative ${
+            activeTab === "alerts"
+              ? "text-emerald-800 bg-white"
+              : "text-slate-500 hover:text-slate-700"
+          }`}
+        >
+          <span>Текущие алерты</span>
+          <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold">
+            {alerts.length}
+          </span>
+          {activeTab === "alerts" && (
+            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600" />
+          )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab("analytics")}
+          className={`flex-1 flex items-center justify-center font-semibold transition-all relative ${
+            activeTab === "analytics"
+              ? "text-emerald-800 bg-white font-bold"
+              : "text-slate-500 hover:text-slate-700"
+          }`}
+        >
+          <span>Аналитика ML</span>
+          {activeTab === "analytics" && (
+            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600" />
+          )}
+        </button>
+      </div>
+
+      {/* 3. Search and Category Filter Chips */}
+      <div className="p-3 bg-white flex flex-col gap-2 shrink-0 border-b border-slate-100">
+        <div className="relative flex items-center h-8">
+          <Search size={13} className="absolute left-2.5 text-slate-400 pointer-events-none" />
           <input
             type="text"
-            placeholder="Поиск маршрутов (12 линий...)"
+            placeholder="Поиск по бортам и маршрутам..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-8 pr-8 py-1.5 text-xs bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-800 placeholder-slate-400 font-medium"
+            className="w-full h-8 pl-7 pr-3 text-xs bg-slate-50 hover:bg-slate-100 focus:bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800 placeholder-slate-400 font-medium"
           />
-          <SlidersHorizontal size={13} className="absolute right-3 text-blue-600 cursor-pointer" />
         </div>
 
-        {/* Filter Buttons */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 h-6">
           <button
             onClick={() => setActiveFilter("all")}
-            className={`flex-1 py-1 px-2 rounded-lg text-[11px] font-bold transition-all text-center ${
+            className={`h-6 px-2 rounded text-[10px] font-bold transition-all flex items-center justify-center ${
               activeFilter === "all"
-                ? "bg-blue-600 text-white shadow-xs"
+                ? "bg-slate-900 text-white"
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             }`}
           >
-            Все (12)
+            Все ({alerts.length})
           </button>
           <button
             onClick={() => setActiveFilter("critical")}
-            className={`flex-1 py-1 px-2 rounded-lg text-[11px] font-bold transition-all text-center ${
+            className={`h-6 px-2 rounded text-[10px] font-bold transition-all flex items-center justify-center ${
               activeFilter === "critical"
-                ? "bg-blue-600 text-white shadow-xs"
+                ? "bg-rose-600 text-white"
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             }`}
           >
-            Критич. (3)
+            Критич. ({alerts.filter((a) => a.category === "critical").length})
           </button>
           <button
             onClick={() => setActiveFilter("bunching")}
-            className={`flex-1 py-1 px-2 rounded-lg text-[11px] font-bold transition-all text-center ${
+            className={`h-6 px-2 rounded text-[10px] font-bold transition-all flex items-center justify-center ${
               activeFilter === "bunching"
-                ? "bg-blue-600 text-white shadow-xs"
+                ? "bg-amber-600 text-white"
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             }`}
           >
-            Пачкование (2)
+            Пачкование ({alerts.filter((a) => a.category === "bunching").length})
           </button>
         </div>
       </div>
 
-      {/* 3. Predictive Alert Cards List */}
-      <div className="flex-1 p-3 flex flex-col gap-3 overflow-y-auto scrollbar-thin">
-        {filteredAlerts.map((alert) => {
-          const isSelected = alert.id === selectedAlertId;
+      {/* 4. Alert Cards List */}
+      <div className="flex-1 p-2.5 overflow-y-auto flex flex-col gap-2.5">
+        {filteredAlerts.map((item) => {
+          const isSelected = item.id === selectedAlertId;
+          const isHigh = item.tagType === "bunching" || item.category === "critical";
 
           return (
             <div
-              key={alert.id}
-              onClick={() => onSelectAlert(alert)}
-              className={
+              key={item.id}
+              onClick={() => onSelectAlert(item)}
+              className={`rounded-xl p-3 cursor-pointer transition-all ${
                 isSelected
-                  ? "bg-[#fff8f5] border border-amber-200/80 border-l-4 border-l-rose-500 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer"
-                  : "bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm hover:shadow-md hover:border-slate-300 transition-all cursor-pointer"
-              }
+                  ? "border-2 border-[#DA251D] bg-rose-50/30 shadow-xs"
+                  : "border border-slate-200 bg-white hover:border-slate-300 shadow-2xs"
+              }`}
             >
-              {/* Row 1: Badges matching reference */}
-              <div className="flex items-center gap-2 mb-2 flex-wrap">
-                {/* Urgency Badge (Orange pill) */}
-                <span className="bg-[#ffe8d6] text-[#b45309] font-bold text-xs px-2.5 py-1 rounded-lg flex items-center gap-1 shrink-0">
-                  <Clock size={12} className="text-[#b45309]" />
-                  <span>{alert.urgencyBadge}</span>
-                </span>
-
-                {/* Route Number Badge (Blue pill) */}
-                <span className="bg-[#e0f2fe] text-[#0369a1] font-bold text-xs px-2.5 py-1 rounded-lg shrink-0">
-                  {alert.routeNumberBadge}
-                </span>
-
-                {/* Incident Tag Badge (Pink pill for bunching, sky for interval, emerald for compression) */}
+              {/* Card Header: Icon + Title + Severity Badge */}
+              <div className="flex items-center justify-between gap-1 mb-1">
+                <div className="flex items-center gap-1.5">
+                  <AlertTriangle
+                    size={14}
+                    className={isHigh ? "text-rose-600 shrink-0" : "text-amber-500 shrink-0"}
+                  />
+                  <span className="text-xs font-bold text-slate-900 leading-tight">
+                    {item.tagType === "bunching"
+                      ? "Пачкование м3 (Bunching)"
+                      : item.tagType === "interval"
+                      ? "Срыв интервала т17"
+                      : "Сжатие интервала е30"}
+                  </span>
+                </div>
                 <span
-                  className={`font-semibold text-xs px-2.5 py-1 rounded-lg shrink-0 ${
-                    alert.tagType === "bunching"
-                      ? "bg-[#fee2e2] text-[#b91c1c]"
-                      : alert.tagType === "interval"
-                      ? "bg-[#e0f2fe] text-[#0369a1]"
-                      : "bg-emerald-50 text-emerald-700"
+                  className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${
+                    isHigh ? "bg-rose-100 text-rose-700" : "bg-amber-100 text-amber-800"
                   }`}
                 >
-                  {alert.tag}
+                  {isHigh ? "HIGH" : "MEDIUM"}
                 </span>
               </div>
 
-              {/* Row 2: Vehicle Title + Red Delay Status */}
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-slate-900 text-sm">{alert.title}</span>
-                <span className="text-xs font-bold text-rose-600">{alert.delayLabel}</span>
-              </div>
-
-              {/* Row 3: Description */}
-              <p className="text-xs text-slate-600 leading-snug my-2 line-clamp-2">
-                {alert.description}
+              {/* Description */}
+              <p className="text-[11px] text-slate-600 leading-snug mb-2">
+                {item.id === "alert_1042"
+                  ? "Борт №1042 догоняет лидера №1043 на перегоне м. Бауманская. Текущий интервал 1.4 мин (норма: 8 мин)."
+                  : item.id === "alert_2198"
+                  ? "Борт №2198, затор на Покровке / Мосфильмовская. Опоздание от расписания: +9 мин."
+                  : "Борт №0814, интервал сократился до 1.5 мин на радиусе ТТК Юго-Запад."}
               </p>
 
-              {/* Row 4: Neural Confidence Progress Bar */}
-              <div className="mt-2 pt-2 border-t border-slate-100">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-slate-700">Уверенность нейросети</span>
-                  <span className="font-bold text-slate-900">{alert.confidence}%</span>
-                </div>
-                <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden mt-1.5">
-                  <div
-                    className="bg-[#0f172a] h-full rounded-full transition-all duration-500"
-                    style={{ width: `${alert.confidence}%` }}
-                  />
-                </div>
+              {/* Footer metrics line */}
+              <div className="flex items-center justify-between text-[10px] font-mono pt-1.5 border-t border-slate-100">
+                <span className={isHigh ? "text-rose-600 font-bold" : "text-amber-700 font-bold"}>
+                  {item.id === "alert_1042"
+                    ? "Риск CatBoost: 89.4%"
+                    : item.id === "alert_2198"
+                    ? "Затор: 7 баллов"
+                    : "Уверенность ML: 94%"}
+                </span>
+                <span className="text-slate-500 font-semibold">
+                  {item.id === "alert_1042"
+                    ? "+14 мин задержки"
+                    : item.id === "alert_2198"
+                    ? "T+18 мин прогноз"
+                    : "Критично"}
+                </span>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* 4. Bottom Status Strip */}
-      <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-200/80 flex items-center justify-between text-[11px] text-slate-600 font-medium mt-auto">
-        <div className="flex items-center gap-2">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-          </span>
-          <span className="font-semibold text-slate-700">Очередь событий активна</span>
-        </div>
-        <button className="text-slate-400 hover:text-slate-600">
-          <X size={13} />
-        </button>
+      {/* 5. Footer: Real-time monitoring note */}
+      <div className="p-2.5 bg-slate-50/80 border-t border-slate-200/80 text-[10px] font-medium text-slate-500 text-center shrink-0">
+        Мониторинг 48 электробусных маршрутов в реальном времени
       </div>
     </aside>
   );
 };
+
+export default AlertRadar;

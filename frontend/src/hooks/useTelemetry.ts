@@ -229,7 +229,14 @@ export function useTelemetry() {
                 );
               }
               if (data.alert) {
-                setAlerts([mapBackendAlert(data.alert)]);
+                const newAlert = mapBackendAlert(data.alert);
+                setAlerts((prev) => {
+                  const exists = prev.some((a) => a.id === newAlert.id);
+                  if (exists) {
+                    return prev.map((a) => (a.id === newAlert.id ? newAlert : a));
+                  }
+                  return [newAlert, ...prev];
+                });
               }
               if (data.status) {
                 setMetrics((prev) => ({
