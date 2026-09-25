@@ -47,28 +47,26 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
       className={`w-[330px] h-full max-h-[calc(100vh-100px)] rounded-2xl border shadow-2xl overflow-hidden flex flex-col pointer-events-auto shrink-0 select-none backdrop-blur-xl transition-colors duration-200 ${
         isDarkMode
           ? "bg-[#101726]/95 border-slate-700/80 text-slate-200 shadow-black/60"
-          : "bg-white/95 border-slate-200 text-slate-800 shadow-slate-900/10"
+          : "bg-white/95 border-slate-300 text-slate-800 shadow-slate-950/15"
       }`}
     >
       {/* 1. Header: Red Dot + AlertRadar + Badge + More Menu */}
       <div
         className={`px-4 py-3 border-b flex items-center justify-between shrink-0 ${
-          isDarkMode ? "bg-[#0B101D] border-slate-800" : "bg-slate-50 border-slate-200"
+          isDarkMode ? "bg-[#0B101D] border-slate-800" : "bg-[#0F172A] border-slate-800 text-white"
         }`}
       >
         <div className="flex items-center gap-2.5">
           <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse" />
-          <h2 className={`text-sm font-black tracking-tight ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+          <h2 className="text-sm font-black tracking-tight text-white">
             AlertRadar СППР
           </h2>
-          <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 font-black text-[11px] border border-rose-500/30">
+          <span className="px-2 py-0.5 rounded-full bg-rose-500/25 text-rose-300 font-black text-[11px] border border-rose-500/40">
             {alerts.length}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md ${
-            isDarkMode ? "bg-slate-800 text-cyan-400" : "bg-blue-50 text-blue-700"
-          }`}>
+          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-blue-950 text-cyan-300 border border-blue-800/80">
             LIVE FEED
           </span>
         </div>

@@ -92,18 +92,18 @@ export const Inspector: React.FC<InspectorProps> = ({
       className={`w-[360px] max-h-[calc(100vh-100px)] overflow-y-auto rounded-2xl border shadow-2xl p-4 flex flex-col gap-3.5 z-20 pointer-events-auto shrink-0 select-none scrollbar-thin backdrop-blur-xl transition-colors duration-200 ${
         isDarkMode
           ? "bg-[#101726]/95 border-slate-700/80 text-slate-200 shadow-black/60"
-          : "bg-white/95 border-slate-200 text-slate-800 shadow-slate-900/10"
+          : "bg-white/95 border-slate-300 text-slate-800 shadow-slate-950/15"
       }`}
     >
       {/* 1. Header: Inspector Title and Controls */}
       <div
         className={`flex items-center justify-between pb-2 border-b ${
-          isDarkMode ? "border-slate-800 text-slate-400" : "border-slate-100 text-slate-400"
+          isDarkMode ? "border-slate-800 text-slate-400" : "border-slate-200 text-slate-600"
         }`}
       >
         <div className="flex items-center gap-2">
-          <GitBranch size={15} className={isDarkMode ? "text-cyan-400" : "text-emerald-600"} />
-          <span className={`text-xs font-bold uppercase tracking-wider ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+          <GitBranch size={15} className={isDarkMode ? "text-cyan-400" : "text-emerald-700"} />
+          <span className={`text-xs font-black uppercase tracking-wider ${isDarkMode ? "text-slate-300" : "text-slate-800"}`}>
             Инспектор СППР
           </span>
         </div>
@@ -112,7 +112,7 @@ export const Inspector: React.FC<InspectorProps> = ({
             <button
               onClick={onClose}
               className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                isDarkMode ? "hover:bg-slate-800 text-slate-400 hover:text-slate-200" : "hover:bg-slate-100 text-slate-400 hover:text-slate-600"
+                isDarkMode ? "hover:bg-slate-800 text-slate-400 hover:text-slate-200" : "hover:bg-slate-100 text-slate-500 hover:text-slate-800"
               }`}
               title="Свернуть инспектор"
             >
@@ -255,34 +255,27 @@ export const Inspector: React.FC<InspectorProps> = ({
 
       {/* 4. SHAP factor breakdown */}
       <div
-        className={`rounded-xl border p-3.5 shadow-sm flex flex-col gap-2 ${
-          isDarkMode ? "bg-[#141C2E] border-slate-700/80" : "bg-white border-slate-200"
-        }`}
+        className="rounded-xl border border-slate-800 bg-[#0B111E] text-white p-3.5 shadow-md flex flex-col gap-2"
       >
         <div className="flex items-center justify-between">
-          <span className={`text-xs font-bold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-            Факторный анализ (SHAP)
+          <span className="text-xs font-bold text-white flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+            <span>Факторный анализ (SHAP)</span>
           </span>
-          <span className={`text-[10px] font-bold font-mono px-2 py-0.5 rounded ${
-            isDarkMode ? "bg-slate-800 text-cyan-400" : "bg-slate-100 text-slate-600"
-          }`}>
+          <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-slate-800 text-cyan-300 border border-slate-700">
             CatBoost ML
           </span>
         </div>
 
         {/* Vertical Bar Chart */}
-        <div className={`h-20 w-full flex items-end justify-between pt-2 px-1 border-b ${
-          isDarkMode ? "border-slate-700/70" : "border-slate-200"
-        }`}>
+        <div className="h-20 w-full flex items-end justify-between pt-2 px-1 border-b border-slate-800">
           {shapBars.map((bar) => (
             <div key={bar.code} className="flex flex-col items-center gap-1 group relative cursor-pointer" title={bar.label}>
-              <span className={`text-[9px] font-mono opacity-0 group-hover:opacity-100 transition-opacity absolute -top-4 ${
-                isDarkMode ? "text-cyan-300" : "text-slate-600"
-              }`}>
+              <span className="text-[9px] font-mono opacity-0 group-hover:opacity-100 transition-opacity absolute -top-4 text-cyan-300">
                 {bar.value}
               </span>
               <div
-                className="w-5 rounded-t-sm bg-gradient-to-t from-blue-700 to-sky-400 transition-all group-hover:brightness-125"
+                className="w-5 rounded-t-sm bg-gradient-to-t from-blue-600 to-cyan-400 transition-all group-hover:brightness-125"
                 style={{ height: `${bar.height}%` }}
               />
             </div>
@@ -290,9 +283,7 @@ export const Inspector: React.FC<InspectorProps> = ({
         </div>
 
         {/* Bar Labels Row */}
-        <div className={`flex justify-between px-1 text-[9px] font-mono font-bold ${
-          isDarkMode ? "text-slate-400" : "text-slate-500"
-        }`}>
+        <div className="flex justify-between px-1 text-[9px] font-mono font-bold text-slate-400">
           {shapBars.map((bar) => (
             <span key={bar.code} className="w-5 text-center">
               {bar.code}
@@ -300,9 +291,9 @@ export const Inspector: React.FC<InspectorProps> = ({
           ))}
         </div>
 
-        <div className="flex items-center justify-between text-[11px] pt-1 border-t border-slate-700/50">
-          <span className={isDarkMode ? "text-slate-300" : "text-slate-600"}>
-            Ключевой фактор: <strong>{shapBars[0]?.label || "Затор"}</strong>
+        <div className="flex items-center justify-between text-[11px] pt-1 border-t border-slate-800">
+          <span className="text-slate-300">
+            Ключевой фактор: <strong className="text-white">{shapBars[0]?.label || "Затор"}</strong>
           </span>
           <span className="font-bold text-cyan-400">{shapBars[0]?.value || "+0.42"} мин</span>
         </div>

@@ -184,9 +184,7 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
 
       {/* 1. TOP HARDWARE STATUS BAR */}
       <header
-        className={`border-2 rounded-xl px-4 py-2 flex justify-between items-center shrink-0 shadow-md transition-colors ${
-          isDark ? "bg-[#060e20] border-[#2d3449]" : "bg-white border-slate-300"
-        }`}
+        className="border-2 border-slate-700/80 rounded-xl px-4 py-2 flex justify-between items-center shrink-0 shadow-md bg-[#080E1C] text-white transition-colors"
       >
         {/* Brand Anchor & Vehicle Stamp */}
         <div className="flex items-center gap-3">
@@ -195,18 +193,14 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
           </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <span
-                className={`font-mono font-black text-sm tracking-wider uppercase ${
-                  isDark ? "text-white" : "text-slate-900"
-                }`}
-              >
+              <span className="font-mono font-black text-sm tracking-wider uppercase text-white">
                 GRANIT-NAVIGATOR v4.2 [МАРШРУТ {routeNumber} | БОРТ {vehicleId}]
               </span>
               <span className="bg-[#008058] text-[#d3ffe5] px-2 py-0.5 rounded text-[10px] font-mono font-bold">
                 КАМАЗ-6282 ЭЛЕКТРОБУС
               </span>
             </div>
-            <span className={`text-[10px] font-mono tracking-tight ${isDark ? "text-[#ab8985]" : "text-slate-500"}`}>
+            <span className="text-[10px] font-mono tracking-tight text-slate-400">
               ЕГПТС МОСГОРТРАНС • ФИЛИАЛ СЕВЕРО-ВОСТОЧНЫЙ • ПАРК 6 • ГОСНОМЕР Е 143 СК 777
             </span>
           </div>
@@ -215,49 +209,25 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
         {/* Telemetry Links & Driver ID */}
         <div className="flex items-center gap-2.5 font-mono text-xs">
           {/* Clock */}
-          <div
-            className={`flex items-center gap-1.5 px-3 py-1 border rounded-lg font-bold ${
-              isDark
-                ? "bg-[#171f33] border-[#2d3449] text-amber-400"
-                : "bg-slate-50 border-slate-300 text-amber-600"
-            }`}
-          >
-            <Clock className="w-3.5 h-3.5 text-amber-500" />
+          <div className="flex items-center gap-1.5 px-3 py-1 border border-slate-700 rounded-lg font-bold bg-[#141C2D] text-amber-400">
+            <Clock className="w-3.5 h-3.5 text-amber-400" />
             <span>{liveClockStr} МСК</span>
           </div>
 
           {/* GLONASS / GPS */}
-          <div
-            className={`flex items-center gap-1.5 px-2.5 py-1 border rounded-lg text-[11px] font-bold ${
-              isDark
-                ? "bg-[#171f33] border-[#2d3449] text-emerald-400"
-                : "bg-slate-50 border-slate-300 text-emerald-700"
-            }`}
-          >
-            <Radio className="w-3.5 h-3.5 text-emerald-500 animate-pulse" />
+          <div className="flex items-center gap-1.5 px-2.5 py-1 border border-slate-700 rounded-lg text-[11px] font-bold bg-[#141C2D] text-emerald-400">
+            <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
             <span>ГЛОНАСС: 18 СПУТН.</span>
           </div>
 
           {/* 4G LTE / NDTP */}
-          <div
-            className={`flex items-center gap-1.5 px-2.5 py-1 border rounded-lg text-[11px] font-bold ${
-              isDark
-                ? "bg-[#171f33] border-[#2d3449] text-cyan-400"
-                : "bg-slate-50 border-slate-300 text-cyan-700"
-            }`}
-          >
-            <Wifi className="w-3.5 h-3.5 text-cyan-500" />
+          <div className="flex items-center gap-1.5 px-2.5 py-1 border border-slate-700 rounded-lg text-[11px] font-bold bg-[#141C2D] text-cyan-400">
+            <Wifi className="w-3.5 h-3.5 text-cyan-400" />
             <span>NDTP :9201 [12мс]</span>
           </div>
 
           {/* Driver Badge */}
-          <div
-            className={`flex items-center gap-1.5 px-3 py-1 border rounded-lg text-[11px] ${
-              isDark
-                ? "bg-[#171f33] border-[#2d3449] text-slate-300"
-                : "bg-slate-50 border-slate-300 text-slate-700"
-            }`}
-          >
+          <div className="flex items-center gap-1.5 px-3 py-1 border border-slate-700 rounded-lg text-[11px] bg-[#141C2D] text-slate-300">
             <User className="w-3.5 h-3.5 text-slate-400" />
             <span>ТАБ. №08412 • ИВАНОВ А.В.</span>
           </div>
@@ -270,29 +240,23 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
         <div className="col-span-4 flex flex-col gap-2.5 min-h-0">
           {/* Current Stop Box */}
           <div
-            className={`border-2 rounded-xl p-3 shadow-md flex flex-col gap-1 shrink-0 transition-colors ${
-              isDark ? "bg-[#171f33] border-[#2d3449]" : "bg-white border-slate-300"
-            }`}
+            className="border-2 border-slate-700/80 rounded-xl p-3 shadow-md flex flex-col gap-1 shrink-0 bg-[#0F172A] text-white transition-colors"
           >
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono font-bold text-amber-500 uppercase tracking-wider">
+              <span className="text-[10px] font-mono font-bold text-amber-400 uppercase tracking-wider">
                 ТЕКУЩИЙ ПУТЕВОЙ ОРИЕНТИР
               </span>
               <span className="px-1.5 py-0.2 bg-[#d32f2f] text-white rounded text-[9px] font-mono font-bold">
                 МАРШРУТ {routeNumber}
               </span>
             </div>
-            <span className={`text-[11px] font-medium ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+            <span className="text-[11px] font-medium text-slate-400">
               ТЕКУЩАЯ ОСТАНОВКА (ОСТАНОВОЧНЫЙ КАРМАН):
             </span>
-            <div
-              className={`text-lg font-black font-mono tracking-tight flex items-center gap-2 ${
-                isDark ? "text-white" : "text-slate-950"
-              }`}
-            >
+            <div className="text-lg font-black font-mono tracking-tight flex items-center gap-2 text-white">
               <span>МЕТРО БАУМАНСКАЯ</span>
             </div>
-            <span className={`text-[10px] font-mono ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+            <span className="text-[10px] font-mono text-slate-400">
               ➔ Направление: Серебряный бор ➔ Семёновская
             </span>
           </div>
@@ -673,89 +637,67 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
       {/* 3. BOTTOM TELEMETRY DOCK (NDTP Parameters: Speed, Headway, Battery, Pneumatics, Call) */}
       <footer className="grid grid-cols-12 gap-3 h-20 shrink-0 font-mono">
         {/* Speedometer */}
-        <div
-          className={`col-span-2 border-2 rounded-xl p-2.5 flex flex-col justify-between ${
-            isDark ? "bg-[#060e20] border-[#2d3449]" : "bg-white border-slate-300"
-          }`}
-        >
-          <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold uppercase">
+        <div className="col-span-2 border-2 rounded-xl p-2.5 flex flex-col justify-between bg-[#080E1C] border-slate-700/80 text-white shadow-md">
+          <div className="flex items-center justify-between text-[10px] text-slate-400 font-bold uppercase">
             <span>СКОРОСТЬ</span>
-            <span className="text-amber-500">[СТОЯНКА]</span>
+            <span className="text-amber-400">[СТОЯНКА]</span>
           </div>
           <div className="flex items-baseline gap-1">
-            <span className={`text-3xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>0</span>
+            <span className="text-3xl font-black text-white">0</span>
             <span className="text-xs text-slate-400">км/ч</span>
           </div>
-          <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold">✓ ручной тормоз [P]</span>
+          <span className="text-[9px] text-emerald-400 font-bold">✓ ручной тормоз [P]</span>
         </div>
 
         {/* Headway Back (Bunching alert) */}
-        <div
-          className={`col-span-3 border-2 rounded-xl p-2.5 flex flex-col justify-between ${
-            isDark ? "bg-[#060e20] border-[#d32f2f]" : "bg-white border-red-500 shadow-sm"
-          }`}
-        >
-          <div className="flex items-center justify-between text-[10px] text-red-600 dark:text-red-400 font-bold uppercase">
+        <div className="col-span-3 border-2 rounded-xl p-2.5 flex flex-col justify-between bg-[#080E1C] border-rose-600 text-white shadow-md">
+          <div className="flex items-center justify-between text-[10px] text-rose-400 font-bold uppercase">
             <span>СЗАДИ: БОРТ #1042</span>
             <span className="bg-red-600 text-white px-1 rounded text-[9px]">СХЛОПЫВАНИЕ</span>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-red-600 dark:text-red-400">1.4 МИН</span>
+            <span className="text-2xl font-black text-rose-400">1.4 МИН</span>
             <span className="text-slate-400">➔</span>
-            <span className="text-xl font-black text-emerald-600 dark:text-emerald-400">7.5 МИН</span>
+            <span className="text-xl font-black text-emerald-400">7.5 МИН</span>
           </div>
-          <span className="text-[9px] text-slate-500">Дистанция: 480 м (Пачкование ликвидируется)</span>
+          <span className="text-[9px] text-slate-400">Дистанция: 480 м (Пачкование ликвидируется)</span>
         </div>
 
         {/* Headway Front */}
-        <div
-          className={`col-span-3 border-2 rounded-xl p-2.5 flex flex-col justify-between ${
-            isDark ? "bg-[#060e20] border-[#2d3449]" : "bg-white border-slate-300"
-          }`}
-        >
-          <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold uppercase">
+        <div className="col-span-3 border-2 rounded-xl p-2.5 flex flex-col justify-between bg-[#080E1C] border-slate-700/80 text-white shadow-md">
+          <div className="flex items-center justify-between text-[10px] text-slate-400 font-bold uppercase">
             <span>ВПЕРЕДИ: БОРТ #1041</span>
-            <span className="text-emerald-600 dark:text-emerald-400">● НОРМА</span>
+            <span className="text-emerald-400">● НОРМА</span>
           </div>
           <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">8.2</span>
+            <span className="text-2xl font-black text-emerald-400">8.2</span>
             <span className="text-xs text-slate-400">МИН</span>
           </div>
-          <span className="text-[9px] text-slate-500">Дистанция: 2.8 км (Штатный такт)</span>
+          <span className="text-[9px] text-slate-400">Дистанция: 2.8 км (Штатный такт)</span>
         </div>
 
         {/* Battery SOC & Pneumatics */}
-        <div
-          className={`col-span-2 border-2 rounded-xl p-2.5 flex flex-col justify-between ${
-            isDark ? "bg-[#060e20] border-[#2d3449]" : "bg-white border-slate-300"
-          }`}
-        >
-          <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold uppercase">
+        <div className="col-span-2 border-2 rounded-xl p-2.5 flex flex-col justify-between bg-[#080E1C] border-slate-700/80 text-white shadow-md">
+          <div className="flex items-center justify-between text-[10px] text-slate-400 font-bold uppercase">
             <span>ТЯГА (SOC)</span>
-            <span className="text-emerald-600 dark:text-emerald-400">142 КМ</span>
+            <span className="text-emerald-400">142 КМ</span>
           </div>
           <div className="flex items-baseline gap-1">
-            <span className={`text-2xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>84%</span>
+            <span className="text-2xl font-black text-white">84%</span>
             <span className="text-[10px] text-slate-400">650V</span>
           </div>
-          <div className={`w-full h-1.5 rounded-full overflow-hidden ${isDark ? "bg-slate-800" : "bg-slate-200"}`}>
+          <div className="w-full h-1.5 rounded-full overflow-hidden bg-slate-800">
             <div className="bg-emerald-500 h-full w-[84%]" />
           </div>
         </div>
 
         {/* Dispatcher Quick Touch Action */}
-        <div
-          className={`col-span-2 border-2 rounded-xl p-2 flex flex-col justify-center items-center text-center cursor-pointer transition-all active:scale-95 shadow-md ${
-            isDark
-              ? "bg-[#171f33] border-slate-600 hover:border-slate-400"
-              : "bg-white border-slate-300 hover:border-slate-400 text-slate-800"
-          }`}
-        >
-          <PhoneCall className="w-5 h-5 text-amber-500 mb-1" />
-          <span className={`text-xs font-black uppercase tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
+        <div className="col-span-2 border-2 rounded-xl p-2 flex flex-col justify-center items-center text-center cursor-pointer transition-all active:scale-95 shadow-md bg-[#171f33] border-slate-600 hover:border-slate-400 text-white">
+          <PhoneCall className="w-5 h-5 text-amber-400 mb-1" />
+          <span className="text-xs font-black uppercase tracking-tight text-white">
             ДИСПЕТЧЕР
           </span>
-          <span className="text-[9px] text-slate-500">СЕКТОР «ЦЕНТР»</span>
+          <span className="text-[9px] text-slate-400">СЕКТОР «ЦЕНТР»</span>
         </div>
       </footer>
     </div>

@@ -498,44 +498,32 @@ export const MapView: React.FC<MapViewProps> = ({
 
       {/* 2. Floating Map Tools (Right side of left panel) */}
       <div
-        className={`absolute top-5 left-[365px] z-20 flex flex-col gap-1 p-1.5 rounded-xl border shadow-xl pointer-events-auto backdrop-blur-xl transition-colors ${
-          isDarkMode
-            ? "bg-[#151D2A]/90 border-slate-700/80 text-slate-200 shadow-black/40"
-            : "bg-white/95 border-slate-200/90 text-slate-700 shadow-slate-900/10"
-        }`}
+        className="absolute top-5 left-[365px] z-20 flex flex-col gap-1 p-1.5 rounded-xl border border-slate-700/80 bg-[#0F172A]/95 text-slate-200 shadow-xl shadow-black/25 pointer-events-auto backdrop-blur-xl transition-all"
       >
         <button
           onClick={() => mapInstanceRef.current?.zoomIn()}
-          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
-            isDarkMode ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-100 text-slate-700"
-          }`}
+          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer hover:bg-slate-800 text-slate-200"
           title="Приблизить"
         >
           <Plus size={15} />
         </button>
         <button
           onClick={() => mapInstanceRef.current?.zoomOut()}
-          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
-            isDarkMode ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-100 text-slate-700"
-          }`}
+          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer hover:bg-slate-800 text-slate-200"
           title="Отдалить"
         >
           <Minus size={15} />
         </button>
-        <div className={`h-px my-0.5 ${isDarkMode ? "bg-slate-700" : "bg-slate-200"}`} />
+        <div className="h-px my-0.5 bg-slate-700" />
         <button
           onClick={() => mapInstanceRef.current?.flyTo([55.7745, 37.6850], 13)}
-          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
-            isDarkMode ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-100 text-slate-700"
-          }`}
+          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer hover:bg-slate-800 text-slate-200"
           title="Центрировать на перегоне"
         >
           <Crosshair size={14} />
         </button>
         <button
-          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
-            isDarkMode ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-100 text-slate-700"
-          }`}
+          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer hover:bg-slate-800 text-slate-200"
           title="Слои карты"
         >
           <Layers size={14} />
@@ -549,7 +537,7 @@ export const MapView: React.FC<MapViewProps> = ({
           <div
             className={`px-3 py-1 rounded-full text-[11px] font-black flex items-center gap-1.5 shadow-lg border backdrop-blur-md transition-all ${
               isHoldingApplied
-                ? "bg-emerald-600/90 text-white border-emerald-400"
+                ? "bg-emerald-600/95 text-white border-emerald-400"
                 : "bg-red-600/95 text-white border-red-400 animate-pulse"
             }`}
           >
@@ -561,35 +549,17 @@ export const MapView: React.FC<MapViewProps> = ({
             </span>
           </div>
         ) : timeStep === "Сейчас" ? (
-          <div
-            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 shadow border backdrop-blur-md ${
-              isDarkMode
-                ? "bg-slate-800/90 text-emerald-400 border-slate-700"
-                : "bg-white/95 text-emerald-700 border-slate-200"
-            }`}
-          >
+          <div className="px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 shadow border backdrop-blur-md bg-[#0F172A]/90 text-emerald-400 border-slate-700">
             <Radio size={11} className="animate-pulse text-emerald-500" />
             <span>ОНЛАЙН ТЕЛЕМЕТРИЯ NDTP • ТЕКУЩИЙ МОМЕНТ</span>
           </div>
         ) : (
-          <div
-            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 shadow border backdrop-blur-md ${
-              isDarkMode
-                ? "bg-slate-800/90 text-blue-400 border-slate-700"
-                : "bg-white/95 text-blue-700 border-slate-200"
-            }`}
-          >
+          <div className="px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 shadow border backdrop-blur-md bg-[#0F172A]/90 text-blue-400 border-slate-700">
             <span>ПРОГНОЗНЫЙ ГОРИЗОНТ ДВИЖЕНИЯ {timeStep}</span>
           </div>
         )}
 
-        <div
-          className={`rounded-2xl border shadow-2xl px-4 py-2.5 flex items-center gap-3 w-[460px] max-w-[calc(100vw-750px)] backdrop-blur-xl transition-colors ${
-            isDarkMode
-              ? "bg-[#151D2A]/90 border-slate-700/80 text-slate-200 shadow-black/50"
-              : "bg-white/95 border-slate-200/90 text-slate-800 shadow-slate-900/10"
-          }`}
-        >
+        <div className="rounded-2xl border border-slate-700/80 shadow-2xl shadow-black/35 px-4 py-2.5 flex items-center gap-3 w-[460px] max-w-[calc(100vw-750px)] backdrop-blur-xl bg-[#0F172A]/95 text-slate-200 transition-colors">
           {/* Play/Pause Button */}
           <button
             onClick={() => setIsPlaying(!isPlaying)}
