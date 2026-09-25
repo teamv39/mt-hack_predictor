@@ -3,8 +3,9 @@ name = "mt-hack-ml"
 version = "0.1.0"
 description = "Machine Learning & Feature Engineering pipeline for MT-Hackathon Track 3 (Bus Bunching Predictor)"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
+    "torch>=2.2.0",
     "catboost>=1.2",
     "lightgbm>=4.0.0",
     "shap>=0.45.0",

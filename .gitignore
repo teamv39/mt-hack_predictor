@@ -64,6 +64,13 @@ htmlcov/
 .ruff_cache/
 .ipynb_checkpoints/
 
+# Datasets & Large Archives (competition data, emulator images)
+dataset/
+*.tar
+*.tar.gz
+*.zip
+*.7z
+
 # Data & Models (ignore large files, keep samples)
 data/raw/*
 !data/raw/.gitkeep
@@ -76,9 +83,6 @@ data/models/*
 *.pkl
 *.joblib
 *.onnx
-*.tar.gz
-*.zip
-*.7z
 
 # Environment variables
 .env

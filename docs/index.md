@@ -15,7 +15,9 @@
 | 🏛 **[architecture.md](architecture.md)** | **Денис / Все** | C4-архитектура, диаграммы потоков данных Mermaid (NDTP $\to$ Go $\to$ ML $\to$ Frontend), E2E-сценарий работы. |
 | 🔌 **[api_contracts.md](api_contracts.md)** | **Денис / Миша / Кирилл** | JSON-схемы REST API, потокового WebSocket и ML inference сервиса (`/predict`). |
 | 💼 **[business_values.md](business_values.md)** | **Денис (Питч)** | Бизнес-ценности и продуктовая модель: почему выравнивание интервалов важнее скорости, метрики для пассажиров, Мосгортранса и ЦОДД. |
-| 📄 **[hack_pre-description.md](hack_pre-description.md)** | **Вся команда** | Предварительное описание кейса хакатона (протокол NDTP, горизонт предикта 10-15 минут). |
+| 🎯 **[CASE_DESCRIPTION.md](CASE_DESCRIPTION.md)** | **Вся команда** | Официальное техническое задание и критерии оценивания кейса №3 хакатона (критерии 1–5, лимиты сабмитов). |
+| 📊 **[dataset_spec.md](dataset_spec.md)** | **Миша / Артём** | Полное описание структуры датасета (train/test/validate, labels, submission.csv, метрика MAE / score). |
+| 📡 **[ndtp_emulator_spec.md](ndtp_emulator_spec.md)** | **Денис / Артём** | Спецификация бинарного протокола NDTP и REST-API эмулятора телеметрии (G6CellNav00, TCP handshake, порты). |
 | 📋 **[implementation_plan.md](implementation_plan.md)** | **Вся команда** | План реализации: аудит выполненных фаз, сводка готовности по компонентам, TODO для Фазы 7. |
 
 ---

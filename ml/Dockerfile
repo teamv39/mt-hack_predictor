@@ -1,5 +1,5 @@
 # Dockerfile for Python ML & FastAPI Inference Service
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 # Install system dependencies for C++ libraries (CatBoost, OpenMP)
 RUN apt-get update && apt-get install -y --no-install-recommends \
