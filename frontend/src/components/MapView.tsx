@@ -28,6 +28,7 @@ interface MapViewProps {
     status: string;
     footerText: string;
   };
+  isDarkMode?: boolean;
 }
 
 export const MapView: React.FC<MapViewProps> = ({
@@ -39,9 +40,11 @@ export const MapView: React.FC<MapViewProps> = ({
   flyToTarget,
   timeStep,
   onTimeStepChange,
+  isDarkMode = true,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
 
   const routeLayerRef = useRef<L.LayerGroup | null>(null);
   const stopsLayerRef = useRef<L.LayerGroup | null>(null);
@@ -50,7 +53,7 @@ export const MapView: React.FC<MapViewProps> = ({
 
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
 
-  // 1. Initialize Leaflet Map with CartoDB Positron clean light tiles
+  // 1. Initialize Leaflet Map with CartoDB Positron / Dark Matter
   useEffect(() => {
     if (!mapContainerRef.current || mapInstanceRef.current) return;
 
@@ -61,15 +64,15 @@ export const MapView: React.FC<MapViewProps> = ({
       attributionControl: false,
     });
 
-    // CartoDB Positron — чистая светлая картооснова для ситуационных дашбордов
-    L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-      {
-        maxZoom: 20,
-        subdomains: "abcd",
-        attribution: "© OpenStreetMap / CartoDB Positron / Мосгортранс",
-      }
-    ).addTo(map);
+    const tileUrl = isDarkMode
+      ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+      : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+
+    tileLayerRef.current = L.tileLayer(tileUrl, {
+      maxZoom: 20,
+      subdomains: "abcd",
+      attribution: "© OpenStreetMap / CartoDB / Мосгортранс",
+    }).addTo(map);
 
     polygonsLayerRef.current = L.layerGroup().addTo(map);
     routeLayerRef.current = L.layerGroup().addTo(map);
@@ -83,6 +86,16 @@ export const MapView: React.FC<MapViewProps> = ({
       mapInstanceRef.current = null;
     };
   }, []);
+
+  // Update tilelayer on isDarkMode toggle
+  useEffect(() => {
+    if (!mapInstanceRef.current || !tileLayerRef.current) return;
+    const newTileUrl = isDarkMode
+      ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+      : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+
+    tileLayerRef.current.setUrl(newTileUrl);
+  }, [isDarkMode]);
 
   // 2. Draw Route Polylines, Congestion Polygons, and Stop Markers
   useEffect(() => {
@@ -111,7 +124,7 @@ export const MapView: React.FC<MapViewProps> = ({
     L.polygon(amberPolygonCoords, {
       color: "#d97706",
       fillColor: "#fbbf24",
-      fillOpacity: 0.18,
+      fillOpacity: isDarkMode ? 0.25 : 0.18,
       weight: 1.5,
       dashArray: "4 4",
     }).addTo(polygonsLayerRef.current);
@@ -119,12 +132,12 @@ export const MapView: React.FC<MapViewProps> = ({
     L.polygon(redCongestionCoords, {
       color: "#dc2626",
       fillColor: "#ef4444",
-      fillOpacity: 0.22,
+      fillOpacity: isDarkMode ? 0.32 : 0.22,
       weight: 1.5,
       dashArray: "3 3",
     }).addTo(polygonsLayerRef.current);
 
-    // Primary Route m3 Polyline (Emerald Green #00875A)
+    // Primary Route m3 Polyline (Emerald Green #00875A / Neon Emerald)
     const m3Coordinates: [number, number][] = [
       [55.7580, 37.6420],
       [55.7645, 37.6610],
@@ -135,7 +148,7 @@ export const MapView: React.FC<MapViewProps> = ({
     ];
 
     L.polyline(m3Coordinates, {
-      color: "#00875A",
+      color: isDarkMode ? "#10b981" : "#00875A",
       weight: 5,
       opacity: 0.95,
       lineCap: "round",
@@ -157,141 +170,158 @@ export const MapView: React.FC<MapViewProps> = ({
             display: flex;
             align-items: center;
             gap: 4px;
-            background: #ffffff;
-            border: 2px solid #00875A;
+            background: ${isDarkMode ? "#1e293b" : "#ffffff"};
+            border: 2px solid ${isDarkMode ? "#10b981" : "#00875A"};
             border-radius: 6px;
-            padding: 2px 5px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            padding: 2px 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,${isDarkMode ? "0.4" : "0.15"});
             font-size: 10px;
             font-weight: 700;
-            color: #1e293b;
+            color: ${isDarkMode ? "#f8fafc" : "#1e293b"};
             white-space: nowrap;
             transform: translate(-50%, -100%);
           ">
-            <span style="width: 5px; height: 5px; border-radius: 50%; background: #00875A;"></span>
+            <span style="width: 5px; height: 5px; border-radius: 50%; background: ${isDarkMode ? "#10b981" : "#00875A"};"></span>
             <span>${stop.name}</span>
           </div>
         `,
-        iconSize: [80, 20],
-        iconAnchor: [40, 10],
+        iconSize: [90, 22],
+        iconAnchor: [45, 11],
       });
 
       L.marker(stop.coords, { icon: stopIcon }).addTo(stopsLayerRef.current!);
     });
-  }, [route]);
+  }, [route, isDarkMode]);
 
-  // 3. Draw Vehicle Markers: №1042 (trailing red badge) and №1043 (leading green badge)
+  // 3. Draw Vehicle Markers dynamically from vehicles prop
   useEffect(() => {
     if (!vehiclesLayerRef.current) return;
     vehiclesLayerRef.current.clearLayers();
 
-    // Trailing Bus №1042 (Bunching risk, red pill with pulsing ring)
-    const trailingBusIcon = L.divIcon({
-      className: "trailing-bus-marker",
-      html: `
-        <div style="position: relative; display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -50%); cursor: pointer;">
-          <!-- Pulsing halo ring -->
-          <div style="
-            position: absolute;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: rgba(239, 68, 68, 0.25);
-            animation: pulse-ring 2s infinite;
-          "></div>
-          
-          <!-- Badge Pill -->
-          <div style="
-            position: relative;
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            background: #dc2626;
-            color: #ffffff;
-            font-size: 11px;
-            font-weight: 800;
-            padding: 3px 8px;
-            border-radius: 9999px;
-            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
-            border: 2px solid #ffffff;
-            white-space: nowrap;
-          ">
-            <span style="width: 6px; height: 6px; border-radius: 50%; background: #ffffff;"></span>
-            <span>№1042 • Приближение Δ 1.4 мин</span>
+    vehicles.forEach((veh) => {
+      const isSelected = veh.id === selectedVehicleId;
+      const isBunching = veh.status === "BUNCHING_RISK";
+      const isDelayed = veh.status === "DELAYED";
+      const cleanId = veh.id.replace(/^P/, "");
+
+      // Dynamic color theme
+      const badgeBg = isBunching ? "#dc2626" : isDelayed ? "#d97706" : "#00875A";
+      const statusText = isBunching
+        ? `№${cleanId} • Пачкование ${veh.speedKmh} км/ч`
+        : isDelayed
+        ? `№${cleanId} • +${Math.round(veh.delaySeconds / 60)}м (${veh.speedKmh} км/ч)`
+        : `№${cleanId} (Лидер) • ${veh.speedKmh} км/ч`;
+
+      const vehicleIcon = L.divIcon({
+        className: `bus-marker-${veh.id}`,
+        html: `
+          <div style="position: relative; display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -50%); cursor: pointer;">
+            ${(isBunching || isSelected) ? `
+              <div style="
+                position: absolute;
+                width: ${isSelected ? "52px" : "44px"};
+                height: ${isSelected ? "52px" : "44px"};
+                border-radius: 50%;
+                background: ${isBunching ? "rgba(239, 68, 68, 0.3)" : "rgba(37, 99, 235, 0.35)"};
+                animation: pulse-ring 2s infinite;
+              "></div>
+            ` : ""}
+            
+            <!-- Badge Pill -->
+            <div style="
+              position: relative;
+              z-index: 10;
+              display: flex;
+              align-items: center;
+              gap: 4px;
+              background: ${badgeBg};
+              color: #ffffff;
+              font-size: 11px;
+              font-weight: 800;
+              padding: 3px 8px;
+              border-radius: 9999px;
+              box-shadow: 0 4px 14px ${isBunching ? "rgba(220, 38, 38, 0.45)" : "rgba(0, 135, 90, 0.4)"};
+              border: 2px solid ${isSelected ? "#38bdf8" : "#ffffff"};
+              white-space: nowrap;
+              transition: transform 0.15s ease-in-out;
+            ">
+              <span style="width: 6px; height: 6px; border-radius: 50%; background: #ffffff;"></span>
+              <span>${statusText}</span>
+            </div>
+            
+            <!-- Vehicle Direction Pin -->
+            <div style="
+              width: 18px;
+              height: 18px;
+              border-radius: 50%;
+              background: ${badgeBg};
+              border: 2px solid ${isSelected ? "#38bdf8" : "#ffffff"};
+              margin-top: 2px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+            ">
+              <div style="width: 6px; height: 6px; border-radius: 50%; background: #ffffff;"></div>
+            </div>
           </div>
-          
-          <!-- Vehicle Direction Pin -->
-          <div style="
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #dc2626;
-            border: 2px solid #ffffff;
-            margin-top: 2px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-          ">
-            <div style="width: 6px; height: 6px; border-radius: 50%; background: #ffffff;"></div>
-          </div>
-        </div>
-      `,
-      iconSize: [220, 48],
-      iconAnchor: [110, 24],
+        `,
+        iconSize: [220, 48],
+        iconAnchor: [110, 24],
+      });
+
+      const marker = L.marker([veh.latitude, veh.longitude], { icon: vehicleIcon });
+      marker.on("click", () => onSelectVehicle(veh.id));
+      vehiclesLayerRef.current?.addLayer(marker);
     });
 
-    const trailingMarker = L.marker([55.7765, 37.6920], { icon: trailingBusIcon });
-    trailingMarker.on("click", () => onSelectVehicle("P1042"));
-    vehiclesLayerRef.current.addLayer(trailingMarker);
+    // 4. Headway Connector between trailing bus and leading bus
+    const trailingVeh = vehicles.find((v) => v.status === "BUNCHING_RISK") || vehicles.find((v) => v.id.includes("1042"));
+    const leadingVeh = vehicles.find((v) => v.id.includes("1043")) || vehicles.find((v) => v.status === "NORMAL" && v.id !== trailingVeh?.id);
 
-    // Leading Bus №1043 (Green Leader Badge)
-    const leadingBusIcon = L.divIcon({
-      className: "leading-bus-marker",
-      html: `
-        <div style="position: relative; display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -50%); cursor: pointer;">
+    if (trailingVeh && leadingVeh) {
+      const connectorLine = L.polyline(
+        [
+          [trailingVeh.latitude, trailingVeh.longitude],
+          [leadingVeh.latitude, leadingVeh.longitude],
+        ],
+        {
+          color: "#ef4444",
+          weight: 2.5,
+          dashArray: "5, 7",
+          opacity: 0.85,
+        }
+      );
+      vehiclesLayerRef.current.addLayer(connectorLine);
+
+      // Midpoint interval tag
+      const midLat = (trailingVeh.latitude + leadingVeh.latitude) / 2;
+      const midLon = (trailingVeh.longitude + leadingVeh.longitude) / 2;
+      const headwayBadge = L.divIcon({
+        className: "headway-badge",
+        html: `
           <div style="
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            background: #00875A;
+            background: #dc2626;
             color: #ffffff;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 800;
-            padding: 3px 8px;
+            font-family: monospace;
+            padding: 2px 8px;
             border-radius: 9999px;
-            box-shadow: 0 4px 12px rgba(0, 135, 90, 0.35);
-            border: 2px solid #ffffff;
+            border: 1.5px solid #ffffff;
+            box-shadow: 0 2px 10px rgba(220, 38, 38, 0.5);
             white-space: nowrap;
+            transform: translate(-50%, -50%);
           ">
-            <span style="width: 6px; height: 6px; border-radius: 50%; background: #ffffff;"></span>
-            <span>№1043 (Лидер)</span>
+            Δ 1.4 мин • Схлопывание
           </div>
-          <div style="
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #00875A;
-            border: 2px solid #ffffff;
-            margin-top: 2px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-          ">
-            <div style="width: 6px; height: 6px; border-radius: 50%; background: #ffffff;"></div>
-          </div>
-        </div>
-      `,
-      iconSize: [140, 48],
-      iconAnchor: [70, 24],
-    });
-
-    const leadingMarker = L.marker([55.7735, 37.6815], { icon: leadingBusIcon });
-    leadingMarker.on("click", () => onSelectVehicle("P1043"));
-    vehiclesLayerRef.current.addLayer(leadingMarker);
-  }, [vehicles, onSelectVehicle]);
+        `,
+        iconSize: [140, 24],
+        iconAnchor: [70, 12],
+      });
+      vehiclesLayerRef.current.addLayer(L.marker([midLat, midLon], { icon: headwayBadge }));
+    }
+  }, [vehicles, selectedVehicleId, onSelectVehicle, isDarkMode]);
 
   // FlyTo handler
   useEffect(() => {
@@ -309,31 +339,45 @@ export const MapView: React.FC<MapViewProps> = ({
       <div ref={mapContainerRef} className="absolute inset-0 w-full h-full z-0" />
 
       {/* 2. Floating Map Tools (Right side of left panel) */}
-      <div className="absolute top-4 left-[380px] z-20 flex flex-col gap-1 bg-white/95 backdrop-blur-md p-1.5 rounded-xl border border-slate-200/90 shadow-lg pointer-events-auto">
+      <div
+        className={`absolute top-5 left-[365px] z-20 flex flex-col gap-1 p-1.5 rounded-xl border shadow-xl pointer-events-auto backdrop-blur-xl transition-colors ${
+          isDarkMode
+            ? "bg-[#151D2A]/90 border-slate-700/80 text-slate-200 shadow-black/40"
+            : "bg-white/95 border-slate-200/90 text-slate-700 shadow-slate-900/10"
+        }`}
+      >
         <button
           onClick={() => mapInstanceRef.current?.zoomIn()}
-          className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-700 hover:bg-slate-100 transition-colors"
+          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
+            isDarkMode ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-100 text-slate-700"
+          }`}
           title="Приблизить"
         >
           <Plus size={15} />
         </button>
         <button
           onClick={() => mapInstanceRef.current?.zoomOut()}
-          className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-700 hover:bg-slate-100 transition-colors"
+          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
+            isDarkMode ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-100 text-slate-700"
+          }`}
           title="Отдалить"
         >
           <Minus size={15} />
         </button>
-        <div className="h-px bg-slate-200 my-0.5" />
+        <div className={`h-px my-0.5 ${isDarkMode ? "bg-slate-700" : "bg-slate-200"}`} />
         <button
           onClick={() => mapInstanceRef.current?.flyTo([55.7745, 37.6850], 13)}
-          className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-700 hover:bg-slate-100 transition-colors"
+          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
+            isDarkMode ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-100 text-slate-700"
+          }`}
           title="Центрировать на перегоне"
         >
           <Crosshair size={14} />
         </button>
         <button
-          className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-700 hover:bg-slate-100 transition-colors"
+          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
+            isDarkMode ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-100 text-slate-700"
+          }`}
           title="Слои карты"
         >
           <Layers size={14} />
@@ -342,11 +386,19 @@ export const MapView: React.FC<MapViewProps> = ({
 
       {/* 3. Floating Bottom Center Horizon Scrubber Capsule */}
       <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
-        <div className="bg-white/95 backdrop-blur-md rounded-full border border-slate-200/90 shadow-xl px-5 py-2.5 flex items-center gap-3.5 min-w-[580px]">
+        <div
+          className={`rounded-full border shadow-2xl px-4 py-2 flex items-center gap-3 w-[420px] max-w-[calc(100vw-750px)] backdrop-blur-xl transition-colors ${
+            isDarkMode
+              ? "bg-[#151D2A]/90 border-slate-700/80 text-slate-200 shadow-black/50"
+              : "bg-white/95 border-slate-200/90 text-slate-800 shadow-slate-900/10"
+          }`}
+        >
           {/* Play/Pause Button */}
           <button
             onClick={() => setIsPlaying(!isPlaying)}
-            className="w-7 h-7 rounded-full bg-slate-900 text-white flex items-center justify-center hover:bg-slate-800 transition-colors shadow-2xs shrink-0 cursor-pointer"
+            className={`w-7 h-7 rounded-full flex items-center justify-center transition-all shadow-sm shrink-0 cursor-pointer ${
+              isDarkMode ? "bg-blue-600 hover:bg-blue-500 text-white" : "bg-slate-900 hover:bg-slate-800 text-white"
+            }`}
             title={isPlaying ? "Пауза" : "Воспроизведение"}
           >
             {isPlaying ? <Pause size={12} /> : <Play size={12} className="ml-0.5" />}
@@ -355,16 +407,16 @@ export const MapView: React.FC<MapViewProps> = ({
           {/* Rewind */}
           <button
             onClick={() => onTimeStepChange("Сейчас")}
-            className="text-slate-400 hover:text-slate-600 transition-colors shrink-0 cursor-pointer"
+            className="text-slate-400 hover:text-slate-200 transition-colors shrink-0 cursor-pointer"
             title="К текущему моменту"
           >
-            <SkipBack size={14} />
+            <SkipBack size={13} />
           </button>
 
           {/* Time Steps and Track */}
           <div className="flex-1 flex flex-col gap-1 px-1">
             {/* Slider track with active thumb */}
-            <div className="relative w-full h-1.5 bg-slate-200 rounded-full flex items-center">
+            <div className={`relative w-full h-1.5 rounded-full flex items-center ${isDarkMode ? "bg-slate-700" : "bg-slate-200"}`}>
               <div
                 className="h-full bg-[#00875A] rounded-full transition-all"
                 style={{
@@ -379,7 +431,9 @@ export const MapView: React.FC<MapViewProps> = ({
                 }}
               />
               <div
-                className="absolute w-3.5 h-3.5 rounded-full bg-white border-2 border-[#00875A] shadow-md transition-all cursor-pointer"
+                className={`absolute w-3 h-3 rounded-full border-2 border-[#00875A] shadow-md transition-all cursor-pointer ${
+                  isDarkMode ? "bg-slate-900" : "bg-white"
+                }`}
                 style={{
                   left:
                     timeStep === "Сейчас"
@@ -395,43 +449,51 @@ export const MapView: React.FC<MapViewProps> = ({
             </div>
 
             {/* Step buttons row */}
-            <div className="flex justify-between items-center text-[10px] font-semibold text-slate-500 pt-0.5">
+            <div className="flex justify-between items-center text-[10px] font-semibold pt-0.5">
               <button
                 onClick={() => onTimeStepChange("Сейчас")}
                 className={`cursor-pointer transition-colors ${
-                  timeStep === "Сейчас" ? "text-slate-900 font-bold" : "hover:text-slate-800"
+                  timeStep === "Сейчас"
+                    ? isDarkMode ? "text-white font-bold" : "text-slate-900 font-bold"
+                    : isDarkMode ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-800"
                 }`}
               >
-                Сейчас [T=0]
+                Сейчас
               </button>
 
               <button
                 onClick={() => onTimeStepChange("+15 мин")}
-                className={`px-2 py-0.5 rounded-full cursor-pointer transition-all ${
+                className={`px-1.5 py-0.2 rounded-full cursor-pointer transition-all ${
                   timeStep === "+15 мин"
-                    ? "bg-emerald-100 text-emerald-800 font-extrabold border border-emerald-300"
-                    : "hover:text-slate-800"
+                    ? isDarkMode
+                      ? "bg-emerald-900/60 text-emerald-300 font-extrabold border border-emerald-600"
+                      : "bg-emerald-100 text-emerald-800 font-extrabold border border-emerald-300"
+                    : isDarkMode ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-800"
                 }`}
               >
-                T+15 min (Прогноз)
+                +15м (ML)
               </button>
 
               <button
                 onClick={() => onTimeStepChange("+30 мин")}
                 className={`cursor-pointer transition-colors ${
-                  timeStep === "+30 мин" ? "text-slate-900 font-bold" : "hover:text-slate-800"
+                  timeStep === "+30 мин"
+                    ? isDarkMode ? "text-white font-bold" : "text-slate-900 font-bold"
+                    : isDarkMode ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-800"
                 }`}
               >
-                T+30 min
+                +30м
               </button>
 
               <button
                 onClick={() => onTimeStepChange("+45 мин")}
                 className={`cursor-pointer transition-colors ${
-                  timeStep === "+45 мин" ? "text-slate-900 font-bold" : "hover:text-slate-800"
+                  timeStep === "+45 мин"
+                    ? isDarkMode ? "text-white font-bold" : "text-slate-900 font-bold"
+                    : isDarkMode ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-800"
                 }`}
               >
-                T+45 min
+                +45м
               </button>
             </div>
           </div>
@@ -439,16 +501,16 @@ export const MapView: React.FC<MapViewProps> = ({
           {/* Next Arrow */}
           <button
             onClick={() => onTimeStepChange("+30 мин")}
-            className="text-slate-400 hover:text-slate-600 transition-colors shrink-0 cursor-pointer"
+            className="text-slate-400 hover:text-slate-200 transition-colors shrink-0 cursor-pointer"
             title="Следующий горизонт"
           >
-            <ChevronRight size={16} />
+            <ChevronRight size={14} />
           </button>
         </div>
 
         {/* Bottom subtle watermark note */}
-        <div className="text-[10px] text-slate-400 text-center font-medium mt-1">
-          Картографическая основа: CartoDB Positron / ЕГКС Мосгортранс
+        <div className={`text-[9px] text-center font-medium mt-1 ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
+          {isDarkMode ? "CartoDB Dark Matter" : "CartoDB Positron"} • ЕГКС Мосгортранс
         </div>
       </div>
     </div>

@@ -8,9 +8,12 @@ import { ToastContainer } from "./components/Toast";
 import { ScenariosModal } from "./components/ScenariosModal";
 import { MareyDiagram } from "./components/MareyDiagram";
 import { DriverTerminal } from "./components/DriverTerminal";
+import { SlidersHorizontal } from "lucide-react";
 
 export default function App() {
   const [isScenariosOpen, setIsScenariosOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isInspectorOpen, setIsInspectorOpen] = useState(true);
 
   const {
     vehicles,
@@ -42,9 +45,23 @@ export default function App() {
     controlSimulation,
   } = useTelemetry();
 
+  const handleAlertClick = (alert: any) => {
+    handleSelectAlert(alert);
+    setIsInspectorOpen(true);
+  };
+
+  const handleVehicleClick = (id: string) => {
+    handleSelectVehicle(id);
+    setIsInspectorOpen(true);
+  };
+
   return (
-    <div className="relative w-screen h-screen flex flex-col bg-slate-50 text-slate-900 overflow-hidden font-sans select-none">
-      {/* 1. Top Navigation & Metrics Bar */}
+    <div
+      className={`relative w-screen h-screen flex flex-col overflow-hidden font-sans select-none transition-colors duration-200 ${
+        isDarkMode ? "bg-[#0B0F17] text-slate-100" : "bg-slate-100 text-slate-900"
+      }`}
+    >
+      {/* 1. Top Navigation & System Status Bar */}
       <TopBar
         metrics={metrics}
         activeTab={activeTab}
@@ -52,15 +69,18 @@ export default function App() {
         isSimPlaying={isSimPlaying}
         simSpeed={simSpeed}
         onControl={controlSimulation}
+        isDarkMode={isDarkMode}
+        onToggleDarkMode={() => setIsDarkMode((prev) => !prev)}
       />
 
       {/* 2. Main Dashboard Workspace */}
       <main className="relative flex-1 min-h-0 w-full overflow-hidden">
         {activeTab === "marey" ? (
           <MareyDiagram
-            onApplyHolding={applyHolding}
+            onApplyHolding={() => applyHolding(selectedAlertId || "alert_1042")}
             onOpenScenarios={() => setIsScenariosOpen(true)}
             isApplied={selectedAlert?.recommendation?.applied || false}
+            isDarkMode={isDarkMode}
           />
         ) : activeTab === "terminal" ? (
           <DriverTerminal
@@ -80,36 +100,58 @@ export default function App() {
                 vehicles={vehicles}
                 alert={selectedAlert}
                 selectedVehicleId={selectedVehicleId}
-                onSelectVehicle={handleSelectVehicle}
+                onSelectVehicle={handleVehicleClick}
                 flyToTarget={flyToTarget}
                 timeStep={timeStep}
                 onTimeStepChange={(step) => controlSimulation("step", step)}
                 camera={camera}
+                isDarkMode={isDarkMode}
               />
             </div>
 
             {/* Floating Left Panel (Alert Radar) */}
-            <div className="absolute top-4 bottom-8 left-4 z-10 pointer-events-none flex flex-col">
+            <div className="absolute top-5 bottom-5 left-5 z-10 pointer-events-none flex flex-col">
               <AlertRadar
                 alerts={alerts}
                 selectedAlertId={selectedAlertId}
-                onSelectAlert={handleSelectAlert}
+                onSelectAlert={handleAlertClick}
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
                 activeFilter={activeFilter}
                 setActiveFilter={setActiveFilter}
+                isDarkMode={isDarkMode}
               />
             </div>
 
             {/* Floating Right Panel (Inspector) */}
-            <div className="absolute top-4 bottom-6 right-4 z-10 pointer-events-none flex flex-col">
-              <Inspector
-                vehicle={selectedVehicle}
-                alert={selectedAlert}
-                onApplyHolding={applyHolding}
-                onOpenScenarios={() => setIsScenariosOpen(true)}
-              />
-            </div>
+            {isInspectorOpen ? (
+              <div className="absolute top-5 bottom-5 right-5 z-10 pointer-events-none flex flex-col animate-in fade-in slide-in-from-right-4 duration-200">
+                <Inspector
+                  vehicle={selectedVehicle}
+                  alert={selectedAlert}
+                  onApplyHolding={applyHolding}
+                  onOpenScenarios={() => setIsScenariosOpen(true)}
+                  onClose={() => setIsInspectorOpen(false)}
+                  isDarkMode={isDarkMode}
+                />
+              </div>
+            ) : (
+              /* Collapsed Inspector Button */
+              <div className="absolute top-5 right-5 z-10 pointer-events-auto">
+                <button
+                  onClick={() => setIsInspectorOpen(true)}
+                  className={`px-3.5 py-2 rounded-xl border shadow-lg flex items-center gap-2 text-xs font-bold transition-all cursor-pointer backdrop-blur-md ${
+                    isDarkMode
+                      ? "bg-[#151D2A]/90 hover:bg-[#1C2637] border-slate-700/80 text-cyan-300"
+                      : "bg-white/95 hover:bg-slate-50 border-slate-200 text-slate-800 shadow-slate-900/10"
+                  }`}
+                  title="Открыть инспектор СППР"
+                >
+                  <SlidersHorizontal size={15} />
+                  <span>Инспектор СППР</span>
+                </button>
+              </div>
+            )}
           </>
         )}
       </main>
