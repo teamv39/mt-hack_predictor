@@ -23,7 +23,7 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
   onApplyHolding,
   onOpenScenarios,
   isApplied = false,
-  isDarkMode = true,
+  isDarkMode = false,
 }) => {
   const [filterMode, setFilterMode] = useState<"all" | "anomalies">("all");
   const [showPlan, setShowPlan] = useState<boolean>(true);

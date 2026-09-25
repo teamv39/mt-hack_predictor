@@ -40,7 +40,7 @@ export const MapView: React.FC<MapViewProps> = ({
   flyToTarget,
   timeStep,
   onTimeStepChange,
-  isDarkMode = true,
+  isDarkMode = false,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);

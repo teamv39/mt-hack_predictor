@@ -26,7 +26,7 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
   setSearchQuery,
   activeFilter,
   setActiveFilter,
-  isDarkMode = true,
+  isDarkMode = false,
 }) => {
   const [activeTab, setActiveTab] = useState<"alerts" | "analytics">("alerts");
 
