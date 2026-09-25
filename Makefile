@@ -9,6 +9,9 @@ backend-run: ## Запустить Go бэкенд на :8080
 backend-build: ## Собрать Go бэкенд в бинарник
 	cd backend && go build -o bin/server ./cmd/server
 
+frontend-install: ## Установить npm-зависимости фронтенда
+	cd frontend && npm install
+
 frontend-dev: ## Запустить Vite dev-сервер фронтенда
 	cd frontend && npm run dev
 
