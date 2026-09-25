@@ -40,7 +40,7 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
   });
 
   return (
-    <aside className="w-[330px] xl:w-[350px] h-full flex flex-col bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-md overflow-hidden shrink-0 z-20 pointer-events-auto">
+    <aside className="w-[340px] xl:w-[360px] m-3 bg-white/90 backdrop-blur-md shadow-xl border border-slate-200/80 rounded-2xl max-h-[calc(100vh-140px)] flex flex-col overflow-hidden shrink-0 z-20 pointer-events-auto">
       {/* 1. Header with Settings Cog & 3 затемнения badge */}
       <div className="px-3.5 py-3 border-b border-slate-100 flex items-center justify-between">
         <div className="flex items-center gap-2">

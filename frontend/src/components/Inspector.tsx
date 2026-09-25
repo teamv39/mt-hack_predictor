@@ -37,7 +37,7 @@ export const Inspector: React.FC<InspectorProps> = ({
   const shapFactors = alert.shapFactors;
 
   return (
-    <aside className="w-[370px] xl:w-[390px] h-full flex flex-col bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-lg overflow-hidden shrink-0 z-20 pointer-events-auto">
+    <aside className="w-[380px] xl:w-[400px] m-3 bg-white/90 backdrop-blur-md shadow-xl border border-slate-200/80 rounded-2xl max-h-[calc(100vh-140px)] flex flex-col overflow-hidden shrink-0 z-20 pointer-events-auto">
       {/* 1. Header: Борт P1042, ЛиАЗ-6274 (Электробус), Close Button */}
       <div className="p-3.5 border-b border-slate-100 flex items-start justify-between">
         <div>
@@ -81,8 +81,8 @@ export const Inspector: React.FC<InspectorProps> = ({
           </div>
 
           {/* Recharts LineChart matching screenshot */}
-          <div className="w-full h-36 -ml-3">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="w-full h-[160px] -ml-3">
+            <ResponsiveContainer width="100%" height={160}>
               <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                 <XAxis
@@ -239,10 +239,10 @@ export const Inspector: React.FC<InspectorProps> = ({
           <button
             onClick={() => !isApplied && onApplyHolding(alert.id)}
             disabled={isApplied}
-            className={`w-full mt-3 py-2.5 px-4 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all shadow-md ${
+            className={`w-full mt-3 flex items-center justify-center gap-2 font-semibold py-2.5 px-4 rounded-xl shadow-md transition-all ${
               isApplied
-                ? "bg-emerald-600 text-white cursor-default shadow-emerald-500/20"
-                : "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/30 hover:shadow-lg cursor-pointer active:scale-[0.99]"
+                ? "bg-emerald-700 text-white cursor-default shadow-emerald-700/30"
+                : "bg-emerald-600 hover:bg-emerald-700 text-white active:scale-95 cursor-pointer shadow-emerald-600/30 hover:shadow-lg"
             }`}
           >
             <CheckCircle2 size={16} />

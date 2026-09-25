@@ -64,7 +64,7 @@ export default function App() {
         />
 
         {/* Floating Side Panels Overlay (Glassmorphism & Cards) */}
-        <div className="absolute inset-0 pointer-events-none p-4 flex justify-between gap-4 z-10">
+        <div className="absolute inset-0 pointer-events-none flex justify-between z-10">
           {/* Left Column: Center of Incidents / Alert Radar */}
           <AlertRadar
             alerts={alerts}

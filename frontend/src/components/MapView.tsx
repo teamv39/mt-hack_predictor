@@ -62,19 +62,17 @@ export const MapView: React.FC<MapViewProps> = ({
     if (!mapContainerRef.current || mapInstanceRef.current) return;
 
     const map = L.map(mapContainerRef.current, {
-      center: [55.7760, 37.6980], // Area between Baumanskaya and Semyonovskaya
-      zoom: 14,
+      center: [55.7725, 37.6830], // Moscow: Baumanskaya / Semyonovskaya cluster
+      zoom: 13,
       zoomControl: false,
       attributionControl: false,
     });
 
-    L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-      {
-        maxZoom: 19,
-        subdomains: "abcd",
-      }
-    ).addTo(map);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(map);
 
     routeLayerRef.current = L.layerGroup().addTo(map);
     stopsLayerRef.current = L.layerGroup().addTo(map);
@@ -325,7 +323,7 @@ export const MapView: React.FC<MapViewProps> = ({
           <Video size={15} />
         </button>
         <button
-          onClick={() => mapInstanceRef.current?.flyTo([55.7760, 37.6980], 14)}
+          onClick={() => mapInstanceRef.current?.flyTo([55.7725, 37.6830], 13)}
           className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-700 hover:bg-slate-100 transition-colors"
           title="Сброс к Бауманской"
         >
