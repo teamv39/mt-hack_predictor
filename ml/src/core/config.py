@@ -23,6 +23,13 @@ def _repo_root() -> Path:
     return Path(__file__).resolve().parents[3]
 
 
+def _default_models_dir() -> Path:
+    docker_path = Path("/app/data/models")
+    if docker_path.exists():
+        return docker_path
+    return _repo_root() / "data" / "models"
+
+
 class Settings(BaseSettings):
     """Application settings with environment variable support (prefix ML_)."""
 
@@ -43,7 +50,7 @@ class Settings(BaseSettings):
 
     # Paths
     repo_root: Path = _repo_root()
-    models_dir: Path = _repo_root() / "data" / "models"
+    models_dir: Path = _default_models_dir()
     dataset_dir: Path = _repo_root() / "dataset"
     regressor_model_filename: str = "catboost_delay_regressor.cbm"
     classifier_model_filename: str = "catboost_bunching_classifier.cbm"
