@@ -182,7 +182,7 @@ export const MOCK_ALERTS: AlertItem[] = [
     id: "alert_1042",
     vehicleId: "P1042",
     followingVehicleId: "P1043",
-    routeNumberBadge: "40",
+    routeNumberBadge: "м3",
     routeId: "м3",
     urgencyBadge: "ЧЕРЕЗ 22 МИН",
     urgencyMinutes: 22,
@@ -199,7 +199,7 @@ export const MOCK_ALERTS: AlertItem[] = [
     shapFactors: [
       {
         title: "Затор: Бауманская — Электрозаводская",
-        delayMinutes: -5.0,
+        delayMinutes: 5.0,
         percent: 45,
         color: "#ef4444",
       },
@@ -237,7 +237,7 @@ export const MOCK_ALERTS: AlertItem[] = [
   {
     id: "alert_2198",
     vehicleId: "P2198",
-    routeNumberBadge: "137",
+    routeNumberBadge: "м7",
     routeId: "м7",
     urgencyBadge: "ЧЕРЕЗ 14 МИН",
     urgencyMinutes: 14,
@@ -305,7 +305,7 @@ export const MOCK_ALERTS: AlertItem[] = [
     locationName: "ул. Старая Басманная",
     latitude: 55.7612,
     longitude: 37.6475,
-    category: "all",
+    category: "bunching",
     shapFactors: [
       {
         title: "Сужение полосы (дорожные работы)",

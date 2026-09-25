@@ -30,28 +30,42 @@ export const Inspector: React.FC<InspectorProps> = ({
   onOpenScenarios,
   onClose,
 }) => {
-  const chartData = [
-    { sec: 0, plan: 10, fact: 10 },
-    { sec: 100, plan: 38, fact: 20 },
-    { sec: 200, plan: 68, fact: 35 },
-    { sec: 300, plan: 95, fact: 50 },
-    { sec: 400, plan: 125, fact: 60 },
-  ];
+  // Use alert's delay chart data if available, with sensible fallback
+  const chartData = alert?.delayChartData?.length
+    ? alert.delayChartData.map((d) => ({
+        stop: d.stop,
+        plan: d.plan,
+        withoutAction: d.withoutAction,
+        withHolding: d.withHolding,
+      }))
+    : [
+        { stop: "Покровка", plan: 10, withoutAction: 15, withHolding: 15 },
+        { stop: "Доброслободская", plan: 20, withoutAction: 45, withHolding: 30 },
+        { stop: "м. Бауманская", plan: 30, withoutAction: 85, withHolding: 52 },
+        { stop: "м. Семёновская", plan: 45, withoutAction: 145, withHolding: 58 },
+      ];
 
   const recommendation = alert?.recommendation;
   const isApplied = recommendation?.applied || false;
   const alertId = alert?.id || "alert_1042";
 
-  // SHAP feature breakdown bars
-  const shapBars = [
-    { code: "BUR", height: 85, value: "+0.42", label: "Затор перегона" },
-    { code: "PHR", height: 60, value: "+0.28", label: "Посадка в дождь" },
-    { code: "SSR", height: 45, value: "+0.20", label: "Светофор" },
-    { code: "SRP", height: 35, value: "+0.15", label: "Интервал" },
-    { code: "CFD", height: 25, value: "+0.10", label: "Пассажиропоток" },
-    { code: "PET", height: 16, value: "+0.05", label: "Посадка ТПУ" },
-    { code: "FHR", height: 10, value: "+0.03", label: "Маневры" },
-  ];
+  // Use alert's SHAP factors dynamically, with fallback to static demo values
+  const shapBars = alert?.shapFactors?.length
+    ? alert.shapFactors.map((f, i) => ({
+        code: ["BUR", "PHR", "SSR", "SRP", "CFD", "PET", "FHR"][i] || `F${i}`,
+        height: Math.min(95, Math.max(10, f.percent * 1.4)),
+        value: `+${f.delayMinutes.toFixed(1)}`,
+        label: f.title,
+      }))
+    : [
+        { code: "BUR", height: 85, value: "+0.42", label: "Затор перегона" },
+        { code: "PHR", height: 60, value: "+0.28", label: "Посадка в дождь" },
+        { code: "SSR", height: 45, value: "+0.20", label: "Светофор" },
+        { code: "SRP", height: 35, value: "+0.15", label: "Интервал" },
+        { code: "CFD", height: 25, value: "+0.10", label: "Пассажиропоток" },
+        { code: "PET", height: 16, value: "+0.05", label: "Посадка ТПУ" },
+        { code: "FHR", height: 10, value: "+0.03", label: "Маневры" },
+      ];
 
   const vehicleTitle = vehicle ? `Электробус '${vehicle.id}'` : "Электробус '№1042'";
   const routeBadge = vehicle
@@ -111,27 +125,30 @@ export const Inspector: React.FC<InspectorProps> = ({
       <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-2xs flex flex-col gap-1.5">
         <div className="flex items-center justify-between">
           <span className="text-xs font-extrabold text-slate-900">
-            Кривая траектории (Recharts)
+            Прогноз задержки (секунды отставания от плана)
           </span>
           <div className="flex items-center gap-2 text-[10px] font-semibold">
             <span className="text-blue-600 flex items-center gap-1">
               <span className="w-2.5 h-0.5 bg-blue-600 inline-block" /> План
             </span>
+            <span className="text-rose-600 flex items-center gap-1">
+              <span className="w-2.5 h-0.5 bg-rose-500 inline-block" /> Без мер
+            </span>
             <span className="text-emerald-700 flex items-center gap-1">
-              <span className="w-2.5 h-0.5 bg-emerald-600 inline-block" /> Факт/Прогноз
+              <span className="w-2.5 h-0.5 bg-emerald-600 inline-block" /> С Holding
             </span>
           </div>
         </div>
 
         <span className="text-[10px] text-slate-400 font-mono -mt-1">
-          Trajectory comparison curve (секунды отставания)
+          Сравнение сценариев: План vs Без мер vs С рекомендацией ИИ
         </span>
 
-        <div className="h-28 w-full mt-1">
+        <div className="h-36 w-full mt-1">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
-              <XAxis dataKey="sec" tick={{ fontSize: 9, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
-              <YAxis domain={[0, 150]} ticks={[0, 50, 100, 150]} tick={{ fontSize: 9, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
+              <XAxis dataKey="stop" tick={{ fontSize: 9, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
+              <YAxis domain={['auto', 'auto']} tick={{ fontSize: 9, fill: "#94a3b8" }} axisLine={false} tickLine={false} unit=" сек" />
               <Tooltip
                 contentStyle={{
                   fontSize: "11px",
@@ -141,8 +158,9 @@ export const Inspector: React.FC<InspectorProps> = ({
                   boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                 }}
               />
-              <Line type="monotone" dataKey="plan" stroke="#2563eb" strokeWidth={2} dot={{ r: 2 }} isAnimationActive={false} />
-              <Line type="monotone" dataKey="fact" stroke="#059669" strokeWidth={2.5} dot={{ r: 3 }} isAnimationActive={false} />
+              <Line type="monotone" dataKey="plan" name="План" stroke="#2563eb" strokeWidth={2} strokeDasharray="5 3" dot={{ r: 2 }} isAnimationActive={false} />
+              <Line type="monotone" dataKey="withoutAction" name="Без мер" stroke="#ef4444" strokeWidth={2} dot={{ r: 2.5 }} isAnimationActive={false} />
+              <Line type="monotone" dataKey="withHolding" name="С Holding" stroke="#059669" strokeWidth={2.5} dot={{ r: 3 }} isAnimationActive={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -155,7 +173,7 @@ export const Inspector: React.FC<InspectorProps> = ({
             Факторный анализ (SHAP values)
           </span>
           <span className="text-[9px] font-bold font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
-            Модель: Elecor ML v4.2
+            Модель: CatBoost v24.1
           </span>
         </div>
 
@@ -166,7 +184,7 @@ export const Inspector: React.FC<InspectorProps> = ({
         {/* Vertical Bar Chart */}
         <div className="h-24 w-full flex items-end justify-between pt-2 px-1 border-b border-slate-200">
           {shapBars.map((bar) => (
-            <div key={bar.code} className="flex flex-col items-center gap-1 group relative cursor-pointer">
+            <div key={bar.code} className="flex flex-col items-center gap-1 group relative cursor-pointer" title={bar.label}>
               <span className="text-[9px] font-mono text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity absolute -top-4">
                 {bar.value}
               </span>
@@ -189,8 +207,8 @@ export const Inspector: React.FC<InspectorProps> = ({
 
         {/* Top Factor Highlight */}
         <div className="mt-1 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[10px]">
-          <span className="text-slate-600 font-medium">Ключевой фактор: <strong>Затор перегона (BUR)</strong></span>
-          <span className="font-bold text-blue-700">Влияние: 42%</span>
+          <span className="text-slate-600 font-medium">Ключевой фактор: <strong>{shapBars[0]?.label || "Затор перегона"} ({shapBars[0]?.code || "BUR"})</strong></span>
+          <span className="font-bold text-blue-700">Влияние: {shapBars[0]?.value || "+0.42"}</span>
         </div>
       </div>
 

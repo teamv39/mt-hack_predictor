@@ -61,13 +61,13 @@ export const MapView: React.FC<MapViewProps> = ({
       attributionControl: false,
     });
 
-    // OpenStreetMap styled with clean light filter (CartoDB Positron look without watermark)
+    // CartoDB Positron — чистая светлая картооснова для ситуационных дашбордов
     L.tileLayer(
-      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
       {
-        maxZoom: 19,
-        className: "clean-light-tiles",
-        attribution: "© OpenStreetMap / Мосгортранс",
+        maxZoom: 20,
+        subdomains: "abcd",
+        attribution: "© OpenStreetMap / CartoDB Positron / Мосгортранс",
       }
     ).addTo(map);
 
