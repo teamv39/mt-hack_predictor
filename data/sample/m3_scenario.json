@@ -1,0 +1,3331 @@
+{
+  "route": {
+    "id": "m3",
+    "name": "м3",
+    "title": "м. Семеновская — Лубянская пл.",
+    "color": "#3B82F6",
+    "stops": [
+      {
+        "id": "stop_semenovskaya",
+        "name": "м. Семеновская",
+        "lat": 55.7828,
+        "lon": 37.718,
+        "dist_m": 0
+      },
+      {
+        "id": "stop_electrozavod",
+        "name": "Электрозаводский мост",
+        "lat": 55.7766,
+        "lon": 37.7051,
+        "dist_m": 1200
+      },
+      {
+        "id": "stop_bakuninskaya",
+        "name": "Бакунинская ул.",
+        "lat": 55.7735,
+        "lon": 37.692,
+        "dist_m": 2200
+      },
+      {
+        "id": "stop_baumanskaya",
+        "name": "м. Бауманская",
+        "lat": 55.7724,
+        "lon": 37.6791,
+        "dist_m": 3100
+      },
+      {
+        "id": "stop_dobroslobodskaya",
+        "name": "Доброслободская ул.",
+        "lat": 55.7667,
+        "lon": 37.6631,
+        "dist_m": 4300
+      },
+      {
+        "id": "stop_pokrovka",
+        "name": "Покровские ворота",
+        "lat": 55.7601,
+        "lon": 37.6475,
+        "dist_m": 5600
+      },
+      {
+        "id": "stop_lubyanka",
+        "name": "Лубянская площадь",
+        "lat": 55.759,
+        "lon": 37.627,
+        "dist_m": 7100
+      }
+    ],
+    "polyline": [
+      {
+        "lat": 55.7828,
+        "lon": 37.718
+      },
+      {
+        "lat": 55.782387,
+        "lon": 37.71714
+      },
+      {
+        "lat": 55.781973,
+        "lon": 37.71628
+      },
+      {
+        "lat": 55.78156,
+        "lon": 37.71542
+      },
+      {
+        "lat": 55.781147,
+        "lon": 37.71456
+      },
+      {
+        "lat": 55.780733,
+        "lon": 37.7137
+      },
+      {
+        "lat": 55.78032,
+        "lon": 37.71284
+      },
+      {
+        "lat": 55.779907,
+        "lon": 37.71198
+      },
+      {
+        "lat": 55.779493,
+        "lon": 37.71112
+      },
+      {
+        "lat": 55.77908,
+        "lon": 37.71026
+      },
+      {
+        "lat": 55.778667,
+        "lon": 37.7094
+      },
+      {
+        "lat": 55.778253,
+        "lon": 37.70854
+      },
+      {
+        "lat": 55.77784,
+        "lon": 37.70768
+      },
+      {
+        "lat": 55.777427,
+        "lon": 37.70682
+      },
+      {
+        "lat": 55.777013,
+        "lon": 37.70596
+      },
+      {
+        "lat": 55.7766,
+        "lon": 37.7051
+      },
+      {
+        "lat": 55.776393,
+        "lon": 37.704227
+      },
+      {
+        "lat": 55.776187,
+        "lon": 37.703353
+      },
+      {
+        "lat": 55.77598,
+        "lon": 37.70248
+      },
+      {
+        "lat": 55.775773,
+        "lon": 37.701607
+      },
+      {
+        "lat": 55.775567,
+        "lon": 37.700733
+      },
+      {
+        "lat": 55.77536,
+        "lon": 37.69986
+      },
+      {
+        "lat": 55.775153,
+        "lon": 37.698987
+      },
+      {
+        "lat": 55.774947,
+        "lon": 37.698113
+      },
+      {
+        "lat": 55.77474,
+        "lon": 37.69724
+      },
+      {
+        "lat": 55.774533,
+        "lon": 37.696367
+      },
+      {
+        "lat": 55.774327,
+        "lon": 37.695493
+      },
+      {
+        "lat": 55.77412,
+        "lon": 37.69462
+      },
+      {
+        "lat": 55.773913,
+        "lon": 37.693747
+      },
+      {
+        "lat": 55.773707,
+        "lon": 37.692873
+      },
+      {
+        "lat": 55.7735,
+        "lon": 37.692
+      },
+      {
+        "lat": 55.773427,
+        "lon": 37.69114
+      },
+      {
+        "lat": 55.773353,
+        "lon": 37.69028
+      },
+      {
+        "lat": 55.77328,
+        "lon": 37.68942
+      },
+      {
+        "lat": 55.773207,
+        "lon": 37.68856
+      },
+      {
+        "lat": 55.773133,
+        "lon": 37.6877
+      },
+      {
+        "lat": 55.77306,
+        "lon": 37.68684
+      },
+      {
+        "lat": 55.772987,
+        "lon": 37.68598
+      },
+      {
+        "lat": 55.772913,
+        "lon": 37.68512
+      },
+      {
+        "lat": 55.77284,
+        "lon": 37.68426
+      },
+      {
+        "lat": 55.772767,
+        "lon": 37.6834
+      },
+      {
+        "lat": 55.772693,
+        "lon": 37.68254
+      },
+      {
+        "lat": 55.77262,
+        "lon": 37.68168
+      },
+      {
+        "lat": 55.772547,
+        "lon": 37.68082
+      },
+      {
+        "lat": 55.772473,
+        "lon": 37.67996
+      },
+      {
+        "lat": 55.7724,
+        "lon": 37.6791
+      },
+      {
+        "lat": 55.77202,
+        "lon": 37.678033
+      },
+      {
+        "lat": 55.77164,
+        "lon": 37.676967
+      },
+      {
+        "lat": 55.77126,
+        "lon": 37.6759
+      },
+      {
+        "lat": 55.77088,
+        "lon": 37.674833
+      },
+      {
+        "lat": 55.7705,
+        "lon": 37.673767
+      },
+      {
+        "lat": 55.77012,
+        "lon": 37.6727
+      },
+      {
+        "lat": 55.76974,
+        "lon": 37.671633
+      },
+      {
+        "lat": 55.76936,
+        "lon": 37.670567
+      },
+      {
+        "lat": 55.76898,
+        "lon": 37.6695
+      },
+      {
+        "lat": 55.7686,
+        "lon": 37.668433
+      },
+      {
+        "lat": 55.76822,
+        "lon": 37.667367
+      },
+      {
+        "lat": 55.76784,
+        "lon": 37.6663
+      },
+      {
+        "lat": 55.76746,
+        "lon": 37.665233
+      },
+      {
+        "lat": 55.76708,
+        "lon": 37.664167
+      },
+      {
+        "lat": 55.7667,
+        "lon": 37.6631
+      },
+      {
+        "lat": 55.76626,
+        "lon": 37.66206
+      },
+      {
+        "lat": 55.76582,
+        "lon": 37.66102
+      },
+      {
+        "lat": 55.76538,
+        "lon": 37.65998
+      },
+      {
+        "lat": 55.76494,
+        "lon": 37.65894
+      },
+      {
+        "lat": 55.7645,
+        "lon": 37.6579
+      },
+      {
+        "lat": 55.76406,
+        "lon": 37.65686
+      },
+      {
+        "lat": 55.76362,
+        "lon": 37.65582
+      },
+      {
+        "lat": 55.76318,
+        "lon": 37.65478
+      },
+      {
+        "lat": 55.76274,
+        "lon": 37.65374
+      },
+      {
+        "lat": 55.7623,
+        "lon": 37.6527
+      },
+      {
+        "lat": 55.76186,
+        "lon": 37.65166
+      },
+      {
+        "lat": 55.76142,
+        "lon": 37.65062
+      },
+      {
+        "lat": 55.76098,
+        "lon": 37.64958
+      },
+      {
+        "lat": 55.76054,
+        "lon": 37.64854
+      },
+      {
+        "lat": 55.7601,
+        "lon": 37.6475
+      },
+      {
+        "lat": 55.760027,
+        "lon": 37.646133
+      },
+      {
+        "lat": 55.759953,
+        "lon": 37.644767
+      },
+      {
+        "lat": 55.75988,
+        "lon": 37.6434
+      },
+      {
+        "lat": 55.759807,
+        "lon": 37.642033
+      },
+      {
+        "lat": 55.759733,
+        "lon": 37.640667
+      },
+      {
+        "lat": 55.75966,
+        "lon": 37.6393
+      },
+      {
+        "lat": 55.759587,
+        "lon": 37.637933
+      },
+      {
+        "lat": 55.759513,
+        "lon": 37.636567
+      },
+      {
+        "lat": 55.75944,
+        "lon": 37.6352
+      },
+      {
+        "lat": 55.759367,
+        "lon": 37.633833
+      },
+      {
+        "lat": 55.759293,
+        "lon": 37.632467
+      },
+      {
+        "lat": 55.75922,
+        "lon": 37.6311
+      },
+      {
+        "lat": 55.759147,
+        "lon": 37.629733
+      },
+      {
+        "lat": 55.759073,
+        "lon": 37.628367
+      },
+      {
+        "lat": 55.759,
+        "lon": 37.627
+      }
+    ]
+  },
+  "frames": [
+    {
+      "tick": 0,
+      "sim_time_seconds": 0,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.773427,
+          "longitude": 37.69114,
+          "bearing": 261.3,
+          "speed_kmh": 25.0,
+          "delay_seconds": 60.0,
+          "headway_seconds": 540,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.781147,
+          "longitude": 37.71456,
+          "latitude_held": 55.781147,
+          "longitude_held": 37.71456,
+          "bearing": 229.4,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 540,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 1,
+      "sim_time_seconds": 10,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.773353,
+          "longitude": 37.69028,
+          "bearing": 261.4,
+          "speed_kmh": 25.0,
+          "delay_seconds": 65.0,
+          "headway_seconds": 539,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.780733,
+          "longitude": 37.7137,
+          "latitude_held": 55.780733,
+          "longitude_held": 37.7137,
+          "bearing": 229.5,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 539,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 2,
+      "sim_time_seconds": 20,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.773353,
+          "longitude": 37.69028,
+          "bearing": 261.4,
+          "speed_kmh": 25.0,
+          "delay_seconds": 70.0,
+          "headway_seconds": 538,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.780733,
+          "longitude": 37.7137,
+          "latitude_held": 55.780733,
+          "longitude_held": 37.7137,
+          "bearing": 229.5,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 538,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 3,
+      "sim_time_seconds": 30,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.77328,
+          "longitude": 37.68942,
+          "bearing": 261.4,
+          "speed_kmh": 25.0,
+          "delay_seconds": 75.0,
+          "headway_seconds": 537,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.78032,
+          "longitude": 37.71284,
+          "latitude_held": 55.78032,
+          "longitude_held": 37.71284,
+          "bearing": 229.5,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 537,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 4,
+      "sim_time_seconds": 40,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.773207,
+          "longitude": 37.68856,
+          "bearing": 261.3,
+          "speed_kmh": 25.0,
+          "delay_seconds": 80.0,
+          "headway_seconds": 536,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.779907,
+          "longitude": 37.71198,
+          "latitude_held": 55.779907,
+          "longitude_held": 37.71198,
+          "bearing": 229.4,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 536,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 5,
+      "sim_time_seconds": 50,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.773207,
+          "longitude": 37.68856,
+          "bearing": 261.3,
+          "speed_kmh": 25.0,
+          "delay_seconds": 85.0,
+          "headway_seconds": 536,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.779493,
+          "longitude": 37.71112,
+          "latitude_held": 55.779493,
+          "longitude_held": 37.71112,
+          "bearing": 229.5,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 536,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 6,
+      "sim_time_seconds": 60,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.773133,
+          "longitude": 37.6877,
+          "bearing": 261.4,
+          "speed_kmh": 25.0,
+          "delay_seconds": 90.0,
+          "headway_seconds": 535,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.779493,
+          "longitude": 37.71112,
+          "latitude_held": 55.779493,
+          "longitude_held": 37.71112,
+          "bearing": 229.5,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 535,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 7,
+      "sim_time_seconds": 70,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.77306,
+          "longitude": 37.68684,
+          "bearing": 261.4,
+          "speed_kmh": 25.0,
+          "delay_seconds": 95.0,
+          "headway_seconds": 534,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.77908,
+          "longitude": 37.71026,
+          "latitude_held": 55.77908,
+          "longitude_held": 37.71026,
+          "bearing": 229.5,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 534,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 8,
+      "sim_time_seconds": 80,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.77306,
+          "longitude": 37.68684,
+          "bearing": 261.4,
+          "speed_kmh": 25.0,
+          "delay_seconds": 100.0,
+          "headway_seconds": 533,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.778667,
+          "longitude": 37.7094,
+          "latitude_held": 55.778667,
+          "longitude_held": 37.7094,
+          "bearing": 229.4,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 533,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 9,
+      "sim_time_seconds": 90,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.772987,
+          "longitude": 37.68598,
+          "bearing": 261.3,
+          "speed_kmh": 25.0,
+          "delay_seconds": 105.0,
+          "headway_seconds": 532,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.778667,
+          "longitude": 37.7094,
+          "latitude_held": 55.778667,
+          "longitude_held": 37.7094,
+          "bearing": 229.4,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 532,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 10,
+      "sim_time_seconds": 100,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.772913,
+          "longitude": 37.68512,
+          "bearing": 261.4,
+          "speed_kmh": 25.0,
+          "delay_seconds": 110.0,
+          "headway_seconds": 531,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.778253,
+          "longitude": 37.70854,
+          "latitude_held": 55.778253,
+          "longitude_held": 37.70854,
+          "bearing": 229.5,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 531,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 11,
+      "sim_time_seconds": 110,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.772913,
+          "longitude": 37.68512,
+          "bearing": 261.4,
+          "speed_kmh": 25.0,
+          "delay_seconds": 115.0,
+          "headway_seconds": 530,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.77784,
+          "longitude": 37.70768,
+          "latitude_held": 55.77784,
+          "longitude_held": 37.70768,
+          "bearing": 229.5,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 530,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 12,
+      "sim_time_seconds": 120,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.77284,
+          "longitude": 37.68426,
+          "bearing": 261.4,
+          "speed_kmh": 25.0,
+          "delay_seconds": 120.0,
+          "headway_seconds": 529,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.777427,
+          "longitude": 37.70682,
+          "latitude_held": 55.777427,
+          "longitude_held": 37.70682,
+          "bearing": 229.4,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 529,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 13,
+      "sim_time_seconds": 130,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.772767,
+          "longitude": 37.6834,
+          "bearing": 261.3,
+          "speed_kmh": 25.0,
+          "delay_seconds": 125.0,
+          "headway_seconds": 528,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.777427,
+          "longitude": 37.70682,
+          "latitude_held": 55.777427,
+          "longitude_held": 37.70682,
+          "bearing": 229.4,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 528,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 14,
+      "sim_time_seconds": 140,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.772767,
+          "longitude": 37.6834,
+          "bearing": 261.3,
+          "speed_kmh": 25.0,
+          "delay_seconds": 130.0,
+          "headway_seconds": 527,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.777013,
+          "longitude": 37.70596,
+          "latitude_held": 55.777013,
+          "longitude_held": 37.70596,
+          "bearing": 229.5,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 527,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 15,
+      "sim_time_seconds": 150,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.772693,
+          "longitude": 37.68254,
+          "bearing": 261.4,
+          "speed_kmh": 25.0,
+          "delay_seconds": 135.0,
+          "headway_seconds": 526,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.7766,
+          "longitude": 37.7051,
+          "latitude_held": 55.7766,
+          "longitude_held": 37.7051,
+          "bearing": 247.1,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 526,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 16,
+      "sim_time_seconds": 160,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.77262,
+          "longitude": 37.68168,
+          "bearing": 261.4,
+          "speed_kmh": 25.0,
+          "delay_seconds": 140.0,
+          "headway_seconds": 526,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.776393,
+          "longitude": 37.704227,
+          "latitude_held": 55.776393,
+          "longitude_held": 37.704227,
+          "bearing": 247.3,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 526,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 17,
+      "sim_time_seconds": 170,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.77262,
+          "longitude": 37.68168,
+          "bearing": 261.4,
+          "speed_kmh": 25.0,
+          "delay_seconds": 145.0,
+          "headway_seconds": 525,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.776393,
+          "longitude": 37.704227,
+          "latitude_held": 55.776393,
+          "longitude_held": 37.704227,
+          "bearing": 247.3,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 525,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 18,
+      "sim_time_seconds": 180,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.772547,
+          "longitude": 37.68082,
+          "bearing": 261.3,
+          "speed_kmh": 25.0,
+          "delay_seconds": 150.0,
+          "headway_seconds": 524,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.776187,
+          "longitude": 37.703353,
+          "latitude_held": 55.776187,
+          "longitude_held": 37.703353,
+          "bearing": 247.1,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 524,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 19,
+      "sim_time_seconds": 190,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.772473,
+          "longitude": 37.67996,
+          "bearing": 261.4,
+          "speed_kmh": 25.0,
+          "delay_seconds": 155.0,
+          "headway_seconds": 523,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.77598,
+          "longitude": 37.70248,
+          "latitude_held": 55.77598,
+          "longitude_held": 37.70248,
+          "bearing": 247.1,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 523,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 20,
+      "sim_time_seconds": 200,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.7724,
+          "longitude": 37.6791,
+          "bearing": 237.7,
+          "speed_kmh": 6.5,
+          "delay_seconds": 160.0,
+          "headway_seconds": 522,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.77598,
+          "longitude": 37.70248,
+          "latitude_held": 55.77598,
+          "longitude_held": 37.70248,
+          "bearing": 247.1,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 522,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 21,
+      "sim_time_seconds": 210,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.7724,
+          "longitude": 37.6791,
+          "bearing": 237.7,
+          "speed_kmh": 6.5,
+          "delay_seconds": 182.0,
+          "headway_seconds": 511,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.775773,
+          "longitude": 37.701607,
+          "latitude_held": 55.775773,
+          "longitude_held": 37.701607,
+          "bearing": 247.3,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 511,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 22,
+      "sim_time_seconds": 220,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.7724,
+          "longitude": 37.6791,
+          "bearing": 237.7,
+          "speed_kmh": 6.5,
+          "delay_seconds": 204.0,
+          "headway_seconds": 500,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.775567,
+          "longitude": 37.700733,
+          "latitude_held": 55.775567,
+          "longitude_held": 37.700733,
+          "bearing": 247.1,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 500,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 23,
+      "sim_time_seconds": 230,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.7724,
+          "longitude": 37.6791,
+          "bearing": 237.7,
+          "speed_kmh": 6.5,
+          "delay_seconds": 226.0,
+          "headway_seconds": 490,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.77536,
+          "longitude": 37.69986,
+          "latitude_held": 55.77536,
+          "longitude_held": 37.69986,
+          "bearing": 247.1,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 490,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 24,
+      "sim_time_seconds": 240,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.7724,
+          "longitude": 37.6791,
+          "bearing": 237.7,
+          "speed_kmh": 6.5,
+          "delay_seconds": 248.0,
+          "headway_seconds": 479,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.77536,
+          "longitude": 37.69986,
+          "latitude_held": 55.77536,
+          "longitude_held": 37.69986,
+          "bearing": 247.1,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 479,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 25,
+      "sim_time_seconds": 250,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.7724,
+          "longitude": 37.6791,
+          "bearing": 237.7,
+          "speed_kmh": 6.5,
+          "delay_seconds": 270.0,
+          "headway_seconds": 468,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.775153,
+          "longitude": 37.698987,
+          "latitude_held": 55.775153,
+          "longitude_held": 37.698987,
+          "bearing": 247.3,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 468,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 26,
+      "sim_time_seconds": 260,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.77202,
+          "longitude": 37.678033,
+          "bearing": 237.6,
+          "speed_kmh": 6.5,
+          "delay_seconds": 292.0,
+          "headway_seconds": 457,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.774947,
+          "longitude": 37.698113,
+          "latitude_held": 55.775153,
+          "longitude_held": 37.698987,
+          "bearing": 247.1,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 457,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 27,
+      "sim_time_seconds": 270,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.77202,
+          "longitude": 37.678033,
+          "bearing": 237.6,
+          "speed_kmh": 6.5,
+          "delay_seconds": 314.0,
+          "headway_seconds": 446,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.774947,
+          "longitude": 37.698113,
+          "latitude_held": 55.774947,
+          "longitude_held": 37.698113,
+          "bearing": 247.1,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 446,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 28,
+      "sim_time_seconds": 280,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.77202,
+          "longitude": 37.678033,
+          "bearing": 237.6,
+          "speed_kmh": 6.5,
+          "delay_seconds": 336.0,
+          "headway_seconds": 436,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.77474,
+          "longitude": 37.69724,
+          "latitude_held": 55.774947,
+          "longitude_held": 37.698113,
+          "bearing": 247.1,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 436,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 29,
+      "sim_time_seconds": 290,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.77202,
+          "longitude": 37.678033,
+          "bearing": 237.6,
+          "speed_kmh": 6.5,
+          "delay_seconds": 358.0,
+          "headway_seconds": 425,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.774533,
+          "longitude": 37.696367,
+          "latitude_held": 55.77474,
+          "longitude_held": 37.69724,
+          "bearing": 247.3,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 425,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 30,
+      "sim_time_seconds": 300,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.77202,
+          "longitude": 37.678033,
+          "bearing": 237.6,
+          "speed_kmh": 6.5,
+          "delay_seconds": 380.0,
+          "headway_seconds": 414,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.774327,
+          "longitude": 37.695493,
+          "latitude_held": 55.77474,
+          "longitude_held": 37.69724,
+          "bearing": 247.1,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 414,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 31,
+      "sim_time_seconds": 310,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.77202,
+          "longitude": 37.678033,
+          "bearing": 237.6,
+          "speed_kmh": 6.5,
+          "delay_seconds": 402.0,
+          "headway_seconds": 403,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.774327,
+          "longitude": 37.695493,
+          "latitude_held": 55.774533,
+          "longitude_held": 37.696367,
+          "bearing": 247.1,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 403,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 32,
+      "sim_time_seconds": 320,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.77164,
+          "longitude": 37.676967,
+          "bearing": 237.7,
+          "speed_kmh": 6.5,
+          "delay_seconds": 424.0,
+          "headway_seconds": 392,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.77412,
+          "longitude": 37.69462,
+          "latitude_held": 55.774533,
+          "longitude_held": 37.696367,
+          "bearing": 247.1,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 392,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 33,
+      "sim_time_seconds": 330,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.77164,
+          "longitude": 37.676967,
+          "bearing": 237.7,
+          "speed_kmh": 6.5,
+          "delay_seconds": 446.0,
+          "headway_seconds": 382,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.773913,
+          "longitude": 37.693747,
+          "latitude_held": 55.774533,
+          "longitude_held": 37.696367,
+          "bearing": 247.3,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 382,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 34,
+      "sim_time_seconds": 340,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.77164,
+          "longitude": 37.676967,
+          "bearing": 237.7,
+          "speed_kmh": 6.5,
+          "delay_seconds": 468.0,
+          "headway_seconds": 371,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.773913,
+          "longitude": 37.693747,
+          "latitude_held": 55.774327,
+          "longitude_held": 37.695493,
+          "bearing": 247.3,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 371,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 35,
+      "sim_time_seconds": 350,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.77164,
+          "longitude": 37.676967,
+          "bearing": 237.7,
+          "speed_kmh": 6.5,
+          "delay_seconds": 490.0,
+          "headway_seconds": 360,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.773707,
+          "longitude": 37.692873,
+          "latitude_held": 55.774327,
+          "longitude_held": 37.695493,
+          "bearing": 247.1,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 360,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 36,
+      "sim_time_seconds": 360,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.77164,
+          "longitude": 37.676967,
+          "bearing": 237.7,
+          "speed_kmh": 6.5,
+          "delay_seconds": 512.0,
+          "headway_seconds": 349,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.7735,
+          "longitude": 37.692,
+          "latitude_held": 55.77412,
+          "longitude_held": 37.69462,
+          "bearing": 261.4,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 349,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 37,
+      "sim_time_seconds": 370,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.77126,
+          "longitude": 37.6759,
+          "bearing": 237.7,
+          "speed_kmh": 6.5,
+          "delay_seconds": 534.0,
+          "headway_seconds": 338,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.773427,
+          "longitude": 37.69114,
+          "latitude_held": 55.77412,
+          "longitude_held": 37.69462,
+          "bearing": 261.3,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 338,
+          "next_stop_id": "stop_bakuninskaya",
+          "next_stop_name": "Бакунинская ул.",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 38,
+      "sim_time_seconds": 380,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.77126,
+          "longitude": 37.6759,
+          "bearing": 237.7,
+          "speed_kmh": 6.5,
+          "delay_seconds": 556.0,
+          "headway_seconds": 328,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.773427,
+          "longitude": 37.69114,
+          "latitude_held": 55.77412,
+          "longitude_held": 37.69462,
+          "bearing": 261.3,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 328,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 39,
+      "sim_time_seconds": 390,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.77126,
+          "longitude": 37.6759,
+          "bearing": 237.7,
+          "speed_kmh": 6.5,
+          "delay_seconds": 578.0,
+          "headway_seconds": 317,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.773353,
+          "longitude": 37.69028,
+          "latitude_held": 55.773913,
+          "longitude_held": 37.693747,
+          "bearing": 261.4,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 317,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 40,
+      "sim_time_seconds": 400,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.77126,
+          "longitude": 37.6759,
+          "bearing": 237.7,
+          "speed_kmh": 6.5,
+          "delay_seconds": 600.0,
+          "headway_seconds": 306,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.77328,
+          "longitude": 37.68942,
+          "latitude_held": 55.773913,
+          "longitude_held": 37.693747,
+          "bearing": 261.4,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 306,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    },
+    {
+      "tick": 41,
+      "sim_time_seconds": 410,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.77126,
+          "longitude": 37.6759,
+          "bearing": 237.7,
+          "speed_kmh": 6.5,
+          "delay_seconds": 622.0,
+          "headway_seconds": 295,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.773207,
+          "longitude": 37.68856,
+          "latitude_held": 55.773707,
+          "longitude_held": 37.692873,
+          "bearing": 261.3,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 295,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": {
+        "id": "alert_m3_001",
+        "vehicle_id": "1042",
+        "route_id": "m3",
+        "type": "BUS_BUNCHING",
+        "severity": "MEDIUM",
+        "probability": 0.45,
+        "estimated_time_to_incident": 9,
+        "message": "Критическое сближение с бортом №1043 (интервал 4 мин 55 сек)",
+        "factors": [
+          {
+            "feature": "traffic_congestion",
+            "title": "Затор на Бакунинской/Бауманской ул.",
+            "weight": 65.0,
+            "impact_score": 0.65
+          },
+          {
+            "feature": "weather_precipitation",
+            "title": "Задержка посадки (дождь)",
+            "weight": 25.0,
+            "impact_score": 0.25
+          },
+          {
+            "feature": "traffic_light_cycle",
+            "title": "Светофорный цикл ТТК",
+            "weight": 10.0,
+            "impact_score": 0.1
+          }
+        ],
+        "recommendation": {
+          "action_type": "HOLDING",
+          "target_vehicle_id": "1043",
+          "hold_stop_id": "stop_baumanskaya",
+          "hold_stop_name": "м. Бауманская",
+          "duration_seconds": 150,
+          "predicted_impact": "Восстановление нормативного интервала: рост с 1.8 мин до 7.5 мин",
+          "applied": false
+        }
+      }
+    },
+    {
+      "tick": 42,
+      "sim_time_seconds": 420,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.77126,
+          "longitude": 37.6759,
+          "bearing": 237.7,
+          "speed_kmh": 6.5,
+          "delay_seconds": 644.0,
+          "headway_seconds": 284,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.773207,
+          "longitude": 37.68856,
+          "latitude_held": 55.773707,
+          "longitude_held": 37.692873,
+          "bearing": 261.3,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 284,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": {
+        "id": "alert_m3_001",
+        "vehicle_id": "1042",
+        "route_id": "m3",
+        "type": "BUS_BUNCHING",
+        "severity": "MEDIUM",
+        "probability": 0.45,
+        "estimated_time_to_incident": 9,
+        "message": "Критическое сближение с бортом №1043 (интервал 4 мин 44 сек)",
+        "factors": [
+          {
+            "feature": "traffic_congestion",
+            "title": "Затор на Бакунинской/Бауманской ул.",
+            "weight": 65.0,
+            "impact_score": 0.65
+          },
+          {
+            "feature": "weather_precipitation",
+            "title": "Задержка посадки (дождь)",
+            "weight": 25.0,
+            "impact_score": 0.25
+          },
+          {
+            "feature": "traffic_light_cycle",
+            "title": "Светофорный цикл ТТК",
+            "weight": 10.0,
+            "impact_score": 0.1
+          }
+        ],
+        "recommendation": {
+          "action_type": "HOLDING",
+          "target_vehicle_id": "1043",
+          "hold_stop_id": "stop_baumanskaya",
+          "hold_stop_name": "м. Бауманская",
+          "duration_seconds": 150,
+          "predicted_impact": "Восстановление нормативного интервала: рост с 1.8 мин до 7.5 мин",
+          "applied": false
+        }
+      }
+    },
+    {
+      "tick": 43,
+      "sim_time_seconds": 430,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.77088,
+          "longitude": 37.674833,
+          "bearing": 237.6,
+          "speed_kmh": 6.5,
+          "delay_seconds": 666.0,
+          "headway_seconds": 274,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.773133,
+          "longitude": 37.6877,
+          "latitude_held": 55.7735,
+          "longitude_held": 37.692,
+          "bearing": 261.4,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 274,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": {
+        "id": "alert_m3_001",
+        "vehicle_id": "1042",
+        "route_id": "m3",
+        "type": "BUS_BUNCHING",
+        "severity": "MEDIUM",
+        "probability": 0.45,
+        "estimated_time_to_incident": 8,
+        "message": "Критическое сближение с бортом №1043 (интервал 4 мин 34 сек)",
+        "factors": [
+          {
+            "feature": "traffic_congestion",
+            "title": "Затор на Бакунинской/Бауманской ул.",
+            "weight": 65.0,
+            "impact_score": 0.65
+          },
+          {
+            "feature": "weather_precipitation",
+            "title": "Задержка посадки (дождь)",
+            "weight": 25.0,
+            "impact_score": 0.25
+          },
+          {
+            "feature": "traffic_light_cycle",
+            "title": "Светофорный цикл ТТК",
+            "weight": 10.0,
+            "impact_score": 0.1
+          }
+        ],
+        "recommendation": {
+          "action_type": "HOLDING",
+          "target_vehicle_id": "1043",
+          "hold_stop_id": "stop_baumanskaya",
+          "hold_stop_name": "м. Бауманская",
+          "duration_seconds": 150,
+          "predicted_impact": "Восстановление нормативного интервала: рост с 1.8 мин до 7.5 мин",
+          "applied": false
+        }
+      }
+    },
+    {
+      "tick": 44,
+      "sim_time_seconds": 440,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.77088,
+          "longitude": 37.674833,
+          "bearing": 237.6,
+          "speed_kmh": 6.5,
+          "delay_seconds": 688.0,
+          "headway_seconds": 263,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.77306,
+          "longitude": 37.68684,
+          "latitude_held": 55.7735,
+          "longitude_held": 37.692,
+          "bearing": 261.4,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 263,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": {
+        "id": "alert_m3_001",
+        "vehicle_id": "1042",
+        "route_id": "m3",
+        "type": "BUS_BUNCHING",
+        "severity": "MEDIUM",
+        "probability": 0.45,
+        "estimated_time_to_incident": 8,
+        "message": "Критическое сближение с бортом №1043 (интервал 4 мин 23 сек)",
+        "factors": [
+          {
+            "feature": "traffic_congestion",
+            "title": "Затор на Бакунинской/Бауманской ул.",
+            "weight": 65.0,
+            "impact_score": 0.65
+          },
+          {
+            "feature": "weather_precipitation",
+            "title": "Задержка посадки (дождь)",
+            "weight": 25.0,
+            "impact_score": 0.25
+          },
+          {
+            "feature": "traffic_light_cycle",
+            "title": "Светофорный цикл ТТК",
+            "weight": 10.0,
+            "impact_score": 0.1
+          }
+        ],
+        "recommendation": {
+          "action_type": "HOLDING",
+          "target_vehicle_id": "1043",
+          "hold_stop_id": "stop_baumanskaya",
+          "hold_stop_name": "м. Бауманская",
+          "duration_seconds": 150,
+          "predicted_impact": "Восстановление нормативного интервала: рост с 1.8 мин до 7.5 мин",
+          "applied": false
+        }
+      }
+    },
+    {
+      "tick": 45,
+      "sim_time_seconds": 450,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.77088,
+          "longitude": 37.674833,
+          "bearing": 237.6,
+          "speed_kmh": 22.0,
+          "delay_seconds": 710.0,
+          "headway_seconds": 252,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.77306,
+          "longitude": 37.68684,
+          "latitude_held": 55.7735,
+          "longitude_held": 37.692,
+          "bearing": 261.4,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 252,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": {
+        "id": "alert_m3_001",
+        "vehicle_id": "1042",
+        "route_id": "m3",
+        "type": "BUS_BUNCHING",
+        "severity": "MEDIUM",
+        "probability": 0.45,
+        "estimated_time_to_incident": 7,
+        "message": "Критическое сближение с бортом №1043 (интервал 4 мин 12 сек)",
+        "factors": [
+          {
+            "feature": "traffic_congestion",
+            "title": "Затор на Бакунинской/Бауманской ул.",
+            "weight": 65.0,
+            "impact_score": 0.65
+          },
+          {
+            "feature": "weather_precipitation",
+            "title": "Задержка посадки (дождь)",
+            "weight": 25.0,
+            "impact_score": 0.25
+          },
+          {
+            "feature": "traffic_light_cycle",
+            "title": "Светофорный цикл ТТК",
+            "weight": 10.0,
+            "impact_score": 0.1
+          }
+        ],
+        "recommendation": {
+          "action_type": "HOLDING",
+          "target_vehicle_id": "1043",
+          "hold_stop_id": "stop_baumanskaya",
+          "hold_stop_name": "м. Бауманская",
+          "duration_seconds": 150,
+          "predicted_impact": "Восстановление нормативного интервала: рост с 1.8 мин до 7.5 мин",
+          "applied": false
+        }
+      }
+    },
+    {
+      "tick": 46,
+      "sim_time_seconds": 460,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.7705,
+          "longitude": 37.673767,
+          "bearing": 237.7,
+          "speed_kmh": 22.0,
+          "delay_seconds": 712.0,
+          "headway_seconds": 256,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.772987,
+          "longitude": 37.68598,
+          "latitude_held": 55.773427,
+          "longitude_held": 37.69114,
+          "bearing": 261.3,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 256,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": {
+        "id": "alert_m3_001",
+        "vehicle_id": "1042",
+        "route_id": "m3",
+        "type": "BUS_BUNCHING",
+        "severity": "MEDIUM",
+        "probability": 0.45,
+        "estimated_time_to_incident": 7,
+        "message": "Критическое сближение с бортом №1043 (интервал 4 мин 16 сек)",
+        "factors": [
+          {
+            "feature": "traffic_congestion",
+            "title": "Затор на Бакунинской/Бауманской ул.",
+            "weight": 65.0,
+            "impact_score": 0.65
+          },
+          {
+            "feature": "weather_precipitation",
+            "title": "Задержка посадки (дождь)",
+            "weight": 25.0,
+            "impact_score": 0.25
+          },
+          {
+            "feature": "traffic_light_cycle",
+            "title": "Светофорный цикл ТТК",
+            "weight": 10.0,
+            "impact_score": 0.1
+          }
+        ],
+        "recommendation": {
+          "action_type": "HOLDING",
+          "target_vehicle_id": "1043",
+          "hold_stop_id": "stop_baumanskaya",
+          "hold_stop_name": "м. Бауманская",
+          "duration_seconds": 150,
+          "predicted_impact": "Восстановление нормативного интервала: рост с 1.8 мин до 7.5 мин",
+          "applied": false
+        }
+      }
+    },
+    {
+      "tick": 47,
+      "sim_time_seconds": 470,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.77012,
+          "longitude": 37.6727,
+          "bearing": 237.7,
+          "speed_kmh": 22.0,
+          "delay_seconds": 714.0,
+          "headway_seconds": 259,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.772913,
+          "longitude": 37.68512,
+          "latitude_held": 55.773427,
+          "longitude_held": 37.69114,
+          "bearing": 261.4,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 259,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": {
+        "id": "alert_m3_001",
+        "vehicle_id": "1042",
+        "route_id": "m3",
+        "type": "BUS_BUNCHING",
+        "severity": "MEDIUM",
+        "probability": 0.45,
+        "estimated_time_to_incident": 7,
+        "message": "Критическое сближение с бортом №1043 (интервал 4 мин 19 сек)",
+        "factors": [
+          {
+            "feature": "traffic_congestion",
+            "title": "Затор на Бакунинской/Бауманской ул.",
+            "weight": 65.0,
+            "impact_score": 0.65
+          },
+          {
+            "feature": "weather_precipitation",
+            "title": "Задержка посадки (дождь)",
+            "weight": 25.0,
+            "impact_score": 0.25
+          },
+          {
+            "feature": "traffic_light_cycle",
+            "title": "Светофорный цикл ТТК",
+            "weight": 10.0,
+            "impact_score": 0.1
+          }
+        ],
+        "recommendation": {
+          "action_type": "HOLDING",
+          "target_vehicle_id": "1043",
+          "hold_stop_id": "stop_baumanskaya",
+          "hold_stop_name": "м. Бауманская",
+          "duration_seconds": 150,
+          "predicted_impact": "Восстановление нормативного интервала: рост с 1.8 мин до 7.5 мин",
+          "applied": false
+        }
+      }
+    },
+    {
+      "tick": 48,
+      "sim_time_seconds": 480,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.76974,
+          "longitude": 37.671633,
+          "bearing": 237.6,
+          "speed_kmh": 22.0,
+          "delay_seconds": 716.0,
+          "headway_seconds": 263,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.77284,
+          "longitude": 37.68426,
+          "latitude_held": 55.773353,
+          "longitude_held": 37.69028,
+          "bearing": 261.4,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 263,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": {
+        "id": "alert_m3_001",
+        "vehicle_id": "1042",
+        "route_id": "m3",
+        "type": "BUS_BUNCHING",
+        "severity": "MEDIUM",
+        "probability": 0.45,
+        "estimated_time_to_incident": 6,
+        "message": "Критическое сближение с бортом №1043 (интервал 4 мин 23 сек)",
+        "factors": [
+          {
+            "feature": "traffic_congestion",
+            "title": "Затор на Бакунинской/Бауманской ул.",
+            "weight": 65.0,
+            "impact_score": 0.65
+          },
+          {
+            "feature": "weather_precipitation",
+            "title": "Задержка посадки (дождь)",
+            "weight": 25.0,
+            "impact_score": 0.25
+          },
+          {
+            "feature": "traffic_light_cycle",
+            "title": "Светофорный цикл ТТК",
+            "weight": 10.0,
+            "impact_score": 0.1
+          }
+        ],
+        "recommendation": {
+          "action_type": "HOLDING",
+          "target_vehicle_id": "1043",
+          "hold_stop_id": "stop_baumanskaya",
+          "hold_stop_name": "м. Бауманская",
+          "duration_seconds": 150,
+          "predicted_impact": "Восстановление нормативного интервала: рост с 1.8 мин до 7.5 мин",
+          "applied": false
+        }
+      }
+    },
+    {
+      "tick": 49,
+      "sim_time_seconds": 490,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.76936,
+          "longitude": 37.670567,
+          "bearing": 237.7,
+          "speed_kmh": 22.0,
+          "delay_seconds": 718.0,
+          "headway_seconds": 266,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.77284,
+          "longitude": 37.68426,
+          "latitude_held": 55.773353,
+          "longitude_held": 37.69028,
+          "bearing": 261.4,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 266,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": {
+        "id": "alert_m3_001",
+        "vehicle_id": "1042",
+        "route_id": "m3",
+        "type": "BUS_BUNCHING",
+        "severity": "MEDIUM",
+        "probability": 0.45,
+        "estimated_time_to_incident": 6,
+        "message": "Критическое сближение с бортом №1043 (интервал 4 мин 26 сек)",
+        "factors": [
+          {
+            "feature": "traffic_congestion",
+            "title": "Затор на Бакунинской/Бауманской ул.",
+            "weight": 65.0,
+            "impact_score": 0.65
+          },
+          {
+            "feature": "weather_precipitation",
+            "title": "Задержка посадки (дождь)",
+            "weight": 25.0,
+            "impact_score": 0.25
+          },
+          {
+            "feature": "traffic_light_cycle",
+            "title": "Светофорный цикл ТТК",
+            "weight": 10.0,
+            "impact_score": 0.1
+          }
+        ],
+        "recommendation": {
+          "action_type": "HOLDING",
+          "target_vehicle_id": "1043",
+          "hold_stop_id": "stop_baumanskaya",
+          "hold_stop_name": "м. Бауманская",
+          "duration_seconds": 150,
+          "predicted_impact": "Восстановление нормативного интервала: рост с 1.8 мин до 7.5 мин",
+          "applied": false
+        }
+      }
+    },
+    {
+      "tick": 50,
+      "sim_time_seconds": 500,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.76898,
+          "longitude": 37.6695,
+          "bearing": 237.7,
+          "speed_kmh": 22.0,
+          "delay_seconds": 720.0,
+          "headway_seconds": 270,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.772767,
+          "longitude": 37.6834,
+          "latitude_held": 55.77328,
+          "longitude_held": 37.68942,
+          "bearing": 261.3,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 270,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": {
+        "id": "alert_m3_001",
+        "vehicle_id": "1042",
+        "route_id": "m3",
+        "type": "BUS_BUNCHING",
+        "severity": "MEDIUM",
+        "probability": 0.45,
+        "estimated_time_to_incident": 5,
+        "message": "Критическое сближение с бортом №1043 (интервал 4 мин 30 сек)",
+        "factors": [
+          {
+            "feature": "traffic_congestion",
+            "title": "Затор на Бакунинской/Бауманской ул.",
+            "weight": 65.0,
+            "impact_score": 0.65
+          },
+          {
+            "feature": "weather_precipitation",
+            "title": "Задержка посадки (дождь)",
+            "weight": 25.0,
+            "impact_score": 0.25
+          },
+          {
+            "feature": "traffic_light_cycle",
+            "title": "Светофорный цикл ТТК",
+            "weight": 10.0,
+            "impact_score": 0.1
+          }
+        ],
+        "recommendation": {
+          "action_type": "HOLDING",
+          "target_vehicle_id": "1043",
+          "hold_stop_id": "stop_baumanskaya",
+          "hold_stop_name": "м. Бауманская",
+          "duration_seconds": 150,
+          "predicted_impact": "Восстановление нормативного интервала: рост с 1.8 мин до 7.5 мин",
+          "applied": false
+        }
+      }
+    },
+    {
+      "tick": 51,
+      "sim_time_seconds": 510,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.76898,
+          "longitude": 37.6695,
+          "bearing": 237.7,
+          "speed_kmh": 22.0,
+          "delay_seconds": 722.0,
+          "headway_seconds": 274,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.772693,
+          "longitude": 37.68254,
+          "latitude_held": 55.77328,
+          "longitude_held": 37.68942,
+          "bearing": 261.4,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 274,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": {
+        "id": "alert_m3_001",
+        "vehicle_id": "1042",
+        "route_id": "m3",
+        "type": "BUS_BUNCHING",
+        "severity": "MEDIUM",
+        "probability": 0.45,
+        "estimated_time_to_incident": 5,
+        "message": "Критическое сближение с бортом №1043 (интервал 4 мин 34 сек)",
+        "factors": [
+          {
+            "feature": "traffic_congestion",
+            "title": "Затор на Бакунинской/Бауманской ул.",
+            "weight": 65.0,
+            "impact_score": 0.65
+          },
+          {
+            "feature": "weather_precipitation",
+            "title": "Задержка посадки (дождь)",
+            "weight": 25.0,
+            "impact_score": 0.25
+          },
+          {
+            "feature": "traffic_light_cycle",
+            "title": "Светофорный цикл ТТК",
+            "weight": 10.0,
+            "impact_score": 0.1
+          }
+        ],
+        "recommendation": {
+          "action_type": "HOLDING",
+          "target_vehicle_id": "1043",
+          "hold_stop_id": "stop_baumanskaya",
+          "hold_stop_name": "м. Бауманская",
+          "duration_seconds": 150,
+          "predicted_impact": "Восстановление нормативного интервала: рост с 1.8 мин до 7.5 мин",
+          "applied": false
+        }
+      }
+    },
+    {
+      "tick": 52,
+      "sim_time_seconds": 520,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.7686,
+          "longitude": 37.668433,
+          "bearing": 237.6,
+          "speed_kmh": 22.0,
+          "delay_seconds": 724.0,
+          "headway_seconds": 277,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.772693,
+          "longitude": 37.68254,
+          "latitude_held": 55.77328,
+          "longitude_held": 37.68942,
+          "bearing": 261.4,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 277,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": {
+        "id": "alert_m3_001",
+        "vehicle_id": "1042",
+        "route_id": "m3",
+        "type": "BUS_BUNCHING",
+        "severity": "MEDIUM",
+        "probability": 0.45,
+        "estimated_time_to_incident": 5,
+        "message": "Критическое сближение с бортом №1043 (интервал 4 мин 37 сек)",
+        "factors": [
+          {
+            "feature": "traffic_congestion",
+            "title": "Затор на Бакунинской/Бауманской ул.",
+            "weight": 65.0,
+            "impact_score": 0.65
+          },
+          {
+            "feature": "weather_precipitation",
+            "title": "Задержка посадки (дождь)",
+            "weight": 25.0,
+            "impact_score": 0.25
+          },
+          {
+            "feature": "traffic_light_cycle",
+            "title": "Светофорный цикл ТТК",
+            "weight": 10.0,
+            "impact_score": 0.1
+          }
+        ],
+        "recommendation": {
+          "action_type": "HOLDING",
+          "target_vehicle_id": "1043",
+          "hold_stop_id": "stop_baumanskaya",
+          "hold_stop_name": "м. Бауманская",
+          "duration_seconds": 150,
+          "predicted_impact": "Восстановление нормативного интервала: рост с 1.8 мин до 7.5 мин",
+          "applied": false
+        }
+      }
+    },
+    {
+      "tick": 53,
+      "sim_time_seconds": 530,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.76822,
+          "longitude": 37.667367,
+          "bearing": 237.7,
+          "speed_kmh": 22.0,
+          "delay_seconds": 726.0,
+          "headway_seconds": 281,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.77262,
+          "longitude": 37.68168,
+          "latitude_held": 55.773207,
+          "longitude_held": 37.68856,
+          "bearing": 261.4,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 281,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": {
+        "id": "alert_m3_001",
+        "vehicle_id": "1042",
+        "route_id": "m3",
+        "type": "BUS_BUNCHING",
+        "severity": "MEDIUM",
+        "probability": 0.45,
+        "estimated_time_to_incident": 4,
+        "message": "Критическое сближение с бортом №1043 (интервал 4 мин 41 сек)",
+        "factors": [
+          {
+            "feature": "traffic_congestion",
+            "title": "Затор на Бакунинской/Бауманской ул.",
+            "weight": 65.0,
+            "impact_score": 0.65
+          },
+          {
+            "feature": "weather_precipitation",
+            "title": "Задержка посадки (дождь)",
+            "weight": 25.0,
+            "impact_score": 0.25
+          },
+          {
+            "feature": "traffic_light_cycle",
+            "title": "Светофорный цикл ТТК",
+            "weight": 10.0,
+            "impact_score": 0.1
+          }
+        ],
+        "recommendation": {
+          "action_type": "HOLDING",
+          "target_vehicle_id": "1043",
+          "hold_stop_id": "stop_baumanskaya",
+          "hold_stop_name": "м. Бауманская",
+          "duration_seconds": 150,
+          "predicted_impact": "Восстановление нормативного интервала: рост с 1.8 мин до 7.5 мин",
+          "applied": false
+        }
+      }
+    },
+    {
+      "tick": 54,
+      "sim_time_seconds": 540,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.76784,
+          "longitude": 37.6663,
+          "bearing": 237.7,
+          "speed_kmh": 22.0,
+          "delay_seconds": 728.0,
+          "headway_seconds": 284,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.772547,
+          "longitude": 37.68082,
+          "latitude_held": 55.773207,
+          "longitude_held": 37.68856,
+          "bearing": 261.3,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 284,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": {
+        "id": "alert_m3_001",
+        "vehicle_id": "1042",
+        "route_id": "m3",
+        "type": "BUS_BUNCHING",
+        "severity": "MEDIUM",
+        "probability": 0.45,
+        "estimated_time_to_incident": 4,
+        "message": "Критическое сближение с бортом №1043 (интервал 4 мин 44 сек)",
+        "factors": [
+          {
+            "feature": "traffic_congestion",
+            "title": "Затор на Бакунинской/Бауманской ул.",
+            "weight": 65.0,
+            "impact_score": 0.65
+          },
+          {
+            "feature": "weather_precipitation",
+            "title": "Задержка посадки (дождь)",
+            "weight": 25.0,
+            "impact_score": 0.25
+          },
+          {
+            "feature": "traffic_light_cycle",
+            "title": "Светофорный цикл ТТК",
+            "weight": 10.0,
+            "impact_score": 0.1
+          }
+        ],
+        "recommendation": {
+          "action_type": "HOLDING",
+          "target_vehicle_id": "1043",
+          "hold_stop_id": "stop_baumanskaya",
+          "hold_stop_name": "м. Бауманская",
+          "duration_seconds": 150,
+          "predicted_impact": "Восстановление нормативного интервала: рост с 1.8 мин до 7.5 мин",
+          "applied": false
+        }
+      }
+    },
+    {
+      "tick": 55,
+      "sim_time_seconds": 550,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.76746,
+          "longitude": 37.665233,
+          "bearing": 237.6,
+          "speed_kmh": 22.0,
+          "delay_seconds": 730.0,
+          "headway_seconds": 288,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.772473,
+          "longitude": 37.67996,
+          "latitude_held": 55.773133,
+          "longitude_held": 37.6877,
+          "bearing": 261.4,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 288,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": {
+        "id": "alert_m3_001",
+        "vehicle_id": "1042",
+        "route_id": "m3",
+        "type": "BUS_BUNCHING",
+        "severity": "MEDIUM",
+        "probability": 0.45,
+        "estimated_time_to_incident": 3,
+        "message": "Критическое сближение с бортом №1043 (интервал 4 мин 48 сек)",
+        "factors": [
+          {
+            "feature": "traffic_congestion",
+            "title": "Затор на Бакунинской/Бауманской ул.",
+            "weight": 65.0,
+            "impact_score": 0.65
+          },
+          {
+            "feature": "weather_precipitation",
+            "title": "Задержка посадки (дождь)",
+            "weight": 25.0,
+            "impact_score": 0.25
+          },
+          {
+            "feature": "traffic_light_cycle",
+            "title": "Светофорный цикл ТТК",
+            "weight": 10.0,
+            "impact_score": 0.1
+          }
+        ],
+        "recommendation": {
+          "action_type": "HOLDING",
+          "target_vehicle_id": "1043",
+          "hold_stop_id": "stop_baumanskaya",
+          "hold_stop_name": "м. Бауманская",
+          "duration_seconds": 150,
+          "predicted_impact": "Восстановление нормативного интервала: рост с 1.8 мин до 7.5 мин",
+          "applied": false
+        }
+      }
+    },
+    {
+      "tick": 56,
+      "sim_time_seconds": 560,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.76708,
+          "longitude": 37.664167,
+          "bearing": 237.7,
+          "speed_kmh": 22.0,
+          "delay_seconds": 732.0,
+          "headway_seconds": 292,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.772473,
+          "longitude": 37.67996,
+          "latitude_held": 55.773133,
+          "longitude_held": 37.6877,
+          "bearing": 261.4,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 292,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": {
+        "id": "alert_m3_001",
+        "vehicle_id": "1042",
+        "route_id": "m3",
+        "type": "BUS_BUNCHING",
+        "severity": "MEDIUM",
+        "probability": 0.45,
+        "estimated_time_to_incident": 3,
+        "message": "Критическое сближение с бортом №1043 (интервал 4 мин 52 сек)",
+        "factors": [
+          {
+            "feature": "traffic_congestion",
+            "title": "Затор на Бакунинской/Бауманской ул.",
+            "weight": 65.0,
+            "impact_score": 0.65
+          },
+          {
+            "feature": "weather_precipitation",
+            "title": "Задержка посадки (дождь)",
+            "weight": 25.0,
+            "impact_score": 0.25
+          },
+          {
+            "feature": "traffic_light_cycle",
+            "title": "Светофорный цикл ТТК",
+            "weight": 10.0,
+            "impact_score": 0.1
+          }
+        ],
+        "recommendation": {
+          "action_type": "HOLDING",
+          "target_vehicle_id": "1043",
+          "hold_stop_id": "stop_baumanskaya",
+          "hold_stop_name": "м. Бауманская",
+          "duration_seconds": 150,
+          "predicted_impact": "Восстановление нормативного интервала: рост с 1.8 мин до 7.5 мин",
+          "applied": false
+        }
+      }
+    },
+    {
+      "tick": 57,
+      "sim_time_seconds": 570,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.7667,
+          "longitude": 37.6631,
+          "bearing": 233.1,
+          "speed_kmh": 22.0,
+          "delay_seconds": 734.0,
+          "headway_seconds": 295,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.7724,
+          "longitude": 37.6791,
+          "latitude_held": 55.773133,
+          "longitude_held": 37.6877,
+          "bearing": 237.7,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 295,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": {
+        "id": "alert_m3_001",
+        "vehicle_id": "1042",
+        "route_id": "m3",
+        "type": "BUS_BUNCHING",
+        "severity": "MEDIUM",
+        "probability": 0.45,
+        "estimated_time_to_incident": 3,
+        "message": "Критическое сближение с бортом №1043 (интервал 4 мин 55 сек)",
+        "factors": [
+          {
+            "feature": "traffic_congestion",
+            "title": "Затор на Бакунинской/Бауманской ул.",
+            "weight": 65.0,
+            "impact_score": 0.65
+          },
+          {
+            "feature": "weather_precipitation",
+            "title": "Задержка посадки (дождь)",
+            "weight": 25.0,
+            "impact_score": 0.25
+          },
+          {
+            "feature": "traffic_light_cycle",
+            "title": "Светофорный цикл ТТК",
+            "weight": 10.0,
+            "impact_score": 0.1
+          }
+        ],
+        "recommendation": {
+          "action_type": "HOLDING",
+          "target_vehicle_id": "1043",
+          "hold_stop_id": "stop_baumanskaya",
+          "hold_stop_name": "м. Бауманская",
+          "duration_seconds": 150,
+          "predicted_impact": "Восстановление нормативного интервала: рост с 1.8 мин до 7.5 мин",
+          "applied": false
+        }
+      }
+    },
+    {
+      "tick": 58,
+      "sim_time_seconds": 580,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.76626,
+          "longitude": 37.66206,
+          "bearing": 233.1,
+          "speed_kmh": 22.0,
+          "delay_seconds": 736.0,
+          "headway_seconds": 299,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.77202,
+          "longitude": 37.678033,
+          "latitude_held": 55.77306,
+          "longitude_held": 37.68684,
+          "bearing": 237.6,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 299,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": {
+        "id": "alert_m3_001",
+        "vehicle_id": "1042",
+        "route_id": "m3",
+        "type": "BUS_BUNCHING",
+        "severity": "MEDIUM",
+        "probability": 0.45,
+        "estimated_time_to_incident": 3,
+        "message": "Критическое сближение с бортом №1043 (интервал 4 мин 59 сек)",
+        "factors": [
+          {
+            "feature": "traffic_congestion",
+            "title": "Затор на Бакунинской/Бауманской ул.",
+            "weight": 65.0,
+            "impact_score": 0.65
+          },
+          {
+            "feature": "weather_precipitation",
+            "title": "Задержка посадки (дождь)",
+            "weight": 25.0,
+            "impact_score": 0.25
+          },
+          {
+            "feature": "traffic_light_cycle",
+            "title": "Светофорный цикл ТТК",
+            "weight": 10.0,
+            "impact_score": 0.1
+          }
+        ],
+        "recommendation": {
+          "action_type": "HOLDING",
+          "target_vehicle_id": "1043",
+          "hold_stop_id": "stop_baumanskaya",
+          "hold_stop_name": "м. Бауманская",
+          "duration_seconds": 150,
+          "predicted_impact": "Восстановление нормативного интервала: рост с 1.8 мин до 7.5 мин",
+          "applied": false
+        }
+      }
+    },
+    {
+      "tick": 59,
+      "sim_time_seconds": 590,
+      "vehicles": [
+        {
+          "id": "1042",
+          "route_id": "m3",
+          "trip_id": "trip_m3_101",
+          "latitude": 55.76582,
+          "longitude": 37.66102,
+          "bearing": 233.1,
+          "speed_kmh": 22.0,
+          "delay_seconds": 738.0,
+          "headway_seconds": 302,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "DELAYED"
+        },
+        {
+          "id": "1043",
+          "route_id": "m3",
+          "trip_id": "trip_m3_102",
+          "latitude": 55.77202,
+          "longitude": 37.678033,
+          "latitude_held": 55.77306,
+          "longitude_held": 37.68684,
+          "bearing": 237.6,
+          "speed_kmh": 26.0,
+          "delay_seconds": 30.0,
+          "headway_seconds": 302,
+          "next_stop_id": "stop_baumanskaya",
+          "next_stop_name": "м. Бауманская",
+          "status": "ON_TIME"
+        }
+      ],
+      "alert": null
+    }
+  ]
+}

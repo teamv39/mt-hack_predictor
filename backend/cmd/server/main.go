@@ -9,26 +9,80 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/mt-hack-predictor/backend/internal/feeder"
 	"github.com/mt-hack-predictor/backend/internal/models"
+	"github.com/mt-hack-predictor/backend/internal/ws"
 )
 
+type SimulationControlRequest struct {
+	Action string  `json:"action"` // "play", "pause", "speed", "reset"
+	Speed  float64 `json:"speed,omitempty"`
+}
+
+type TelemetryWSMessage struct {
+	Type      string               `json:"type"` // "TELEMETRY_UPDATE"
+	Status    models.SystemStatus  `json:"status"`
+	Vehicles  []models.Vehicle     `json:"vehicles"`
+	Alert     *models.Alert        `json:"alert,omitempty"`
+	Timestamp string               `json:"timestamp"`
+}
+
 func main() {
+	// Initialize Feeder
+	f, err := feeder.LoadScenario(
+		"data/sample/m3_scenario.json",
+		"../../data/sample/m3_scenario.json",
+		"../data/sample/m3_scenario.json",
+	)
+	if err != nil {
+		log.Fatalf("❌ Failed to load m3 scenario: %v", err)
+	}
+	log.Println("✅ Loaded m3 route scenario successfully")
+
+	// Initialize WebSocket Hub
+	hub := ws.NewHub()
+	go hub.Run()
+
+	// Broadcast loop
+	go func() {
+		for {
+			speed := f.GetSpeed()
+			interval := time.Duration(float64(time.Second) / speed)
+			time.Sleep(interval)
+
+			f.AdvanceTick()
+			vehicles, alert, status := f.GetState()
+
+			msg := TelemetryWSMessage{
+				Type:      "TELEMETRY_UPDATE",
+				Status:    status,
+				Vehicles:  vehicles,
+				Alert:     alert,
+				Timestamp: time.Now().Format(time.RFC3339),
+			}
+
+			if data, err := json.Marshal(msg); err == nil {
+				hub.Broadcast(data)
+			}
+		}
+	}()
+
 	r := chi.NewRouter()
 
-	// Base middleware
+	// Middleware
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(60 * time.Second))
 
-	// CORS setup for frontend dashboard
+	// CORS setup
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:*", "http://127.0.0.1:*"},
+		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: true,
+		AllowCredentials: false,
 		MaxAge:           300,
 	}))
 
@@ -42,103 +96,96 @@ func main() {
 		})
 	})
 
+	// WebSocket stream
+	r.Get("/ws", hub.HandleWebSocket)
+
 	// API v1
 	r.Route("/api/v1", func(r chi.Router) {
-		// System status for Top Bar
+		// Route metadata & geometry
+		r.Get("/route", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(f.GetRoute())
+		})
+
+		// System status
 		r.Get("/status", func(w http.ResponseWriter, r *http.Request) {
-			status := models.SystemStatus{
-				LiveSimulationActive: true,
-				EngineLatencyMs:      3.8,
-				ActiveVehiclesCount:  142,
-				ActiveAlertsCount:    3,
-				PreventedIncidents:   19,
-				PunctualityRate:      94.8,
-				SimulationSpeed:      1.0,
-			}
+			_, _, status := f.GetState()
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(status)
 		})
 
-		// Vehicles list / live telemetry
+		// Vehicles list
 		r.Get("/vehicles", func(w http.ResponseWriter, r *http.Request) {
-			vehicles := []models.Vehicle{
-				{
-					ID:             "1042",
-					RouteID:        "m3",
-					TripID:         "trip_m3_101",
-					Latitude:       55.7602,
-					Longitude:      37.6698,
-					Bearing:        125.0,
-					SpeedKmH:       18.4,
-					DelaySeconds:   720.0, // +12 min
-					HeadwaySeconds: 120.0, // only 2 min to trailing bus!
-					NextStopID:     "stop_baumanskaya",
-					NextStopName:   "м. Бауманская",
-					Timestamp:      time.Now(),
-					Status:         "BUNCHING_RISK",
-				},
-				{
-					ID:             "1043",
-					RouteID:        "m3",
-					TripID:         "trip_m3_102",
-					Latitude:       55.7631,
-					Longitude:      37.6620,
-					Bearing:        122.0,
-					SpeedKmH:       24.0,
-					DelaySeconds:   30.0,
-					HeadwaySeconds: 120.0,
-					NextStopID:     "stop_baumanskaya",
-					NextStopName:   "м. Бауманская",
-					Timestamp:      time.Now(),
-					Status:         "ON_TIME",
-				},
-			}
+			vehicles, _, _ := f.GetState()
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(vehicles)
 		})
 
-		// Predictive radar alerts
+		// Alerts list
 		r.Get("/alerts", func(w http.ResponseWriter, r *http.Request) {
-			alerts := []models.Alert{
-				{
-					ID:            "alert_001",
-					VehicleID:     "1042",
-					RouteID:       "m3",
-					Type:          "BUS_BUNCHING",
-					Severity:      models.SeverityCritical,
-					Probability:   0.89,
-					EstimatedTime: 22 * time.Minute,
-					Message:       "Риск схлопывания интервала с бортом №1043 на перегоне ст.м. Бауманская",
-					CreatedAt:     time.Now(),
-					Factors: []models.SHAPFactor{
-						{Feature: "traffic_congestion", Title: "Затор на Бауманской ул.", Weight: 65.0, ImpactScore: 0.65},
-						{Feature: "weather_precipitation", Title: "Задержка посадки (осадки)", Weight: 25.0, ImpactScore: 0.25},
-						{Feature: "traffic_light_cycle", Title: "Светофорный цикл ТТК", Weight: 10.0, ImpactScore: 0.10},
-					},
-					Recommendation: &models.Recommendation{
-						ActionType:      "HOLDING",
-						TargetVehicleID: "1043",
-						HoldStopID:      "stop_baumanskaya",
-						HoldStopName:    "м. Бауманская",
-						DurationSeconds: 150,
-						PredictedImpact: "Выравнивание интервала: устранение пачкования и восстановление 8-минутного такта",
-						Applied:         false,
-					},
-				},
+			_, alert, _ := f.GetState()
+			alerts := []models.Alert{}
+			if alert != nil {
+				alerts = append(alerts, *alert)
 			}
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(alerts)
 		})
 
-		// Apply recommendation
+		// Apply holding recommendation
 		r.Post("/recommendations/{id}/apply", func(w http.ResponseWriter, r *http.Request) {
 			recID := chi.URLParam(r, "id")
+			f.ApplyHolding(true)
+
+			// Immediate broadcast of updated state
+			vehicles, alert, status := f.GetState()
+			msg := TelemetryWSMessage{
+				Type:      "HOLDING_APPLIED",
+				Status:    status,
+				Vehicles:  vehicles,
+				Alert:     alert,
+				Timestamp: time.Now().Format(time.RFC3339),
+			}
+			if data, err := json.Marshal(msg); err == nil {
+				hub.Broadcast(data)
+			}
+
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]any{
-				"status":          "applied",
-				"recommendation":  recID,
-				"dispatched_to":   "АСУ-РДС / Бортовой терминал",
-				"timestamp":       time.Now().Format(time.RFC3339),
+				"status":         "applied",
+				"recommendation": recID,
+				"holding_active": true,
+				"dispatched_to":  "АСУ-РДС / Бортовой терминал борта №1043",
+				"timestamp":      time.Now().Format(time.RFC3339),
+			})
+		})
+
+		// Simulation control (play/pause/speed/reset)
+		r.Post("/simulation/control", func(w http.ResponseWriter, r *http.Request) {
+			var req SimulationControlRequest
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			switch req.Action {
+			case "play":
+				f.SetPlaying(true)
+			case "pause":
+				f.SetPlaying(false)
+			case "speed":
+				if req.Speed > 0 {
+					f.SetSpeed(req.Speed)
+				}
+			case "reset":
+				f.Reset()
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]any{
+				"status": "updated",
+				"action": req.Action,
+				"speed":  f.GetSpeed(),
 			})
 		})
 	})
