@@ -105,6 +105,7 @@ export default function App() {
             onAcknowledge={() => {
               applyHolding("alert_1042");
             }}
+            isDarkMode={isDarkMode}
           />
         ) : (
           <>
