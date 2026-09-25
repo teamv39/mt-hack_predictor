@@ -1,222 +1,161 @@
-import React from "react";
-import {
-  Play,
-  Pause,
-  Layers,
-  Radio,
-  ArrowRight,
-  Bus,
+import React, { useState } from 'react';
+import { 
+  Activity, 
+  Map, 
+  Radio, 
+  GitCommit, 
+  Bus, 
+  Clock, 
+  AlertOctagon, 
   ShieldCheck,
-  AlertTriangle,
-  Sparkles,
-  PieChart,
-} from "lucide-react";
-import { MOCK_SYSTEM_METRICS } from "../mock/telemetry";
+  RotateCcw
+} from 'lucide-react';
 
-interface TopBarProps {
-  metrics: typeof MOCK_SYSTEM_METRICS;
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
-  isSimPlaying: boolean;
-  simSpeed: number;
-  onControl: (action: "play" | "pause" | "speed" | "step", value?: number | string) => void;
+export interface TopBarProps {
+  metrics?: {
+    vehiclesOnLine?: number;
+    punctualityRate?: number;
+    activeIncidentsCount?: number;
+    preventedIncidentsCount?: number;
+    [key: string]: any;
+  };
+  activeTab?: string;
+  setActiveTab?: (tab: string) => void;
+  isSimPlaying?: boolean;
+  simSpeed?: number;
+  onControl?: (action: string, value?: any) => void;
 }
 
-export const TopBar: React.FC<TopBarProps> = ({
+export function TopBar({
   metrics,
-  activeTab,
-  setActiveTab,
+  activeTab: activeTabProp,
+  setActiveTab: setActiveTabProp,
   isSimPlaying,
   simSpeed,
   onControl,
-}) => {
+}: TopBarProps = {}) {
+  const [internalActiveTab, setInternalActiveTab] = useState('hall');
+
+  const currentTab = activeTabProp ?? internalActiveTab;
+
+  const handleTabChange = (tabId: string) => {
+    setInternalActiveTab(tabId);
+    if (setActiveTabProp) {
+      setActiveTabProp(tabId);
+    }
+  };
+
+  const navTabs = [
+    { id: 'hall', label: 'Ситуационный зал', icon: Activity },
+    { id: 'gis', label: 'ГИС Маршрутов', icon: Map },
+    { id: 'telemetry', label: 'Телеметрия флота', icon: Radio },
+    { id: 'intervals', label: 'Интервалограммы', icon: GitCommit },
+  ];
+
+  const vehiclesCount = metrics?.vehiclesOnLine ?? 412;
+  const punctuality = metrics?.punctualityRate != null 
+    ? `${metrics.punctualityRate.toFixed(1)}%` 
+    : '94.8%';
+  const incidentsCount = metrics?.activeIncidentsCount ?? 1;
+  const preventedCount = metrics?.preventedIncidentsCount ?? 19;
+
   return (
-    <div className="w-full bg-white/95 backdrop-blur-md border-b border-slate-200/80 z-30 select-none shadow-2xs">
-      {/* Upper Header Row */}
-      <div className="h-14 px-4 flex items-center justify-between gap-3">
-        {/* Left Section: Logo & Branding & Navigation Tabs */}
-        <div className="flex items-center gap-3">
-          {/* Moscow Transport Red Icon */}
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center text-white shadow-sm font-bold text-xs">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <circle cx="12" cy="12" r="9" />
-                <path d="M12 7a5 5 0 1 0 5 5" />
-                <circle cx="12" cy="12" r="1.5" fill="currentColor" />
-              </svg>
-            </div>
-            <div className="leading-tight">
-              <div className="text-[12px] font-black text-slate-900 tracking-tight uppercase">
-                Московский транспорт
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                <span className="text-[10px] font-bold text-emerald-600 tracking-wider">
-                  LIVE SIMULATION
-                </span>
-              </div>
-            </div>
+    <header className="h-14 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/90 px-4 flex items-center justify-between z-30 select-none shadow-sm">
+      
+      {/* 1. БРЕНДИНГ И СТАТУС СИСТЕМЫ */}
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-black text-sm shadow-sm shadow-blue-500/30">
+            М
           </div>
-
-          <div className="h-7 w-[1px] bg-slate-200 mx-1" />
-
-          {/* Sub-brand / Organization */}
-          <div className="leading-tight pr-2">
-            <div className="text-[12px] font-bold text-slate-800">Москтор 2.0</div>
-            <div className="text-[10px] text-slate-500 font-medium">ЦОДД / ДИТ Москва</div>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-1.5">
+              <span className="font-extrabold text-slate-900 text-sm tracking-tight">Москтор 2.0</span>
+              <span className="bg-slate-100 text-slate-600 text-[10px] font-bold px-1.5 py-0.5 rounded border border-slate-200">
+                PROD
+              </span>
+            </div>
+            <span className="text-[10px] text-slate-400 font-medium">ЦОДД / ДИТ Москвы</span>
           </div>
-
-          {/* Navigation Tabs matching screenshot */}
-          <nav className="flex items-center gap-1.5 ml-2">
-            {/* Active Tab: Ситуационный зал */}
-            <button
-              onClick={() => setActiveTab("Ситуационный зал")}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-sm shadow-blue-500/20"
-            >
-              <Sparkles size={13} />
-              <span>Ситуационный зал</span>
-            </button>
-
-            {/* Inactive Tab: ГИС Маршрутов */}
-            <button
-              onClick={() => setActiveTab("ГИС Маршрутов")}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-semibold text-xs transition-colors"
-            >
-              <Layers size={14} className="text-slate-500" />
-              <span>ГИС Маршрутов</span>
-            </button>
-
-            {/* Inactive Tab: Телеметрия флота */}
-            <button
-              onClick={() => setActiveTab("Телеметрия флота")}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-semibold text-xs transition-colors"
-            >
-              <Radio size={14} className="text-slate-500" />
-              <span>Телеметрия флота</span>
-            </button>
-
-            {/* Inactive Tab: Интервалограммы */}
-            <button
-              onClick={() => setActiveTab("Интервалограммы")}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-semibold text-xs transition-colors"
-            >
-              <ArrowRight size={13} className="text-slate-500" />
-              <span>Интервалограммы</span>
-            </button>
-          </nav>
         </div>
 
-        {/* Right Section: Metric Chips & Controls matching screenshot */}
-        <div className="flex items-center gap-2">
-          {/* Card 1: Бортов на линии */}
-          <div className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-white border border-slate-200 shadow-2xs">
-            <Bus size={14} className="text-slate-600" />
-            <div className="leading-none">
-              <div className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">Бортов на линии</div>
-              <div className="text-xs font-black text-slate-900 mt-0.5">{metrics.vehiclesOnLine}</div>
-            </div>
-          </div>
-
-          {/* Card 2: Пунктуальность 94.8% */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200/80 text-emerald-800">
-            <PieChart size={13} className="text-emerald-600" />
-            <span className="text-[11px] font-medium text-emerald-700">Пунктуальность</span>
-            <span className="text-xs font-black text-emerald-700 ml-0.5">{metrics.punctualityRate.toFixed(1)}%</span>
-          </div>
-
-          {/* Card 3: Активные инциденты 3 */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-rose-50 border border-rose-200/90 text-rose-800">
-            <AlertTriangle size={13} className="text-rose-600" />
-            <span className="text-[11px] font-bold text-rose-700 uppercase">Активные инциденты</span>
-            <span className="text-xs font-black text-rose-800 ml-0.5">{metrics.activeIncidentsCount}</span>
-          </div>
-
-          {/* Card 4: Предотвращено сбоев 19 */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200/80 text-emerald-800">
-            <ShieldCheck size={13} className="text-emerald-600" />
-            <span className="text-[11px] font-bold text-emerald-700 uppercase">Предотвращено сбоев</span>
-            <span className="text-xs font-black text-emerald-800 ml-0.5">{metrics.preventedIncidentsCount}</span>
-          </div>
-
-          {/* Controls: Play/Pause, 10, 15, x5, x10 */}
-          <div className="flex items-center gap-1 pl-1">
-            <button
-              onClick={() => onControl(isSimPlaying ? "pause" : "play")}
-              className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
-              title="Пауза / Пуск"
-            >
-              {isSimPlaying ? <Pause size={13} /> : <Play size={13} />}
-            </button>
-            <button
-              onClick={() => onControl("step", "+10 мин")}
-              className="px-2 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
-            >
-              10
-            </button>
-            <button
-              onClick={() => onControl("step", "+15 мин")}
-              className="px-2 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
-            >
-              15
-            </button>
-            <button
-              onClick={() => onControl("speed", 5)}
-              className={`px-2 py-1 rounded-lg text-xs font-bold transition-colors ${
-                simSpeed === 5 ? "bg-blue-600 text-white" : "text-slate-600 hover:bg-slate-100"
-              }`}
-            >
-              x5
-            </button>
-            <button
-              onClick={() => onControl("speed", 10)}
-              className={`px-2 py-1 rounded-lg text-xs font-bold transition-colors ${
-                simSpeed === 10 ? "bg-blue-600 text-white" : "text-slate-600 hover:bg-slate-100"
-              }`}
-            >
-              x10
-            </button>
-          </div>
+        {/* Live-индикатор */}
+        <div className="h-6 w-px bg-slate-200 mx-1" />
+        <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-50 border border-emerald-200/60 text-emerald-700 text-[11px] font-semibold">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span>LIVE SIMULATION</span>
         </div>
       </div>
 
-      {/* Subheader Strip: ПРЕДИКТИВНЫЙ РАДАР, МОДЕЛЬ RT-NEURAL, Горизонт, MAE, Сектор мониторинга */}
-      <div className="h-8 px-4 bg-slate-50/90 border-t border-slate-200/70 flex items-center justify-between text-xs">
-        <div className="flex items-center gap-3">
-          {/* Red Dot + ПРЕДИКТИВНЫЙ РАДАР */}
-          <div className="flex items-center gap-1.5 font-black text-rose-600 text-[11px] tracking-wide uppercase">
-            <span className="w-2 h-2 rounded-full bg-rose-600 inline-block"></span>
-            <span>Предиктивный радар</span>
-          </div>
+      {/* 2. НАВИГАЦИОННЫЕ ВКЛАДКИ (СЕГМЕНТИРОВАННЫЙ ТАБ-БАР) */}
+      <nav className="flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200/80">
+        {navTabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = currentTab === tab.id || currentTab === tab.label;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                isActive
+                  ? 'bg-white text-blue-600 shadow-sm border border-slate-200/60'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+              }`}
+            >
+              <Icon className={isActive ? 'text-blue-600' : 'text-slate-400'} size={14} />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </nav>
 
-          {/* Model Badge */}
-          <span className="px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-600 font-bold text-[10px]">
-            МОДЕЛЬ {metrics.modelVersion}
-          </span>
-
-          {/* Simulation Horizon */}
-          <span className="text-slate-600 text-[11px]">
-            Горизонт симуляции: <strong className="text-slate-900 font-black">{metrics.simulationHorizon}</strong>
-          </span>
-
-          {/* MAE Accuracy */}
-          <span className="text-slate-600 text-[11px]">
-            MAE точность: <strong className="text-emerald-600 font-bold">{metrics.maeAccuracy}</strong>
-          </span>
+      {/* 3. ОПЕРАТИВНЫЕ МЕТРИКИ (KPI CHIPS) */}
+      <div className="flex items-center gap-2">
+        {/* Бортов на линии */}
+        <div className="h-8 px-2.5 rounded-lg bg-slate-50 border border-slate-200 flex items-center gap-2 text-xs">
+          <Bus className="text-slate-400" size={14} />
+          <span className="text-[11px] text-slate-500 font-medium">Бортов:</span>
+          <span className="font-extrabold text-slate-900">{vehiclesCount}</span>
         </div>
 
-        {/* Right sub-bar items */}
-        <div className="flex items-center gap-3 text-[11px]">
-          <span className="text-slate-500 font-medium">
-            СЕКТОР МОНИТОРИНГА: <strong className="text-slate-700">{metrics.sector}</strong>
-          </span>
-          <span className="font-mono text-[10px] text-emerald-600 font-bold">
-            EBT: {metrics.ebt} | FPS: {metrics.fps}
-          </span>
+        {/* Пунктуальность */}
+        <div className="h-8 px-2.5 rounded-lg bg-emerald-50/70 border border-emerald-200 flex items-center gap-2 text-xs">
+          <Clock className="text-emerald-600" size={14} />
+          <span className="text-[11px] text-emerald-800 font-medium">Пунктуальность:</span>
+          <span className="font-extrabold text-emerald-700">{punctuality}</span>
         </div>
+
+        {/* Активные инциденты */}
+        <div className="h-8 px-2.5 rounded-lg bg-rose-50/80 border border-rose-200 flex items-center gap-2 text-xs">
+          <AlertOctagon className="text-rose-600" size={14} />
+          <span className="text-[11px] text-rose-800 font-medium">Инциденты:</span>
+          <span className="font-extrabold text-rose-700">{incidentsCount}</span>
+        </div>
+
+        {/* Предотвращено */}
+        <div className="h-8 px-2.5 rounded-lg bg-indigo-50/70 border border-indigo-200 flex items-center gap-2 text-xs">
+          <ShieldCheck className="text-indigo-600" size={14} />
+          <span className="text-[11px] text-indigo-800 font-medium">Спасены:</span>
+          <span className="font-extrabold text-indigo-700">{preventedCount}</span>
+        </div>
+
+        {/* Кнопка сброса/старта симуляции */}
+        <div className="h-6 w-px bg-slate-200 mx-1" />
+        <button 
+          title="Перезапустить поток"
+          onClick={() => {
+            if (onControl) {
+              onControl("step", "+10 мин");
+            }
+          }}
+          className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-600 flex items-center justify-center transition-all border border-slate-200/80 cursor-pointer"
+        >
+          <RotateCcw size={14} />
+        </button>
       </div>
-    </div>
+
+    </header>
   );
-};
+}
+
+export default TopBar;
