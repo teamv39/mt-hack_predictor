@@ -150,8 +150,55 @@ uv run uvicorn src.api.server:app --reload --port 8000 # Запуск серви
 1. Получил задачу от пользователя
 2. Прочитал docs/implementation_plan.md (текущий статус, что уже сделано)
 3. Прочитал релевантные P0/P1 документы (контракты, архитектура)
-4. Выполнил задачу в коде
-5. Обновил все затронутые документы (контракты, план, чеклист)
-6. Проверил сборку (make check)
+4. Создал ветку от актуального dev (git checkout dev && git pull && git checkout -b feat/...)
+5. Выполнил задачу в коде
+6. Обновил все затронутые документы (контракты, план, чеклист)
+7. Проверил сборку (make check)
+8. Запушил ветку и слил в dev (или открыл PR в dev)
 ```
+
+---
+
+## 7. Регламент работы с Git (Git Flow)
+
+> **КРИТИЧЕСКИ ВАЖНОЕ ПРАВИЛО:** Все разработчики и AI-агенты работают **ТОЛЬКО от ветки `dev`**. Прямые коммиты и пуши в `main` **СТРОГО ЗАПРЕЩЕНЫ**. `main` используется исключительно для финальных стабильных релизов на защиту.
+
+### 7.1. Правила ветвления
+1. **Базовая ветка:** Все ветки создаются строго от актуального `origin/dev`:
+   ```bash
+   git checkout dev
+   git pull origin dev
+   git checkout -b <prefix>/<short-description>
+   ```
+2. **Именование веток (префиксы):**
+   * `feat/<name>` — новая фича или компонент (например, `feat/ndtp-tcp-receiver`, `feat/catboost-training`, `feat/inspector-card`).
+   * `fix/<name>` — исправление бага или ошибки в логике (например, `fix/websocket-reconnect`).
+   * `docs/<name>` — добавление или актуализация документации.
+   * `refactor/<name>` — рефакторинг без изменения внешнего API.
+   * `chore/<name>` — обновление зависимостей, Dockerfile, Makefile.
+
+### 7.2. Чеклист перед коммитом и пушем
+Перед каждым коммитом и пушем агент **ОБЯЗАН**:
+1. Запустить `make check` (проверка компиляции Go и сборки Vite). Никаких сломанных билдов!
+2. Проверить `git status` — никаких лишних тяжелых файлов (датасеты, логи, бинарники).
+3. Написать осмысленное сообщение коммита по Conventional Commits:
+   * `feat(backend): add NDTP TCP listener on port 9201`
+   * `fix(ml): resolve process substitution syntax in Dockerfile`
+   * `docs(plan): update Phase 7 roadmap with official case criteria`
+4. Запушить ветку в `origin`:
+   ```bash
+   git push -u origin <имя-ветки>
+   ```
+5. Слить в `dev` (или создать Pull Request в `dev`):
+   ```bash
+   git checkout dev
+   git pull origin dev
+   git merge --no-ff <имя-ветки>
+   git push origin dev
+   ```
+
+### 7.3. Запрещенные действия
+* ❌ Коммитить или пушить напрямую в ветку `main`.
+* ❌ Делать `git push --force` в `dev` или `main`.
+* ❌ Добавлять тяжелые файлы (> 10 МБ, `.tar`, `.csv`, `.parquet`, модели) в Git в обход `.gitignore`.
 
