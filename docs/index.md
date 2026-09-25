@@ -19,6 +19,7 @@
 | 🎯 **[CASE_DESCRIPTION.md](CASE_DESCRIPTION.md)** | **Вся команда** | Официальное техническое задание и критерии оценивания кейса №3 хакатона (критерии 1–5, лимиты сабмитов). |
 | 📊 **[dataset_spec.md](dataset_spec.md)** | **Миша / Артём** | Полное описание структуры датасета (train/test/validate, labels, submission.csv, метрика MAE / score). |
 | 📡 **[ndtp_emulator_spec.md](ndtp_emulator_spec.md)** | **Денис / Артём** | Спецификация бинарного протокола NDTP и REST-API эмулятора телеметрии (G6CellNav00, TCP handshake, порты). |
+| ⚡ **[backend_and_telemetry_guide.md](backend_and_telemetry_guide.md)** | **Денис / Эксперты Go** | Технический паспорт Go-бэкенда: парсер NDTP TCP (:9201), In-Memory матчер 5 558 остановок (88 нс), формула Велдинга (5.5 нс) и микробенчмарки. |
 | 📋 **[implementation_plan.md](implementation_plan.md)** | **Вся команда** | План реализации: аудит выполненных фаз, сводка готовности по компонентам, TODO для Фазы 7. |
 
 ---

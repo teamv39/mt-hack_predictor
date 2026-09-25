@@ -415,6 +415,7 @@
 | **Backend** | 7.3.4 Docker Compose со стеком | Денис | 🟡 P1 | 7.3.1, 7.3.3 | ✅ Реализован (порты :8080, :9201, :8000, :5173, :18080) |
 | **Backend** | 7.3.5 Schedule, Headway & Alerts | Денис | 🔴 P0 | 7.3.1, 7.3.2 | ✅ Реализован (привязка к расписанию, интервалы, алерты, Holding) |
 | **Backend** | 7.3.6 What-If & Business KPIs | Денис | 🟡 P1 | 7.3.5 | ✅ Реализован (Welding formula, KPIs, NDTP 1-click, /stops) |
+| **Backend** | 7.3.7 Паспорт бэкенда и микробенчмарки | Денис | 🔴 P0 | `backend/internal/...` | ✅ Реализован (`docs/backend_and_telemetry_guide.md`, бенчмарки ns/op, 0 allocs) |
 | **Frontend** | 7.4.1 Карточка инцидента по ТЗ | Кирилл | 🔴 P0 | `Inspector.tsx` | ✅ Реализован (таймер горизонта, SHAP-факторы, декомпозиция) |
 | **Frontend** | 7.4.2 Светофорная шкала рисков | Кирилл | 🔴 P0 | `MapView.tsx` | ✅ Реализован (светлая карта CartoDB Positron, цвета бортов, связка пачкования) |
 | **Frontend** | 7.4.3 Actionable UI (Holding) | Кирилл | 🟡 P1 | `Inspector.tsx` | ✅ Реализован (кнопка Holding, Recharts график План vs Без мер vs С ИИ) |
