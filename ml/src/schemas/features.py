@@ -7,7 +7,7 @@ while keeping optional DSS fields (headway / holding) for the live dashboard.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -79,8 +79,12 @@ class FeatureVector(BaseModel):
         le=360.0,
         description="Last valid course at T, degrees",
     )
-    latitude: Optional[float] = Field(default=None, ge=-90.0, le=90.0)
-    longitude: Optional[float] = Field(default=None, ge=-180.0, le=180.0)
+    latitude: Optional[float] = Field(
+        default=None, ge=-90.0, le=90.0, description="Last valid GPS latitude, degrees"
+    )
+    longitude: Optional[float] = Field(
+        default=None, ge=-180.0, le=180.0, description="Last valid GPS longitude, degrees"
+    )
     alt: Optional[float] = Field(default=None, description="Last valid altitude, metres")
     location_valid: Optional[bool] = Field(
         default=None,
@@ -147,9 +151,27 @@ class FeatureVector(BaseModel):
         description="Alias of heading",
     )
 
+    # --- Competition features (extended telemetry & route progress) --------
+    speed_mean_5m: Optional[float] = Field(default=None, ge=0.0, description="Mean speed over 5-min trailing window, km/h")
+    speed_mean_10m: Optional[float] = Field(default=None, ge=0.0, description="Mean speed over 10-min trailing window, km/h")
+    speed_std_3m: Optional[float] = Field(default=None, ge=0.0, description="Std dev of speed over 3-min window, km/h")
+    speed_min_3m: Optional[float] = Field(default=None, ge=0.0, description="Min speed over 3-min window, km/h")
+    speed_max_3m: Optional[float] = Field(default=None, ge=0.0, description="Max speed over 3-min window, km/h")
+    speed_trend: Optional[float] = Field(default=None, description="Speed change proxy: avg3m - avg10m, km/h")
+    idle_time_5m: Optional[float] = Field(default=None, ge=0.0, description="Estimated idle seconds in 5-min window")
+    telemetry_age_s: Optional[float] = Field(default=None, ge=0.0, description="Seconds since last telemetry fix at moment T")
+    points_count_5m: Optional[int] = Field(default=None, ge=0, description="Count of traffic points in 5-min window")
+    heading_std_3m: Optional[float] = Field(default=None, ge=0.0, description="Circular std of heading over 3-min window")
+    dist_to_target_m: Optional[float] = Field(default=None, ge=0.0, description="Haversine distance to target stop, metres")
+    speed_needed_kmh: Optional[float] = Field(default=None, ge=0.0, description="Required avg speed to reach target on time")
+    stops_remaining: Optional[int] = Field(default=None, ge=0, description="Planned stops between T and target")
+    plan_time_to_target_s: Optional[float] = Field(default=None, ge=0.0, description="Plan time from last passed stop to target, seconds")
+    time_since_last_stop_s: Optional[float] = Field(default=None, ge=0.0, description="Seconds since planned departure of last passed stop")
+    plan_sec_per_stop: Optional[float] = Field(default=None, ge=0.0, description="plan_time_to_target_s / stops_remaining")
+
     @model_validator(mode="before")
     @classmethod
-    def _align_aliases(cls, data):  # noqa: ANN001
+    def _align_aliases(cls, data: Any) -> Any:
         if not isinstance(data, dict):
             return data
         payload = dict(data)
@@ -237,7 +259,7 @@ class FeatureVector(BaseModel):
 
     @field_validator("location_valid", mode="before")
     @classmethod
-    def _parse_location_valid(cls, value):  # noqa: ANN001
+    def _parse_location_valid(cls, value: Any) -> Any:
         if value is None or value == "":
             return None
         if isinstance(value, bool):

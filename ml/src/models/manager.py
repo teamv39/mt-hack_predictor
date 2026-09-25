@@ -27,28 +27,37 @@ class ModelManager:
         self.load_models()
 
     def load_models(self) -> None:
-        """Loads delay regressor if available; classifier is optional (DSS)."""
-        reg_file = self.settings.models_dir / self.settings.regressor_model_filename
-        clf_file = self.settings.models_dir / self.settings.classifier_model_filename
+        """Loads delay regressor if available; classifier is optional (DSS).
 
-        if reg_file.exists():
+        Candidate chain: competition 24-feature model → legacy 13-feature model
+        → heuristic fallback. Each candidate that exists but fails to load
+        (e.g. feature-parity guard) is skipped with a logged reason, so the
+        service never degrades past a usable model.
+        """
+        clf_file = self.settings.models_dir / self.settings.classifier_model_filename
+        clf_path = clf_file if clf_file.exists() else None
+
+        candidates = [
+            ("competition", self.settings.models_dir / self.settings.competition_model_filename),
+            ("legacy", self.settings.models_dir / self.settings.regressor_model_filename),
+        ]
+
+        for name, reg_file in candidates:
+            if not reg_file.exists():
+                logger.info(f"{name} model not found at {reg_file}, trying next candidate")
+                continue
             try:
-                logger.info(f"Attempting to load CatBoost regressor from {reg_file}")
-                clf_path = clf_file if clf_file.exists() else None
+                logger.info(f"Loading {name} CatBoost regressor from {reg_file}")
                 self._predictor = CatBoostPredictor(reg_file, clf_path)
-                logger.info("CatBoost delay model active")
+                logger.info(f"CatBoost delay model active ({name})")
                 return
             except Exception as e:  # noqa: BLE001
                 logger.warning(
-                    f"Failed to initialize CatBoost predictor: {e}. "
-                    "Switching to heuristic fallback."
+                    f"Failed to initialize {name} CatBoost predictor: {e}. "
+                    "Trying next candidate."
                 )
-        else:
-            logger.info(
-                f"Regressor weights not found at {reg_file}. "
-                "Operating in heuristic fallback mode."
-            )
 
+        logger.info("No usable model weights — operating in heuristic fallback mode")
         self._predictor = HeuristicFallbackPredictor()
 
     def reload(self) -> ModelStatus:

@@ -5,6 +5,7 @@ import math
 import numpy as np
 import pandas as pd
 import pytest
+from pydantic import ValidationError
 
 from src.features.build_features import (
     TelemetryVehicleIndex,
@@ -166,16 +167,14 @@ def test_plan_progress_and_namedtuple():
     progress = sch_index.plan_progress(500, t_now, t_target)
     assert isinstance(progress, PlanProgress)
 
-    # NamedTuple attribute access
+    # BaseModel attribute access
     assert progress.stops_remaining == 2  # stops 3 (10:20) and 4 (10:30)
     assert progress.plan_time_to_target_s == 20 * 60.0  # 10:30 - 10:10 (last passed was stop 2)
     assert progress.time_since_last_stop_s == 5 * 60.0   # 10:15 - 10:10
     assert progress.plan_sec_per_stop == 10 * 60.0       # 20 min / 2 stops = 10 min
 
-    # Backward compatibility with tuple unpacking
-    stops_rem, p_time, t_since, p_per_stop = progress
-    assert stops_rem == 2
-    assert p_time == 20 * 60.0
-    assert t_since == 5 * 60.0
-    assert p_per_stop == 10 * 60.0
+    # Verify frozen immutability
+    assert progress.model_config.get("frozen") is True
+    with pytest.raises(ValidationError):
+        progress.stops_remaining = 999
 

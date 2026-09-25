@@ -1,6 +1,7 @@
 """Integration tests for CatBoost predictor and TreeSHAP calculation."""
 
 from src.core.config import get_settings
+from src.features.extractor import MODEL_FEATURE_NAMES
 from src.models.catboost_model import CatBoostPredictor
 from src.models.manager import ModelManager
 from src.schemas.features import FeatureVector
@@ -94,3 +95,44 @@ def test_model_manager_loads_without_crash():
     pred_neg = manager.predict_single(fv_neg)
     # Relative: more negative cur_dev should not yield a much larger positive delay
     assert pred_neg.predicted_delay_sec < pred.predicted_delay_sec + 50.0
+
+
+def test_competition_model_online_serving_24_features():
+    manager = ModelManager()
+    status = manager.get_status()
+    assert status.mode == "catboost"
+    assert len(status.active_features) == 24
+    assert status.active_features == MODEL_FEATURE_NAMES
+
+    fv = FeatureVector(
+        sample_id="test_comp_sample",
+        tr_id="131672",
+        cur_dev_s=120.0,
+        horizon_sec=660.0,
+        speed_kmh=18.5,
+        avg_speed_window_kmh=16.0,
+        speed_mean_5m=17.0,
+        speed_mean_10m=15.5,
+        speed_std_3m=2.1,
+        speed_min_3m=12.0,
+        speed_max_3m=22.0,
+        speed_trend=1.5,
+        stop_ratio_window=0.05,
+        idle_time_5m=15.0,
+        telemetry_age_s=12.0,
+        points_count_5m=25,
+        heading_std_3m=5.0,
+        dist_to_target_m=3500.0,
+        speed_needed_kmh=19.1,
+        stops_remaining=4,
+        plan_time_to_target_s=660.0,
+        time_since_last_stop_s=90.0,
+        plan_sec_per_stop=165.0,
+        hour_of_day=10,
+        day_of_week=2,
+    )
+    pred = manager.predict_single(fv)
+    assert isinstance(pred.predicted_delay_sec, float)
+    assert pred.predicted_class is not None
+    assert pred.sample_id == "test_comp_sample"
+    assert pred.tr_id == "131672"

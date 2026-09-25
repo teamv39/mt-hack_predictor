@@ -279,6 +279,18 @@
 
 > Алиасы: `tr_id` ↔ `vehicle_id`, `cur_dev_s` ↔ `current_delay_sec`, `heading` ↔ `bearing`.
 
+**Опциональные competition-поля (24-фичная модель, все `Optional`, default `null`):**
+
+`speed_mean_5m`, `speed_mean_10m`, `speed_std_3m`, `speed_min_3m`, `speed_max_3m`,
+`speed_trend`, `idle_time_5m`, `telemetry_age_s`, `points_count_5m`, `heading_std_3m`,
+`dist_to_target_m`, `speed_needed_kmh`, `stops_remaining`, `plan_time_to_target_s`,
+`time_since_last_stop_s`, `plan_sec_per_stop`.
+
+> Если поля не переданы, онлайн-пайплайн (`src/features/extractor.py`) достраивает их
+> из доступной телеметрии/плана с train-консистентными дефолтами (например,
+> `telemetry_age_s=999.0`, `speed_*` fallback на `speed_kmh`). Go backend может
+> продолжать слать только 13 legacy-полей — контракт обратно совместим.
+
 **Ответ (200 OK):**
 ```json
 {
@@ -368,28 +380,45 @@
     "regressor_loaded": true,
     "classifier_loaded": false,
     "shap_ready": true,
-    "regressor_path": "/app/data/models/catboost_delay_regressor.cbm",
+    "regressor_path": "/app/data/models/competition/catboost_competition.cbm",
     "classifier_path": null,
     "active_features": [
       "cur_dev_s",
       "horizon_sec",
       "speed_kmh",
       "avg_speed_window_kmh",
+      "speed_mean_5m",
+      "speed_mean_10m",
+      "speed_std_3m",
+      "speed_min_3m",
+      "speed_max_3m",
+      "speed_trend",
       "stop_ratio_window",
-      "cumulative_delay_prev_stops",
+      "idle_time_5m",
+      "telemetry_age_s",
+      "points_count_5m",
+      "heading_std_3m",
+      "dist_to_target_m",
+      "speed_needed_kmh",
+      "stops_remaining",
+      "plan_time_to_target_s",
+      "time_since_last_stop_s",
+      "plan_sec_per_stop",
+      "hour_of_day",
       "hour_sin",
-      "hour_cos",
-      "day_of_week",
-      "is_weekend",
-      "current_headway_sec",
-      "weather_factor",
-      "delay_to_headway_ratio"
+      "hour_cos"
     ],
     "primary_target": "target_delay_s",
     "metric": "MAE"
   }
 }
 ```
+
+> Цепочка загрузки (`ml/src/models/manager.py`): competition-модель
+> (`competition/catboost_competition.cbm`, 24 фичи, holdout MAE 53.2 с) →
+> legacy 13-фичная (`catboost_delay_regressor.cbm`) → эвристический fallback.
+> Feature-parity guard в `catboost_model.py` гарантирует, что модель никогда
+> не получит молча нулевые значения вместо недостающих фич.
 
 ---
 
@@ -410,7 +439,7 @@ sample_id;prediction
 
 * Разделитель `;`, UTF-8, заголовок обязателен.
 * `sample_id` — полное покрытие `validate/points.csv`, без дублей.
-* `prediction` — float, секунды, знак важен.
+* `prediction` — float, секунды, знак важен. NaN/Inf запрещены схемой (`allow_inf_nan=False`) и `isfinite`-guard в `make_submission.py` (fallback на `cur_dev_s` для битых строк).
 * Pydantic: `ml/src/schemas/dataset.py` → `SubmissionRow` / `SubmissionFile`.
 
 ---

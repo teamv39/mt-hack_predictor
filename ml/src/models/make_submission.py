@@ -9,7 +9,7 @@ Run from ml/:  .venv/bin/python src/models/make_submission.py
 
 from __future__ import annotations
 
-import csv
+import argparse
 import json
 import logging
 import sys
@@ -18,6 +18,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from catboost import CatBoostRegressor
+
+from src.schemas.dataset import SubmissionFile, SubmissionRow
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("make_submission")
@@ -48,7 +50,27 @@ def load_model_and_features(model_dir: Path) -> tuple[CatBoostRegressor, list[st
     return model, feature_cols
 
 
-def main() -> None:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Generate final competition submission CSV from a trained CatBoost model."
+    )
+    parser.add_argument(
+        "--clip-min",
+        type=float,
+        default=None,
+        help="Optional lower bound to clip predictions",
+    )
+    parser.add_argument(
+        "--clip-max",
+        type=float,
+        default=None,
+        help="Optional upper bound to clip predictions",
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
     root = repo_root()
     model_dir = root / "data" / "models" / "competition"
     processed_dir = root / "data" / "processed" / "_snapshot"
@@ -89,37 +111,72 @@ def main() -> None:
         logger.info(f"NaN cells kept for model-native handling: {nan_counts.to_dict()}")
 
     preds = model.predict(X)
+    preds = np.asarray(preds, dtype=float)
+    bad_mask = ~np.isfinite(preds)
+    if bad_mask.any():
+        n_bad = int(bad_mask.sum())
+        logger.warning(f"{n_bad} non-finite predictions — filling with cur_dev_s fallback")
+        fallback_vals = validate_ordered["cur_dev_s"].to_numpy(dtype=float)
+        # fallback_vals может содержать NaN — замени NaN на 0.0
+        fallback_vals = np.where(np.isfinite(fallback_vals), fallback_vals, 0.0)
+        preds[bad_mask] = fallback_vals[bad_mask]
+        # повторная проверка
+        assert np.isfinite(preds).all(), "Fallback still produced non-finite values"
+    logger.info(f"Predictions finite check passed: {len(preds)} values")
+
     logger.info(
-        f"Predictions: mean={preds.mean():.1f} std={preds.std():.1f} "
+        f"Raw predictions: mean={preds.mean():.1f} std={preds.std():.1f} "
         f"min={preds.min():.1f} max={preds.max():.1f} negatives={int((preds < 0).sum())}"
     )
+
+    if args.clip_min is not None or args.clip_max is not None:
+        preds = np.clip(preds, args.clip_min, args.clip_max)
+        logger.info(
+            f"Clipped predictions [min={args.clip_min}, max={args.clip_max}]: "
+            f"mean={preds.mean():.1f} std={preds.std():.1f} "
+            f"min={preds.min():.1f} max={preds.max():.1f} negatives={int((preds < 0).sum())}"
+        )
 
     # --- Write submission (semicolon, header sample_id;prediction) ---
     csv_path = out_dir / "submission_catboost_v1.csv"
     csv_path_debug = out_dir / "submission_catboost_v1_debug.csv"
 
-    with open(csv_path, "w", encoding="utf-8", newline="\n") as f:
-        w = csv.writer(f, delimiter=";", lineterminator="\n")
-        w.writerow(["sample_id", "prediction"])
-        for sid, p in zip(order_index, preds):
-            w.writerow([sid, f"{float(p):.1f}"])
+    rows = [
+        SubmissionRow(sample_id=str(sid), prediction=float(f"{float(p):.1f}"))
+        for sid, p in zip(order_index, preds)
+    ]
+    sub = SubmissionFile(rows=rows)
+    csv_text = sub.to_csv_text()
+    csv_path.write_text(csv_text, encoding="utf-8")
 
     # Debug companion: comma CSV with context columns
     validate_ordered["prediction"] = preds.astype(float)
-    validate_ordered[["sample_id", "prediction", "cur_dev_s", "speed_kmh",
-                      "dist_to_target_m", "horizon_sec"]].to_csv(
-        csv_path_debug, index=False
-    )
+    validate_ordered[[
+        "sample_id", "prediction", "cur_dev_s", "speed_kmh",
+        "dist_to_target_m", "horizon_sec",
+    ]].to_csv(csv_path_debug, index=False)
 
     # Validate output
-    with open(csv_path, "r", encoding="utf-8") as f:
-        lines = f.readlines()
-    assert lines[0].strip() == "sample_id;prediction", f"Bad header: {lines[0]!r}"
+    read_text = csv_path.read_text(encoding="utf-8")
+    lines = [line.strip() for line in read_text.splitlines() if line.strip()]
+    assert lines[0] == "sample_id;prediction", f"Bad header: {lines[0]!r}"
     assert len(lines) == 1 + len(order_index), f"Expected {1+len(order_index)} lines, got {len(lines)}"
-    assert len(set(l.strip().split(";")[0] for l in lines[1:])) == len(order_index), "Duplicate sample_id"
 
+    parsed_sids: list[str] = []
+    for idx, line in enumerate(lines[1:], start=2):
+        parts = line.split(";")
+        assert len(parts) == 2, f"Line {idx} does not have exactly 2 columns: {line!r}"
+        sid, pred_str = parts
+        parsed_sids.append(sid)
+        val = float(pred_str)
+        assert np.isfinite(val), f"Line {idx} prediction is not finite: {pred_str!r}"
+
+    assert len(set(parsed_sids)) == len(order_index), "Duplicate sample_id found in submission"
+    assert parsed_sids == order_index, "Submission sample_id order does not match expected order"
+
+    logger.info(f"Validated {csv_path}: {len(parsed_sids)} rows, all finite float, valid format")
     logger.info(f"Wrote {csv_path} ({len(lines)-1} rows) and {csv_path_debug}")
-    logger.info(f"First rows: {[l.strip() for l in lines[:4]]}")
+    logger.info(f"First rows: {lines[:4]}")
     return 0
 
 

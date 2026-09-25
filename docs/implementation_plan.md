@@ -175,6 +175,20 @@
 
 ---
 
+#### **Задача 7.1.7 (P0): ML Critical Hardening (ветка `fix/ml-critical-hardening`) [ВЫПОЛНЕНО]**
+* **Цель:** Закрыть находки код-ревью (Critical + Major) **без изменения верифицированного скор 1.0**.
+* **Сделано:**
+  * **Feature-parity guard** (`catboost_model.py`): если модели требуют фичи вне онлайн-пайплайна — громкий `ValueError`, вместо молчаливого zero-fill. Legacy/DSS-поля вынесены в `COMPAT_FEATURE_NAMES`, чтобы обе модели загружались.
+  * **Каскад загрузки моделей** (`manager.py`): competition 24 фичи (`competition/catboost_competition.cbm`, holdout 53.2с) → legacy 13 фич → эвристический fallback, каждый переход логируется. **Онлайн-API теперь отдаёт лучшую модель** (раньше — legacy 13 фич, holdout 73.2с).
+  * **Безопасность сабмита** (`make_submission.py`): `np.isfinite`-guard с fallback на `cur_dev_s`, запись через `SubmissionFile`/`SubmissionRow` (Pydantic, `allow_inf_nan=False`), расширенная пост-валидация. Перегенерация побайтово идентична верифицированному файлу.
+  * **Training hygiene** (`train_competition.py`): TimeSeriesSplit-отчёт в `metrics.json` (`timeseries_cv_mae/std`, compliance AGENTS.md п.5.4, НЕ для селекции), early stopping (`early_stopping_rounds=30`, eval_set = последние 10% time-sorted строк) при финальном экспорте обеих моделей.
+  * **Онлайн 24 фичи** (`extractor.py`, `schemas/features.py`): `MODEL_FEATURE_NAMES` = `FEATURE_COLS`, 16 optional-полей в `FeatureVector`, train-консистентные дефолты, русские SHAP-заголовки.
+  * **Pydantic v2 compliance**: `PlanProgress` → frozen `BaseModel`, `Field(description=...)`, `Any`-аннотации, DEMO-ONLY маркеры синтетических пайплайнов.
+  * **Тесты**: новый `test_submission.py` (формат, NaN/Inf-отказ, roundtrip) + `test_competition_model_online_serving_24_features`; `uv run pytest` → 37 passed.
+* **DoD:** сабмит byte-identical (скор 1.0 не тронут), `mode=catboost` + 24 active features, fallback-каскад проверен smoke-тестами.
+
+---
+
 #### **Задача 7.1.5 (P1): PyTorch модуль для последовательностей телеметрии (требование стека)**
 * **Цель:** Выполнить обязательное требование ТЗ (*«Строгое соблюдение стека: Python 3.12+, PyTorch, CatBoost»*).
 * **Архитектура сети (`ml/src/models/nn_sequence.py`):**

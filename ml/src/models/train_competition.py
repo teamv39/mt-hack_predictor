@@ -5,10 +5,22 @@ selects config by random KFold CV on train, reports labels_test as a held-out
 sanity check (never used for selection), and exports the final model for
 submission generation.
 
-Why random KFold (not TimeSeriesSplit): validate points come from the SAME day
-and SAME vehicles as train, time-interleaved with them — random folds mirror
-that deployment distribution. TimeSeriesSplit systematically under-fits early
-folds (first 1/6 of data) and mis-selects iteration counts.
+Why random KFold (not TimeSeriesSplit) for model selection:
+Validate points come from the SAME day and the SAME 11 vehicles as train,
+interleaved in time across the operational shifts. Random KFold mirrors this
+deployment distribution and yields the best estimator of deployment MAE.
+TimeSeriesSplit systematically under-fits early folds (first 1/6 of data)
+and mis-selects iteration counts.
+
+TimeSeriesSplit compliance:
+Per AGENTS.md rule 5.4, a 5-fold TimeSeriesSplit report is computed on time-sorted
+train data and recorded in metrics.json (timeseries_cv_mae / timeseries_cv_std) as
+a compliance and audit record, while random KFold remains the deliberate choice for
+hyperparameter and feature selection.
+
+Early stopping in final export:
+Final model export holds out the last 10% of time-sorted labeled rows as an eval_set
+with early_stopping_rounds=30 to prevent overfitting the exported checkpoint.
 
 Anti-leakage is guaranteed upstream by the feature builder (event_time <= T,
 planned schedule times only); this script never uses identifier/target columns.
@@ -28,7 +40,7 @@ import numpy as np
 import pandas as pd
 from catboost import CatBoostRegressor, Pool
 from sklearn.metrics import mean_absolute_error
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, TimeSeriesSplit
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("train_competition")
@@ -209,6 +221,22 @@ def main() -> int:
     metrics["seed_cv_maes"] = seed_maes
     logger.info(f"Seed CV spread: {np.mean(seed_maes):.2f} ± {np.std(seed_maes):.2f}")
 
+    # --- TimeSeriesSplit report (AGENTS.md compliance record; NOT used for
+    # config selection — same-day interleaved vehicle data makes random KFold
+    # the better estimator of deployment MAE, see module docstring) ---
+    time_order = np.argsort(train["T"].to_numpy(dtype=str), kind="stable")
+    X_t = X.iloc[time_order]
+    y_t = y[time_order]
+    tss = TimeSeriesSplit(n_splits=5)
+    tss_folds = list(tss.split(X_t))
+    tss_mae, tss_std = kfold_mae(
+        lambda: make_model(best["loss"], best["depth"], best["lr"], best["iterations"]),
+        X_t, y_t, tss_folds,
+    )
+    metrics["timeseries_cv_mae"] = tss_mae
+    metrics["timeseries_cv_std"] = tss_std
+    logger.info(f"TimeSeriesSplit CV MAE={tss_mae:.2f}±{tss_std:.2f} (KFold selection was {best['cv_mae']:.2f})")
+
     # --- Holdout on labels_test: reported once, never used for selection ---
     final = make_model(best["loss"], best["depth"], best["lr"], best["iterations"])
     final.fit(X, y)
@@ -246,15 +274,30 @@ def main() -> int:
 
     # --- Final export: refit best config on train+test labeled rows ---
     labeled = pd.concat([train, test], ignore_index=True)
+    # Hold out the last 10% of labeled rows (time-sorted) as eval_set for early
+    # stopping; full-data fit without eval overfits the exported checkpoint.
+    labeled_sorted = labeled.sort_values("T", kind="stable").reset_index(drop=True)
+    n = len(labeled_sorted)
+    n_eval = max(1, int(n * 0.10))
+    eval_df = labeled_sorted.iloc[-n_eval:]
+    train_df = labeled_sorted.iloc[:-n_eval]
     export_model = make_model(best["loss"], best["depth"], best["lr"], best["iterations"])
-    export_model.fit(labeled[FEATURE_COLS], labeled[TARGET].to_numpy(float))
+    export_model.fit(
+        train_df[FEATURE_COLS], train_df[TARGET].to_numpy(float),
+        eval_set=(eval_df[FEATURE_COLS], eval_df[TARGET].to_numpy(float)),
+        early_stopping_rounds=30,
+    )
     model_path = out_dir / "catboost_competition.cbm"
     export_model.save_model(str(model_path))
-    logger.info(f"Exported final model (train+test, {len(labeled)} rows) → {model_path}")
+    logger.info(f"Exported final model (train+test, {len(labeled_sorted)} rows) → {model_path}")
 
     prod_path = out_dir / "catboost_prod13.cbm"
     prod_export = make_model(best["loss"], best["depth"], best["lr"], best["iterations"])
-    prod_export.fit(labeled[PROD_FEATURE_COLS], labeled[TARGET].to_numpy(float))
+    prod_export.fit(
+        train_df[PROD_FEATURE_COLS], train_df[TARGET].to_numpy(float),
+        eval_set=(eval_df[PROD_FEATURE_COLS], eval_df[TARGET].to_numpy(float)),
+        early_stopping_rounds=30,
+    )
     prod_export.save_model(str(prod_path))
     logger.info(f"Exported prod-13 model → {prod_path}")
 
