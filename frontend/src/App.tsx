@@ -73,7 +73,7 @@ export default function App() {
   return (
     <div
       className={`relative w-screen h-screen flex flex-col overflow-hidden font-sans select-none transition-colors duration-200 ${
-        isDarkMode ? "bg-[#0B0F17] text-slate-100" : "bg-slate-100 text-slate-900"
+        isDarkMode ? "dark bg-[#121214] text-zinc-100" : "bg-[#f4f5f7] text-slate-900"
       }`}
     >
       {/* 1. Top Navigation & System Status Bar */}

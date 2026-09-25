@@ -67,11 +67,11 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
 
   return (
     <div className={`w-full h-full flex flex-col font-sans select-none overflow-hidden transition-colors ${
-      isDarkMode ? "bg-[#0B0F17] text-slate-200" : "bg-[#f1f4f8] text-slate-800"
+      isDarkMode ? "bg-[#121214] text-zinc-200" : "bg-[#f1f4f8] text-slate-800"
     }`}>
       {/* 1. Sub-Header: Route m3 KPI Bar */}
       <div className={`h-14 px-5 border-b flex items-center justify-between shrink-0 shadow-sm transition-colors ${
-        isDarkMode ? "bg-[#0E1524] border-slate-800" : "bg-white border-slate-200"
+        isDarkMode ? "bg-[#18181b] border-zinc-800" : "bg-white border-slate-200"
       }`}>
         <div className="flex items-center gap-3">
           <div className="w-10 h-7 rounded-lg bg-[#2563eb] text-white font-black text-xs flex items-center justify-center tracking-tight shadow-sm">
@@ -90,7 +90,7 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
         {/* Route Realtime KPIs */}
         <div className="flex items-center gap-3">
           <div className={`px-3 py-1.5 rounded-xl border flex flex-col ${
-            isDarkMode ? "bg-[#141C2E] border-slate-700/80" : "bg-slate-50 border-slate-200"
+            isDarkMode ? "bg-[#222226] border-zinc-700/80" : "bg-slate-50 border-slate-200"
           }`}>
             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Бортов на линии</span>
             <div className="flex items-baseline gap-1">
@@ -100,7 +100,7 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
           </div>
 
           <div className={`px-3 py-1.5 rounded-xl border flex flex-col ${
-            isDarkMode ? "bg-[#141C2E] border-slate-700/80" : "bg-slate-50 border-slate-200"
+            isDarkMode ? "bg-[#222226] border-zinc-700/80" : "bg-slate-50 border-slate-200"
           }`}>
             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Плановый такт</span>
             <div className="flex items-baseline gap-1">
@@ -154,11 +154,11 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
         {/* Left/Center: Marey Canvas Area */}
         <div className="flex-1 flex flex-col p-4 overflow-hidden">
           <div className={`flex-1 rounded-2xl border shadow-sm flex flex-col relative overflow-hidden transition-colors ${
-            isDarkMode ? "bg-[#0E1524] border-slate-800" : "bg-white border-slate-200"
+            isDarkMode ? "bg-[#18181b] border-zinc-800" : "bg-white border-slate-200"
           }`}>
             {/* Toolbar */}
             <div className={`h-10 px-4 border-b flex items-center justify-between shrink-0 ${
-              isDarkMode ? "bg-[#090D17] border-slate-800" : "bg-slate-50 border-slate-200"
+              isDarkMode ? "bg-[#121214] border-zinc-800" : "bg-slate-50 border-slate-200"
             }`}>
               <div className="flex items-center gap-4">
                 <span className={`text-xs font-black tracking-tight flex items-center gap-2 ${
@@ -277,7 +277,7 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
                 {/* Top Time Scale Overlay */}
                 <div className={`absolute top-0 left-0 right-0 h-6 border-b flex justify-between px-6 z-10 text-[10px] font-mono font-bold ${
                   isDarkMode
-                    ? "bg-[#0B101D]/90 border-slate-800 text-slate-300 backdrop-blur-xs"
+                    ? "bg-[#18181b]/90 border-zinc-800 text-zinc-300 backdrop-blur-xs"
                     : "bg-slate-50/90 border-slate-200 text-slate-600 backdrop-blur-xs"
                 }`}>
                   <span>14:00</span>
@@ -299,8 +299,8 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
                 >
                   <defs>
                     <pattern id="mareyGrid" width="16.66" height="66.66" patternUnits="userSpaceOnUse">
-                      <line x1="0" y1="0" x2="16.66" y2="0" stroke={isDarkMode ? "#141C2E" : "#f1f5f9"} strokeWidth="0.5" />
-                      <line x1="0" y1="0" x2="0" y2="66.66" stroke={isDarkMode ? "#101726" : "#f8fafc"} strokeWidth="0.5" />
+                      <line x1="0" y1="0" x2="16.66" y2="0" stroke={isDarkMode ? "#222226" : "#f1f5f9"} strokeWidth="0.5" />
+                      <line x1="0" y1="0" x2="0" y2="66.66" stroke={isDarkMode ? "#27272a" : "#f8fafc"} strokeWidth="0.5" />
                     </pattern>
                   </defs>
 
@@ -444,11 +444,11 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
 
         {/* Right Sidebar: Fleet Roster & Predictive DSS Box */}
         <aside className={`w-88 border-l flex flex-col shrink-0 overflow-hidden shadow-2xl z-30 ${
-          isDarkMode ? "bg-[#0E1524] border-slate-800 text-slate-200" : "bg-white border-slate-200 text-slate-800"
+          isDarkMode ? "bg-[#18181b] border-zinc-800 text-zinc-200" : "bg-white border-slate-200 text-slate-800"
         }`}>
           {/* Panel Header */}
           <div className={`p-3.5 border-b flex items-center justify-between shrink-0 ${
-            isDarkMode ? "bg-[#090D17] border-slate-800" : "bg-slate-50 border-slate-200"
+            isDarkMode ? "bg-[#121214] border-zinc-800" : "bg-slate-50 border-slate-200"
           }`}>
             <div>
               <div className={`text-xs font-black flex items-center gap-1.5 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
@@ -468,10 +468,10 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
 
           {/* Roster Filters */}
           <div className={`px-3.5 py-2.5 border-b flex items-center justify-between shrink-0 ${
-            isDarkMode ? "bg-[#0E1524] border-slate-800" : "bg-white border-slate-200"
+            isDarkMode ? "bg-[#18181b] border-zinc-800" : "bg-white border-slate-200"
           }`}>
             <div className={`flex items-center gap-1 p-0.5 rounded-lg border ${
-              isDarkMode ? "bg-[#090D17] border-slate-800" : "bg-slate-100 border-slate-200"
+              isDarkMode ? "bg-[#121214] border-zinc-800" : "bg-slate-100 border-slate-200"
             }`}>
               <button
                 onClick={() => setFilterMode("all")}

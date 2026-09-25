@@ -46,14 +46,14 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
     <aside
       className={`w-[330px] h-full max-h-[calc(100vh-100px)] rounded-2xl border shadow-2xl overflow-hidden flex flex-col pointer-events-auto shrink-0 select-none backdrop-blur-xl transition-colors duration-200 ${
         isDarkMode
-          ? "bg-[#101726]/95 border-slate-700/80 text-slate-200 shadow-black/60"
+          ? "bg-[#18181b]/95 border-zinc-800 text-zinc-100 shadow-black/60"
           : "bg-white/95 border-slate-300 text-slate-800 shadow-slate-950/15"
       }`}
     >
       {/* 1. Header: Red Dot + AlertRadar + Badge + More Menu */}
       <div
         className={`px-4 py-3 border-b flex items-center justify-between shrink-0 ${
-          isDarkMode ? "bg-[#0B101D] border-slate-800" : "bg-[#0F172A] border-slate-800 text-white"
+          isDarkMode ? "bg-[#121214] border-zinc-800 text-white" : "bg-[#27272a] border-zinc-700 text-white"
         }`}
       >
         <div className="flex items-center gap-2.5">
@@ -75,20 +75,20 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
       {/* 2. Tabs: Текущие алерты | Аналитика ML */}
       <div
         className={`flex h-11 border-b shrink-0 text-xs ${
-          isDarkMode ? "bg-[#0E1524] border-slate-800" : "bg-slate-100/70 border-slate-200"
+          isDarkMode ? "bg-[#18181b] border-zinc-800" : "bg-slate-100/70 border-slate-200"
         }`}
       >
         <button
           onClick={() => setActiveTab("alerts")}
           className={`flex-1 flex items-center justify-center gap-2 font-bold transition-all relative cursor-pointer ${
             activeTab === "alerts"
-              ? isDarkMode ? "text-emerald-400 bg-[#141C2E]" : "text-emerald-800 bg-white"
-              : isDarkMode ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-700"
+              ? isDarkMode ? "text-emerald-400 bg-[#222226]" : "text-emerald-800 bg-white"
+              : isDarkMode ? "text-zinc-400 hover:text-zinc-200" : "text-slate-500 hover:text-slate-700"
           }`}
         >
           <span>Алерты</span>
           <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${
-            isDarkMode ? "bg-emerald-900/60 text-emerald-300" : "bg-emerald-100 text-emerald-800"
+            isDarkMode ? "bg-emerald-950/80 text-emerald-300 border border-emerald-800/80" : "bg-emerald-100 text-emerald-800"
           }`}>
             {alerts.length}
           </span>
@@ -101,8 +101,8 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
           onClick={() => setActiveTab("analytics")}
           className={`flex-1 flex items-center justify-center gap-1.5 font-bold transition-all relative cursor-pointer ${
             activeTab === "analytics"
-              ? isDarkMode ? "text-cyan-400 bg-[#141C2E]" : "text-blue-800 bg-white"
-              : isDarkMode ? "text-slate-400 hover:text-slate-200" : "text-slate-500 hover:text-slate-700"
+              ? isDarkMode ? "text-cyan-400 bg-[#222226]" : "text-blue-800 bg-white"
+              : isDarkMode ? "text-zinc-400 hover:text-zinc-200" : "text-slate-500 hover:text-slate-700"
           }`}
         >
           <Sparkles size={13} className="text-cyan-400" />
@@ -118,7 +118,7 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
           {/* 3. Search and Category Filter Chips */}
           <div
             className={`p-3.5 flex flex-col gap-2.5 shrink-0 border-b ${
-              isDarkMode ? "bg-[#101726] border-slate-800" : "bg-white border-slate-100"
+              isDarkMode ? "bg-[#18181b] border-zinc-800" : "bg-white border-slate-100"
             }`}
           >
             <div className="relative flex items-center h-9">
@@ -130,7 +130,7 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className={`w-full h-9 pl-9 pr-3 text-xs rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-500 font-medium transition-colors ${
                   isDarkMode
-                    ? "bg-[#090D17] border border-slate-700 text-white placeholder-slate-500"
+                    ? "bg-[#121214] border border-zinc-700 text-white placeholder-zinc-500"
                     : "bg-slate-50 hover:bg-slate-100 focus:bg-white border border-slate-200 text-slate-800 placeholder-slate-400"
                 }`}
               />
@@ -141,8 +141,8 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
                 onClick={() => setActiveFilter("all")}
                 className={`h-7 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   activeFilter === "all"
-                    ? isDarkMode ? "bg-blue-600 text-white shadow-xs" : "bg-slate-900 text-white"
-                    : isDarkMode ? "bg-slate-800 text-slate-400 hover:bg-slate-700" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    ? isDarkMode ? "bg-zinc-700 text-white shadow-xs" : "bg-slate-900 text-white"
+                    : isDarkMode ? "bg-zinc-800 text-zinc-300 hover:bg-zinc-700" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >
                 Все ({alerts.length})
@@ -152,7 +152,7 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
                 className={`h-7 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   activeFilter === "critical"
                     ? "bg-rose-600 text-white shadow-xs"
-                    : isDarkMode ? "bg-slate-800 text-slate-400 hover:bg-slate-700" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    : isDarkMode ? "bg-zinc-800 text-zinc-300 hover:bg-zinc-700" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >
                 Критич. ({alerts.filter((a) => a.category === "critical").length})
@@ -162,7 +162,7 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
                 className={`h-7 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   activeFilter === "bunching"
                     ? "bg-amber-600 text-white shadow-xs"
-                    : isDarkMode ? "bg-slate-800 text-slate-400 hover:bg-slate-700" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    : isDarkMode ? "bg-zinc-800 text-zinc-300 hover:bg-zinc-700" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >
                 Пачкование ({alerts.filter((a) => a.category === "bunching").length})
@@ -186,7 +186,7 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
                         ? "border-2 border-rose-500 bg-rose-950/40 shadow-xl ring-2 ring-rose-500/20"
                         : "border-2 border-[#DA251D] bg-rose-50/50 shadow-md"
                       : isDarkMode
-                      ? "border border-slate-700/80 bg-[#141C2E] hover:border-slate-600 hover:bg-[#182238] shadow-sm"
+                      ? "border border-zinc-700/80 bg-[#222226] hover:border-zinc-600 hover:bg-[#27272b] shadow-sm"
                       : "border border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 shadow-xs"
                   }`}
                 >
@@ -243,7 +243,7 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
         <div className="flex-1 p-3.5 overflow-y-auto flex flex-col gap-3.5">
           {/* Card: Engine Status */}
           <div className={`p-3.5 rounded-xl border ${
-            isDarkMode ? "bg-[#141C2E] border-slate-700/80" : "bg-white border-slate-200"
+            isDarkMode ? "bg-[#18181b] border-zinc-700/80" : "bg-white border-slate-200"
           }`}>
             <div className="flex items-center justify-between mb-2.5">
               <span className="text-xs font-bold text-emerald-400 flex items-center gap-2">
@@ -251,7 +251,7 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
                 CatBoost v24.1 ML Инференс
               </span>
               <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${
-                isDarkMode ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-600"
+                isDarkMode ? "bg-[#222226] text-zinc-300" : "bg-slate-100 text-slate-600"
               }`}>
                 3.2 мс
               </span>
@@ -259,13 +259,13 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
 
             <div className="grid grid-cols-2 gap-2 text-center">
               <div className={`p-2.5 rounded-xl border ${
-                isDarkMode ? "bg-[#090D17] border-slate-800" : "bg-slate-50 border-slate-100"
+                isDarkMode ? "bg-[#121214] border-zinc-800" : "bg-slate-50 border-slate-100"
               }`}>
                 <div className="text-[10px] text-slate-400 mb-0.5">Ошибка MAE</div>
                 <div className="text-sm font-black font-mono text-cyan-400">±1.2 мин</div>
               </div>
               <div className={`p-2.5 rounded-xl border ${
-                isDarkMode ? "bg-[#090D17] border-slate-800" : "bg-slate-50 border-slate-100"
+                isDarkMode ? "bg-[#121214] border-zinc-800" : "bg-slate-50 border-slate-100"
               }`}>
                 <div className="text-[10px] text-slate-400 mb-0.5">Точность F1</div>
                 <div className="text-sm font-black font-mono text-emerald-400">94.2%</div>
@@ -275,7 +275,7 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
 
           {/* Card: Global SHAP Factor Importance */}
           <div className={`p-3.5 rounded-xl border ${
-            isDarkMode ? "bg-[#141C2E] border-slate-700/80" : "bg-white border-slate-200"
+            isDarkMode ? "bg-[#18181b] border-zinc-700/80" : "bg-white border-slate-200"
           }`}>
             <span className={`text-xs font-bold block mb-1 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
               Глобальные драйверы задержек (SHAP)
@@ -329,7 +329,7 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
 
           {/* Card: Fleet Stability Status */}
           <div className={`p-3.5 rounded-xl border ${
-            isDarkMode ? "bg-[#141C2E] border-slate-700/80" : "bg-white border-slate-200"
+            isDarkMode ? "bg-[#222226] border-zinc-700/80" : "bg-white border-slate-200"
           }`}>
             <span className={`text-xs font-bold block mb-2 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
               Состояние такта движения
@@ -339,7 +339,7 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
               <div className="h-full bg-amber-500" style={{ width: "12%" }} title="Задержка: 12%" />
               <div className="h-full bg-rose-500" style={{ width: "6%" }} title="Пачкование: 6%" />
             </div>
-            <div className="flex justify-between text-[11px] text-slate-400 font-medium">
+            <div className="flex justify-between text-[11px] text-zinc-400 font-medium">
               <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /> Норма 82%</span>
               <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-500 inline-block" /> Риск 12%</span>
               <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-rose-500 inline-block" /> Сбой 6%</span>
@@ -352,7 +352,7 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
       <div
         className={`p-3 border-t text-[11px] font-medium text-center shrink-0 ${
           isDarkMode
-            ? "bg-[#090D17] border-slate-800 text-slate-400"
+            ? "bg-[#141416] border-zinc-800 text-zinc-400"
             : "bg-slate-50 border-slate-200 text-slate-500"
         }`}
       >

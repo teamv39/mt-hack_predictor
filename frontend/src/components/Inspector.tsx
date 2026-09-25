@@ -91,7 +91,7 @@ export const Inspector: React.FC<InspectorProps> = ({
     <aside
       className={`w-[360px] max-h-[calc(100vh-100px)] overflow-y-auto rounded-2xl border shadow-2xl p-4 flex flex-col gap-3.5 z-20 pointer-events-auto shrink-0 select-none scrollbar-thin backdrop-blur-xl transition-colors duration-200 ${
         isDarkMode
-          ? "bg-[#101726]/95 border-slate-700/80 text-slate-200 shadow-black/60"
+          ? "bg-[#18181b]/95 border-zinc-700/80 text-zinc-200 shadow-black/60"
           : "bg-white/95 border-slate-300 text-slate-800 shadow-slate-950/15"
       }`}
     >
@@ -166,7 +166,7 @@ export const Inspector: React.FC<InspectorProps> = ({
         <div className="grid grid-cols-3 gap-2 mt-1">
           <div
             className={`p-2.5 rounded-xl border flex flex-col items-center justify-center text-center ${
-              isDarkMode ? "bg-[#141C2E] border-slate-700/70" : "bg-slate-50 border-slate-200"
+              isDarkMode ? "bg-[#222226] border-zinc-700/70" : "bg-slate-50 border-slate-200"
             }`}
           >
             <div className="flex items-center gap-1 text-[10px] text-slate-400 mb-0.5">
@@ -180,7 +180,7 @@ export const Inspector: React.FC<InspectorProps> = ({
 
           <div
             className={`p-2.5 rounded-xl border flex flex-col items-center justify-center text-center ${
-              isDarkMode ? "bg-[#141C2E] border-slate-700/70" : "bg-slate-50 border-slate-200"
+              isDarkMode ? "bg-[#222226] border-zinc-700/70" : "bg-slate-50 border-slate-200"
             }`}
           >
             <div className="flex items-center gap-1 text-[10px] text-slate-400 mb-0.5">
@@ -194,7 +194,7 @@ export const Inspector: React.FC<InspectorProps> = ({
 
           <div
             className={`p-2.5 rounded-xl border flex flex-col items-center justify-center text-center ${
-              isDarkMode ? "bg-[#141C2E] border-slate-700/70" : "bg-slate-50 border-slate-200"
+              isDarkMode ? "bg-[#222226] border-zinc-700/70" : "bg-slate-50 border-slate-200"
             }`}
           >
             <div className="flex items-center gap-1 text-[10px] text-slate-400 mb-0.5">
@@ -211,7 +211,7 @@ export const Inspector: React.FC<InspectorProps> = ({
       {/* 3. Recharts Trajectory comparison curve */}
       <div
         className={`rounded-xl border p-3.5 shadow-sm flex flex-col gap-2 ${
-          isDarkMode ? "bg-[#141C2E] border-slate-700/80" : "bg-white border-slate-200"
+          isDarkMode ? "bg-[#222226] border-zinc-700/80" : "bg-white border-slate-200"
         }`}
       >
         <div className="flex items-center justify-between">
@@ -234,14 +234,14 @@ export const Inspector: React.FC<InspectorProps> = ({
         <div className="h-32 w-full mt-1">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
-              <XAxis dataKey="stop" tick={{ fontSize: 9, fill: isDarkMode ? "#64748b" : "#94a3b8" }} axisLine={false} tickLine={false} />
-              <YAxis domain={["auto", "auto"]} tick={{ fontSize: 9, fill: isDarkMode ? "#64748b" : "#94a3b8" }} axisLine={false} tickLine={false} unit="с" />
+              <XAxis dataKey="stop" tick={{ fontSize: 9, fill: isDarkMode ? "#71717a" : "#94a3b8" }} axisLine={false} tickLine={false} />
+              <YAxis domain={["auto", "auto"]} tick={{ fontSize: 9, fill: isDarkMode ? "#71717a" : "#94a3b8" }} axisLine={false} tickLine={false} unit="с" />
               <Tooltip
                 contentStyle={{
                   fontSize: "11px",
                   borderRadius: "8px",
-                  backgroundColor: isDarkMode ? "rgba(15, 23, 42, 0.95)" : "rgba(255, 255, 255, 0.95)",
-                  borderColor: isDarkMode ? "#334155" : "#e2e8f0",
+                  backgroundColor: isDarkMode ? "rgba(24, 24, 27, 0.95)" : "rgba(255, 255, 255, 0.95)",
+                  borderColor: isDarkMode ? "#3f3f46" : "#e2e8f0",
                   color: isDarkMode ? "#f8fafc" : "#0f172a",
                 }}
               />
@@ -255,7 +255,7 @@ export const Inspector: React.FC<InspectorProps> = ({
 
       {/* 4. SHAP factor breakdown */}
       <div
-        className="rounded-xl border border-slate-800 bg-[#0B111E] text-white p-3.5 shadow-md flex flex-col gap-2"
+        className="rounded-xl border border-zinc-800 bg-[#18181b] text-white p-3.5 shadow-md flex flex-col gap-2"
       >
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold text-white flex items-center gap-1.5">
@@ -350,7 +350,7 @@ export const Inspector: React.FC<InspectorProps> = ({
           onClick={() => onOpenScenarios && onOpenScenarios()}
           className={`w-full h-9 px-3 rounded-lg border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs ${
             isDarkMode
-              ? "border-emerald-600/80 bg-[#141C2E] hover:bg-slate-800 text-emerald-300"
+              ? "border-emerald-600/80 bg-[#222226] hover:bg-[#2c2c31] text-emerald-300"
               : "border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-800"
           }`}
         >

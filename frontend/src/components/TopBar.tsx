@@ -81,17 +81,14 @@ export const TopBar: React.FC<TopBarProps> = ({
 
   return (
     <header
-      className={`h-14 w-full border-b px-5 flex items-center justify-between relative z-30 select-none transition-colors duration-200 shrink-0 ${
-        isDarkMode
-          ? "bg-[#0A0F1D] border-slate-800 text-white shadow-lg shadow-black/30"
-          : "bg-[#0F172A] border-slate-800 text-white shadow-md shadow-slate-950/20"
-      }`}
+      className="h-14 w-full bg-gradient-to-r from-[#D32F2F] via-[#CC1E1E] to-[#B71C1C] border-b border-[#9E1212] px-4 lg:px-5 flex items-center justify-between relative z-30 select-none text-white shadow-lg shadow-red-950/20 shrink-0 font-sans"
+      data-purpose="top-navigation-bar"
     >
       {/* 1. BRANDING & NAVIGATION TABS */}
       <div className="flex items-center gap-4">
         {/* Brand Lockup */}
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-[#DA251D] flex items-center justify-center shadow-md shadow-red-900/40 shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-white/20 border border-white/30 flex items-center justify-center shadow-inner shrink-0">
             <svg className="w-5 h-5 text-white fill-current" viewBox="0 0 100 100">
               <circle cx="50" cy="50" fill="none" r="46" stroke="currentColor" strokeWidth="9" />
               <circle cx="50" cy="50" fill="none" r="28" stroke="currentColor" strokeWidth="8" />
@@ -110,27 +107,27 @@ export const TopBar: React.FC<TopBarProps> = ({
               <span className="text-[13px] font-black tracking-tight uppercase text-white">
                 Московский Транспорт
               </span>
-              <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded font-mono bg-blue-900/80 text-cyan-300 border border-blue-700/60">
+              <span className="text-[10px] font-black px-1.5 py-0.2 rounded font-mono bg-white text-[#D32F2F] shadow-xs">
                 ЦОДД
               </span>
             </div>
-            <span className="text-[10px] font-medium text-slate-400">
+            <span className="text-[10px] font-medium text-red-100/90 tracking-tight">
               Ситуационный Центр • СППР Headway DSS
             </span>
           </div>
         </div>
 
         {/* Subtle Divider */}
-        <div className="h-6 w-px bg-slate-800" />
+        <div className="h-6 w-px bg-white/25 hidden md:block" />
 
         {/* Navigation Tabs Pill */}
-        <nav className="flex items-center p-1 rounded-xl border border-slate-800 bg-[#080D18] gap-1">
+        <nav className="flex items-center p-1 rounded-xl bg-black/20 border border-white/20 gap-1 backdrop-blur-xs">
           <button
             onClick={() => setActiveTab && setActiveTab("hall")}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
               activeTab === "hall" || activeTab === "map"
-                ? "bg-slate-700 text-white shadow-sm"
-                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+                ? "bg-white text-[#D32F2F] shadow-sm font-black"
+                : "text-red-100 hover:text-white hover:bg-white/10"
             }`}
           >
             <Layers size={13} />
@@ -141,8 +138,8 @@ export const TopBar: React.FC<TopBarProps> = ({
             onClick={() => setActiveTab && setActiveTab("marey")}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
               activeTab === "marey"
-                ? "bg-[#2563eb] text-white shadow-sm"
-                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+                ? "bg-white text-[#D32F2F] shadow-sm font-black"
+                : "text-red-100 hover:text-white hover:bg-white/10"
             }`}
           >
             <Activity size={13} />
@@ -153,8 +150,8 @@ export const TopBar: React.FC<TopBarProps> = ({
             onClick={() => setActiveTab && setActiveTab("terminal")}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
               activeTab === "terminal"
-                ? "bg-amber-500/25 text-amber-300 border border-amber-500/50 shadow-sm"
-                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+                ? "bg-white text-[#D32F2F] shadow-sm font-black"
+                : "text-red-100 hover:text-white hover:bg-white/10"
             }`}
           >
             <span>📱 Терминал борта</span>
@@ -163,40 +160,40 @@ export const TopBar: React.FC<TopBarProps> = ({
       </div>
 
       {/* 2. CENTER: DIGITAL CLOCK CAPSULE */}
-      <div className="hidden lg:flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-slate-700/80 bg-[#141C2B] text-white shadow-inner">
-        <span className="relative flex h-2.5 w-2.5">
+      <div className="hidden lg:flex items-center gap-2.5 px-3.5 py-1 rounded-full border border-white/20 bg-black/25 text-white shadow-inner">
+        <span className="relative flex h-2 w-2">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
         </span>
-        <span className="text-sm font-bold font-mono tracking-wider text-slate-100">
+        <span className="text-sm font-bold font-mono tracking-wider text-white">
           {timeStr}
         </span>
-        <span className="text-[10px] font-bold font-mono text-slate-400 uppercase tracking-widest pl-0.5">
+        <span className="text-[10px] font-bold font-mono text-red-200 uppercase tracking-widest pl-0.5">
           МСК (UTC+3)
         </span>
       </div>
 
       {/* 3. RIGHT CONTROLS & KPIS */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5">
         {/* KPI Pills Group */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {/* Punctuality Rate */}
-          <div className="h-8 px-3 rounded-xl border border-emerald-700/80 bg-emerald-950/70 text-emerald-300 flex items-center gap-2 shadow-xs">
+          <div className="h-8 px-2.5 rounded-xl border border-emerald-400/40 bg-emerald-950/70 text-emerald-200 flex items-center gap-1.5 shadow-xs">
             <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
             <div className="flex items-baseline gap-1">
               <span className="text-xs font-black font-mono">{punctuality}</span>
-              <span className="text-[10px] font-bold uppercase tracking-tight text-emerald-400/80 hidden xl:inline">
+              <span className="text-[10px] font-bold uppercase tracking-tight text-emerald-300/80 hidden xl:inline">
                 Такт
               </span>
             </div>
           </div>
 
           {/* Active Incidents */}
-          <div className="h-8 px-3 rounded-xl border border-rose-700/80 bg-rose-950/70 text-rose-300 flex items-center gap-2 shadow-xs">
-            <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0 animate-pulse" />
+          <div className="h-8 px-2.5 rounded-xl border border-white/20 bg-black/25 text-white flex items-center gap-1.5 shadow-xs">
+            <AlertTriangle className="w-3.5 h-3.5 text-amber-300 shrink-0 animate-pulse" />
             <div className="flex items-baseline gap-1">
               <span className="text-xs font-black font-mono">{incidentsCount}</span>
-              <span className="text-[10px] font-bold uppercase tracking-tight text-rose-400/80 hidden xl:inline">
+              <span className="text-[10px] font-bold uppercase tracking-tight text-red-200 hidden xl:inline">
                 Сбоя
               </span>
             </div>
@@ -204,20 +201,20 @@ export const TopBar: React.FC<TopBarProps> = ({
         </div>
 
         {/* Divider */}
-        <div className="h-6 w-px bg-slate-800" />
+        <div className="h-6 w-px bg-white/25 hidden sm:block" />
 
         {/* Simulation Controls Group */}
-        <div className="flex items-center p-0.5 rounded-xl border border-slate-800 bg-[#080D17] gap-1">
+        <div className="flex items-center p-0.5 rounded-xl border border-white/20 bg-black/20 gap-1">
           <button
             onClick={() => onControl && onControl(isSimPlaying ? "pause" : "play")}
             className={`h-7 px-2.5 rounded-lg flex items-center gap-1.5 text-xs font-bold transition-all cursor-pointer ${
               isSimPlaying
-                ? "bg-slate-700 hover:bg-slate-600 text-slate-100 shadow-xs"
-                : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs"
+                ? "bg-white text-[#D32F2F] shadow-xs hover:bg-red-50"
+                : "bg-emerald-500 hover:bg-emerald-400 text-white shadow-xs"
             }`}
             title={isSimPlaying ? "Пауза симуляции" : "Запуск симуляции"}
           >
-            {isSimPlaying ? <Pause size={13} /> : <Play size={13} />}
+            {isSimPlaying ? <Pause size={12} /> : <Play size={12} />}
             <span className="hidden xl:inline">{isSimPlaying ? "Пауза" : "Пуск"}</span>
           </button>
 
@@ -226,7 +223,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               onControl &&
               onControl("speed", simSpeed === 1 ? 5 : simSpeed === 5 ? 10 : 1)
             }
-            className="h-7 px-2 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer hover:bg-slate-800 text-slate-300"
+            className="h-7 px-2 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer hover:bg-white/10 text-white"
             title="Скорость симуляции"
           >
             {simSpeed}x
@@ -234,58 +231,42 @@ export const TopBar: React.FC<TopBarProps> = ({
 
           <button
             onClick={() => onControl && onControl("reset")}
-            className="h-7 w-7 rounded-lg flex items-center justify-center transition-all cursor-pointer hover:bg-slate-800 text-slate-400 hover:text-slate-200"
+            className="h-7 w-7 rounded-lg flex items-center justify-center transition-all cursor-pointer hover:bg-white/10 text-red-200 hover:text-white"
             title="Сбросить симуляцию"
           >
-            <RotateCcw size={13} />
+            <RotateCcw size={12} />
           </button>
         </div>
 
         {/* Divider */}
-        <div className="h-6 w-px bg-slate-800" />
+        <div className="h-6 w-px bg-white/25 hidden sm:block" />
 
         {/* Quick Utility Actions */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1">
           {/* Dark / Light Toggle */}
           {onToggleDarkMode && (
             <button
               onClick={onToggleDarkMode}
-              className={`h-8 w-8 rounded-xl flex items-center justify-center border transition-all cursor-pointer ${
-                isDarkMode
-                  ? "bg-slate-800/80 hover:bg-slate-700 border-slate-700 text-cyan-300"
-                  : "bg-white hover:bg-slate-100 border-slate-200 text-amber-600 shadow-xs"
-              }`}
+              className="h-8 w-8 rounded-xl flex items-center justify-center border border-white/20 bg-black/20 hover:bg-white/15 text-white transition-all cursor-pointer shadow-xs"
               title={isDarkMode ? "Светлая карта" : "Темная видеостена ЦОДД"}
             >
-              {isDarkMode ? <Moon size={14} /> : <Sun size={14} />}
+              {isDarkMode ? <Sun size={14} className="text-amber-300" /> : <Moon size={14} className="text-white" />}
             </button>
           )}
 
           {/* Sound Toggle */}
           <button
             onClick={() => setIsMuted(!isMuted)}
-            className={`h-8 w-8 rounded-xl flex items-center justify-center border transition-all cursor-pointer ${
-              isMuted
-                ? isDarkMode
-                  ? "bg-rose-950/40 border-rose-800 text-rose-400"
-                  : "bg-rose-50 border-rose-200 text-rose-600"
-                : isDarkMode
-                ? "bg-slate-800/80 hover:bg-slate-700 border-slate-700 text-slate-400 hover:text-slate-200"
-                : "bg-white hover:bg-slate-100 border-slate-200 text-slate-600 shadow-xs"
-            }`}
+            className="h-8 w-8 rounded-xl flex items-center justify-center border border-white/20 bg-black/20 hover:bg-white/15 text-white transition-all cursor-pointer shadow-xs"
             title={isMuted ? "Включить звук" : "Выключить звук"}
           >
-            {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+            {isMuted ? <VolumeX size={14} className="text-red-300" /> : <Volume2 size={14} />}
           </button>
 
           {/* Fullscreen Toggle */}
           <button
             onClick={handleToggleFullscreen}
-            className={`h-8 w-8 rounded-xl flex items-center justify-center border transition-all cursor-pointer ${
-              isDarkMode
-                ? "bg-slate-800/80 hover:bg-slate-700 border-slate-700 text-slate-400 hover:text-slate-200"
-                : "bg-white hover:bg-slate-100 border-slate-200 text-slate-600 shadow-xs"
-            }`}
+            className="h-8 w-8 rounded-xl flex items-center justify-center border border-white/20 bg-black/20 hover:bg-white/15 text-white transition-all cursor-pointer shadow-xs"
             title={isFullscreen ? "Выйти из полного экрана" : "На весь экран"}
           >
             {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}

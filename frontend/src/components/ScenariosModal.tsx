@@ -175,14 +175,14 @@ export const ScenariosModal: React.FC<ScenariosModalProps> = ({
 
         {/* Modal Body: 4 Tactical Strategies Grid */}
         <div className={`grid grid-cols-2 gap-4 p-6 pt-4 overflow-y-auto max-h-[calc(85vh-160px)] ${
-          isDarkMode ? "bg-[#0B0F17]" : "bg-slate-50/60"
+          isDarkMode ? "bg-[#121214]" : "bg-slate-50/60"
         }`}>
           {SCENARIOS.map((sc) => {
             const isSelected = sc.id === selectedId;
             let borderClass = isDarkMode
-              ? "border-slate-700/80 hover:border-slate-600"
+              ? "border-zinc-700/80 hover:border-zinc-600"
               : "border-slate-200 hover:border-slate-300 hover:shadow-xs";
-            let bgClass = isDarkMode ? "bg-[#111827]" : "bg-white";
+            let bgClass = isDarkMode ? "bg-[#18181b]" : "bg-white";
 
             if (isSelected) {
               if (sc.theme === "emerald") {
@@ -193,7 +193,7 @@ export const ScenariosModal: React.FC<ScenariosModalProps> = ({
                 borderClass = "border-2 border-blue-500 shadow-md ring-4 ring-blue-500/10";
               } else {
                 borderClass = isDarkMode
-                  ? "border-2 border-slate-500 shadow-md ring-4 ring-slate-400/10"
+                  ? "border-2 border-zinc-500 shadow-md ring-4 ring-zinc-400/10"
                   : "border-2 border-slate-700 shadow-md ring-4 ring-slate-500/10";
               }
             }
@@ -214,7 +214,7 @@ export const ScenariosModal: React.FC<ScenariosModalProps> = ({
                           ? isDarkMode ? "bg-amber-950/80 text-amber-300 border-amber-700" : "bg-amber-50 text-amber-800 border-amber-200"
                           : sc.theme === "blue"
                           ? isDarkMode ? "bg-blue-950/80 text-blue-300 border-blue-700" : "bg-blue-50 text-blue-800 border-blue-200"
-                          : isDarkMode ? "bg-slate-800 text-slate-300 border-slate-700" : "bg-slate-100 text-slate-700 border-slate-200"
+                          : isDarkMode ? "bg-zinc-800 text-zinc-300 border-zinc-700" : "bg-slate-100 text-slate-700 border-slate-200"
                       }`}
                     >
                       {sc.badge}
@@ -228,8 +228,8 @@ export const ScenariosModal: React.FC<ScenariosModalProps> = ({
                             ? "bg-amber-600 text-white shadow-xs"
                             : sc.theme === "blue"
                             ? "bg-blue-600 text-white shadow-xs"
-                            : "bg-slate-700 text-white shadow-xs"
-                          : isDarkMode ? "border-2 border-slate-600" : "border-2 border-slate-300"
+                            : "bg-zinc-700 text-white shadow-xs"
+                          : isDarkMode ? "border-2 border-zinc-600" : "border-2 border-slate-300"
                       }`}
                     >
                       {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
@@ -247,7 +247,7 @@ export const ScenariosModal: React.FC<ScenariosModalProps> = ({
                           ? "bg-emerald-950/40 border-emerald-800/80 text-emerald-200"
                           : "bg-emerald-50/70 border-emerald-200/60 text-slate-700"
                         : isDarkMode
-                        ? "bg-[#0B0F17] border-slate-800 text-slate-300"
+                        ? "bg-[#222226] border-zinc-800 text-zinc-300"
                         : "bg-slate-50 border-slate-200 text-slate-700"
                     }`}
                   >
