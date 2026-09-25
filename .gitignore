@@ -63,6 +63,8 @@ htmlcov/
 .mypy_cache/
 .ruff_cache/
 .ipynb_checkpoints/
+catboost_info/
+**/catboost_info/
 
 # Data & Models (ignore large files, keep samples)
 data/raw/*
@@ -71,6 +73,7 @@ data/processed/*
 !data/processed/.gitkeep
 data/models/*
 !data/models/.gitkeep
+dataset
 *.parquet
 *.h5
 *.pkl
