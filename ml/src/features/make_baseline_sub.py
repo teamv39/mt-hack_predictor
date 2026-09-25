@@ -34,9 +34,6 @@ def generate_baseline_submission(
 
     rows: list[tuple[str, str]] = []
 
-    # Use built-in csv module for zero-dependency reliability
-    import csv
-
     with open(points_file, "r", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for r in reader:
@@ -76,7 +73,7 @@ def generate_baseline_submission(
     return output_file
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Generate baseline submission")
     parser.add_argument(
         "--points",

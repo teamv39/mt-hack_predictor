@@ -101,7 +101,7 @@ class ScheduleIndex:
     def _build_index(self, df: pd.DataFrame) -> None:
         geom_col = "geom" if "geom" in df.columns else None
 
-        plan_times: Dict[int, List] = {}
+        plan_times: Dict[int, List[int]] = {}
         for _, row in df.iterrows():
             tr_id = int(row["tr_id"])
             stop_id = int(row["tt_action_item_id"])

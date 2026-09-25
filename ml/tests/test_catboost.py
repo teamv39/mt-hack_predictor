@@ -172,3 +172,15 @@ def test_gold_weights_backup_exists_and_preferred():
     status = manager.get_status()
     assert status.mode == "catboost"
     assert status.regressor_loaded is True
+
+
+def test_competition_training_features_ssot_parity():
+    """Verifies that train_competition.py uses SSOT feature lists matching extractor.py."""
+    from src.features.extractor import LEGACY_FEATURE_NAMES, MODEL_FEATURE_NAMES
+    from src.models.train_competition import FEATURE_COLS, PROD_FEATURE_COLS
+
+    assert FEATURE_COLS == MODEL_FEATURE_NAMES
+    assert PROD_FEATURE_COLS == LEGACY_FEATURE_NAMES
+    assert len(FEATURE_COLS) == 24
+    assert len(PROD_FEATURE_COLS) == 13
+
