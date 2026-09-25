@@ -334,11 +334,11 @@ export const MapView: React.FC<MapViewProps> = ({
         </button>
       </div>
 
-      {/* Floating Bottom-Left CCTV Widget */}
+      {/* Floating Bottom-Left CCTV Widget (Matches AlertRadar width: 360px) */}
       <div className="absolute bottom-20 left-4 z-20 pointer-events-auto">
-        <div className="w-64 bg-white/95 backdrop-blur-md border border-slate-200 rounded-xl shadow-lg p-2">
+        <div className="w-[360px] bg-white/95 backdrop-blur-md border border-slate-200 rounded-xl shadow-lg p-2.5">
           {/* Header */}
-          <div className="px-2 py-1.5 bg-slate-50 rounded-lg border border-slate-200/80 flex items-center justify-between mb-1.5">
+          <div className="px-2.5 py-1.5 bg-slate-50 rounded-lg border border-slate-200/80 flex items-center justify-between mb-1.5">
             <span className="text-[11px] font-bold text-slate-800">
               {camera.id}: {camera.location}
             </span>
@@ -351,22 +351,22 @@ export const MapView: React.FC<MapViewProps> = ({
           <div>
             <div className="relative w-full h-20 bg-gradient-to-b from-slate-100 to-slate-200 rounded-lg overflow-hidden border border-slate-300 flex items-center justify-center">
               {/* Isometric roads and vehicles graphic */}
-              <svg className="w-full h-full" viewBox="0 0 240 100">
+              <svg className="w-full h-full" viewBox="0 0 340 90">
                 {/* Road perspective planes */}
-                <polygon points="10,90 230,90 180,20 60,20" fill="#cbd5e1" opacity="0.7" />
-                <line x1="120" y1="20" x2="120" y2="90" stroke="#ffffff" strokeWidth="2" strokeDasharray="6 4" />
-                <line x1="90" y1="20" x2="65" y2="90" stroke="#e2e8f0" strokeWidth="1.5" />
-                <line x1="150" y1="20" x2="175" y2="90" stroke="#e2e8f0" strokeWidth="1.5" />
+                <polygon points="10,85 330,85 240,15 100,15" fill="#cbd5e1" opacity="0.7" />
+                <line x1="170" y1="15" x2="170" y2="85" stroke="#ffffff" strokeWidth="2" strokeDasharray="6 4" />
+                <line x1="135" y1="15" x2="90" y2="85" stroke="#e2e8f0" strokeWidth="1.5" />
+                <line x1="205" y1="15" x2="250" y2="85" stroke="#e2e8f0" strokeWidth="1.5" />
 
                 {/* Overpass / bridge */}
-                <rect x="30" y="38" width="180" height="12" rx="4" fill="#94a3b8" opacity="0.8" />
-                <rect x="35" y="40" width="170" height="8" rx="2" fill="#64748b" />
+                <rect x="50" y="32" width="240" height="12" rx="4" fill="#94a3b8" opacity="0.8" />
+                <rect x="55" y="34" width="230" height="8" rx="2" fill="#64748b" />
 
                 {/* Cars */}
-                <rect x="105" y="65" width="12" height="18" rx="2" fill="#ef4444" />
-                <rect x="125" y="50" width="10" height="14" rx="2" fill="#3b82f6" />
-                <rect x="80" y="70" width="10" height="15" rx="2" fill="#10b981" />
-                <rect x="145" y="75" width="11" height="16" rx="2" fill="#f59e0b" />
+                <rect x="150" y="60" width="13" height="18" rx="2" fill="#ef4444" />
+                <rect x="180" y="46" width="11" height="14" rx="2" fill="#3b82f6" />
+                <rect x="110" y="64" width="11" height="15" rx="2" fill="#10b981" />
+                <rect x="210" y="68" width="12" height="16" rx="2" fill="#f59e0b" />
               </svg>
 
               <div className="absolute top-1.5 left-2 text-[9px] font-mono text-slate-500 font-bold">
