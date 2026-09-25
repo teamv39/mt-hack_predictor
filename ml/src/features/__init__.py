@@ -7,6 +7,7 @@ from .extractor import (
     feature_vectors_to_dataframe,
 )
 from .schedule_matcher import (
+    PlanProgress,
     ScheduleIndex,
     angle_diff_deg,
     haversine_distance_m,
@@ -17,6 +18,7 @@ from .telemetry_cleaner import (
     clean_traffic_dataframe,
     load_and_clean_traffic,
 )
+from .time_utils import to_epoch_s
 
 __all__ = [
     "MODEL_FEATURE_NAMES",
@@ -26,8 +28,10 @@ __all__ = [
     "clean_traffic_dataframe",
     "load_and_clean_traffic",
     "ScheduleIndex",
+    "PlanProgress",
     "load_schedule_index",
     "haversine_distance_m",
     "angle_diff_deg",
     "parse_wkt_point",
+    "to_epoch_s",
 ]

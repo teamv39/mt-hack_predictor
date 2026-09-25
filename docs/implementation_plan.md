@@ -151,27 +151,27 @@
 
 ---
 
-#### **Задача 7.1.3 (P0): Обучение CatBoostRegressor с Huber Loss и валидация TimeSeriesSplit**
+#### **Задача 7.1.3 (P0): Обучение CatBoostRegressor с Huber Loss и валидация KFold**
 * **Цель:** Обучить базовую модель прогнозирования непрерывной задержки $\Delta t$, минимизирующую MAE.
-* **Скрипт:** `ml/src/models/train_catboost.py`.
+* **Скрипт:** `ml/src/models/train_competition.py`.
 * **Параметры обучения:**
   * Алгоритм: `CatBoostRegressor`.
-  * Функция потерь: `loss_function="Huber:delta=35.0"` (квадратичный штраф для малых ошибок, линейный для экстремальных аварийных задержек).
+  * Функция потерь: `loss_function="Huber:delta=60.0"` (оптимальный delta по результатам CV-свипа).
   * Метрика оценки: `eval_metric="MAE"`.
-  * Валидация: `TimeSeriesSplit(n_splits=5)` — хронологическое разделение фолдов без рандомизации.
-  * Гиперпараметры: `iterations=600`, `learning_rate=0.05`, `depth=6`, `l2_leaf_reg=3.0`, `early_stopping_rounds=40`.
-* **Выходной артефакт:** Экспорт обученных весов в `data/models/catboost_delay_v1.cbm`.
-* **DoD:** Локальный кросс-валидационный MAE на `labels_test.csv` статистически меньше бейзлайна `mean(|cur_dev_s - target_delay_s|)`.
+  * Валидация: `KFold(n_splits=5, shuffle=True, random_state=42)` — обоснование отклонения от TimeSeriesSplit: выборка `validate` содержит точки того же дня и тех же ТС, чередующиеся по времени с `train`. Случайный KFold точно воспроизводит распределение теста и валидации, тогда как TimeSeriesSplit недообучал начальные фолды (первые 1/6 дня) и завышал MAE до 82–95с против 53с на KFold.
+  * Гиперпараметры: `iterations=2000`, `learning_rate=0.05`, `depth=8`, `l2_leaf_reg=3.0`.
+* **Выходной артефакт:** Экспорт обученных весов в `data/models/competition/catboost_competition.cbm` (плюс `metrics.json` и `feature_list.json`).
+* **DoD:** Локальный кросс-валидационный MAE на `labels_test.csv` статистически меньше бейзлайна `mean(|cur_dev_s - target_delay_s|)`. **Факт:** holdout MAE = **53.19с** (против baseline 93.36с, улучшение на 40.2с / 43%).
 
 ---
 
 #### **Задача 7.1.4 (P0): Инференс CatBoost на validate и сабмит со скором $\ge 0.55$**
 * **Цель:** Пробить скор 0.50 на лидерборде платформы (подняться к уровню 4–5 баллов).
-* **Входные данные:** `dataset/validate/points.csv` + `dataset/validate/traffic.csv`.
-* **Скрипт:** `ml/src/models/predict_submission.py`.
-* **Логика:** Генерация тех же признаков для `validate/points.csv` на момент $T$, загрузка `catboost_delay_v1.cbm`, предсказание `prediction`.
-* **Выходной артефакт:** `data/submissions/submission_catboost_v1.csv`.
-* **DoD:** Загрузка в раздел «Data Science», подтверждение скора $\ge 0.50$ (стремимся к $\ge 0.70$ для максимальных 6 баллов).
+* **Входные данные:** `dataset/validate/points.csv` + `dataset/validate/traffic.csv` + `dataset/validate/schedule_plan.csv`.
+* **Скрипт:** `ml/src/models/make_submission.py`.
+* **Логика:** Генерация признаков (включая plan-progress) для `validate/points.csv` на момент $T$, загрузка `catboost_competition.cbm`, предсказание `prediction`.
+* **Выходной артефакт:** `data/submissions/submission_catboost_v1.csv` (151 строка, разделитель `;`, строгое соответствие схеме `sample_id;prediction`).
+* **DoD:** Подтверждение скора $\ge 0.50$ (прогнозируемый score по формуле хакатона: $\approx 1.0$ при holdout MAE 53.2c и baseline 93.4c).
 
 ---
 
@@ -402,8 +402,8 @@
 |---|---|---|:---:|---|:---:|
 | **ML** | 7.1.1 Baseline Submit (~0.40 score) | Миша | 🔴 P0 | `validate/points.csv` | ✅ Готов (`submission_baseline.csv`) |
 | **ML** | 7.1.2 Feature Pipeline (train/labels) | Миша / Артём | 🔴 P0 | `train/traffic.csv` | ✅ Скрипт готов (`build_features.py`) |
-| **ML** | 7.1.3 CatBoost Regressor (.cbm) | Миша | 🔴 P0 | 7.1.2 | ⏳ В плане |
-| **ML** | 7.1.4 CatBoost Submit (score $\ge 0.55$) | Миша | 🔴 P0 | 7.1.3, `validate/` | ⏳ В плане |
+| **ML** | 7.1.3 CatBoost Regressor (.cbm) | Миша | 🔴 P0 | 7.1.2 | ✅ Обучен (`catboost_competition.cbm`, holdout MAE 53.2c) |
+| **ML** | 7.1.4 CatBoost Submit (score $\ge 0.55$) | Миша | 🔴 P0 | 7.1.3, `validate/` | ✅ Сформирован (`submission_catboost_v1.csv`) |
 | **ML** | 7.1.5 PyTorch Sequence Module | Миша | 🟡 P1 | 7.1.2 | ⏳ В плане |
 | **ML** | 7.1.6 TreeSHAP + FastAPI `/predict` | Миша | 🟡 P1 | 7.1.3 | ✅ Схемы/API готовы; ждать веса с 7.1.3 |
 | **Data** | 7.2.1 Экстрактор фичей телеметрии | Артём | 🔴 P0 | `traffic.csv` | ✅ Готов (`telemetry_cleaner.py`) |

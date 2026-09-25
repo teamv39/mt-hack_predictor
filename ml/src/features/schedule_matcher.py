@@ -9,10 +9,12 @@ from __future__ import annotations
 import math
 import re
 from pathlib import Path
-from typing import Dict, Optional, Tuple, Union
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
+
+from .time_utils import to_epoch_s
 
 # Regex matching WKT POINT (lon lat)
 _WKT_POINT_RE = re.compile(r"POINT\s*\(\s*([-\d.]+)\s+([-\d.]+)\s*\)", re.IGNORECASE)
@@ -56,8 +58,22 @@ def angle_diff_deg(angle1: float, angle2: float) -> float:
     return 360.0 - diff if diff > 180.0 else diff
 
 
+class PlanProgress(NamedTuple):
+    """Route-progress features derived from planned schedule times."""
+
+    stops_remaining: int
+    plan_time_to_target_s: Optional[float]
+    time_since_last_stop_s: Optional[float]
+    plan_sec_per_stop: Optional[float]
+
+
 class ScheduleIndex:
-    """In-memory index for fast lookup of stops by (tr_id, tt_action_item_id)."""
+    """In-memory index for fast lookup of stops by (tr_id, tt_action_item_id).
+
+    Also keeps per-vehicle sorted arrays of PLANNED arrival epochs
+    (``time_begin`` only — never ``time_fact_begin``, which is post-T leakage
+    for train/test splits) to derive route-progress features.
+    """
 
     def __init__(self, schedule_df: pd.DataFrame) -> None:
         """Initializes schedule index from DataFrame.
@@ -70,11 +86,13 @@ class ScheduleIndex:
         - optional `building_address`
         """
         self._stops_by_id: Dict[Tuple[int, int], Dict[str, Union[float, str]]] = {}
+        self._plan_times_by_vehicle: Dict[int, np.ndarray] = {}
         self._build_index(schedule_df)
 
     def _build_index(self, df: pd.DataFrame) -> None:
         geom_col = "geom" if "geom" in df.columns else None
 
+        plan_times: Dict[int, List] = {}
         for _, row in df.iterrows():
             tr_id = int(row["tr_id"])
             stop_id = int(row["tt_action_item_id"])
@@ -90,6 +108,66 @@ class ScheduleIndex:
                 "time_begin": str(row.get("time_begin", "")),
                 "address": str(row.get("building_address", "")),
             }
+
+            tb = row.get("time_begin")
+            if tb is not None and pd.notna(tb):
+                plan_times.setdefault(tr_id, []).append(to_epoch_s(tb))
+
+        for tr_id, times in plan_times.items():
+            self._plan_times_by_vehicle[tr_id] = np.sort(
+                np.array(times, dtype=np.int64)
+            )
+
+    def plan_progress(
+        self,
+        tr_id: int,
+        t_epoch_sec: Union[int, Any],
+        target_time_epoch_sec: Union[int, Any],
+    ) -> PlanProgress:
+        """Route-progress features from planned times only (legal at moment T).
+
+        Returns PlanProgress(stops_remaining, plan_time_to_target_s,
+        time_since_last_stop_s, plan_sec_per_stop):
+        - stops_remaining: planned arrivals in (T, target_time] (target inclusive)
+        - plan_time_to_target_s: planned seconds from last passed stop to target
+        - time_since_last_stop_s: T minus planned time of last passed stop
+        - plan_sec_per_stop: plan_time_to_target_s / stops_remaining
+        All but stops_remaining are None when the vehicle has no passed stop yet.
+        """
+        t_sec = to_epoch_s(t_epoch_sec)
+        target_sec = to_epoch_s(target_time_epoch_sec)
+
+        times = self._plan_times_by_vehicle.get(tr_id)
+        if times is None:
+            return PlanProgress(
+                stops_remaining=0,
+                plan_time_to_target_s=None,
+                time_since_last_stop_s=None,
+                plan_sec_per_stop=None,
+            )
+
+        passed_mask = times <= t_sec
+        stops_remaining = int(np.sum((times > t_sec) & (times <= target_sec)))
+        if not passed_mask.any():
+            return PlanProgress(
+                stops_remaining=stops_remaining,
+                plan_time_to_target_s=None,
+                time_since_last_stop_s=None,
+                plan_sec_per_stop=None,
+            )
+
+        last_passed = int(times[passed_mask].max())
+        plan_time_to_target = float(target_sec - last_passed)
+        time_since_last_stop = float(t_sec - last_passed)
+        plan_sec_per_stop = (
+            plan_time_to_target / stops_remaining if stops_remaining > 0 else None
+        )
+        return PlanProgress(
+            stops_remaining=stops_remaining,
+            plan_time_to_target_s=plan_time_to_target,
+            time_since_last_stop_s=time_since_last_stop,
+            plan_sec_per_stop=plan_sec_per_stop,
+        )
 
     def get_stop_coords(
         self,

@@ -17,8 +17,9 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import numpy as np
 import pandas as pd
 
-from .schedule_matcher import ScheduleIndex, load_schedule_index
+from .schedule_matcher import PlanProgress, ScheduleIndex, load_schedule_index
 from .telemetry_cleaner import clean_traffic_dataframe, load_and_clean_traffic
+from .time_utils import to_epoch_s
 
 logging.basicConfig(
     level=logging.INFO,
@@ -37,7 +38,7 @@ class TelemetryVehicleIndex:
             traffic_df = traffic_df.copy()
             traffic_df["event_time"] = pd.to_datetime(traffic_df["event_time"])
 
-        epoch_sec = traffic_df["event_time"].astype("datetime64[s]").astype("int64")
+        epoch_sec = to_epoch_s(traffic_df["event_time"])
 
         self._vehicles: Dict[int, Dict[str, np.ndarray]] = {}
 
@@ -91,7 +92,7 @@ def extract_features_for_sample(
     t_val = sample_row["T"]
     if not isinstance(t_val, pd.Timestamp):
         t_val = pd.to_datetime(t_val)
-    t_epoch = int(t_val.timestamp())
+    t_epoch = to_epoch_s(t_val)
 
     target_stop_id = int(sample_row["target_stop_id"])
     target_time_begin = sample_row["target_time_begin"]
@@ -128,7 +129,7 @@ def extract_features_for_sample(
     idle_time_5m = 0.0
     telemetry_age_s = 999.0
     points_count_5m = 0
-    heading_diff_3m = 0.0
+    heading_std_3m = 0.0
     bus_lat: Optional[float] = None
     bus_lon: Optional[float] = None
 
@@ -156,8 +157,12 @@ def extract_features_for_sample(
 
             slice_3m_heading = heading_arr[idx_3m:]
             if len(slice_3m_heading) > 1:
-                # Difference between max and min heading on 3m
-                heading_diff_3m = float(np.max(slice_3m_heading) - np.min(slice_3m_heading))
+                # Circular std of headings (max-min is wrong across the 0/360 wrap)
+                rad = np.deg2rad(slice_3m_heading.astype(np.float64))
+                resultant = abs(np.exp(1j * rad).mean())
+                heading_std_3m = float(
+                    np.degrees(np.sqrt(max(0.0, -2.0 * np.log(max(resultant, 1e-9)))))
+                )
 
         # 5-minute window [T - 300, T]
         idx_5m = np.searchsorted(ts_arr, t_epoch - 300, side="left")
@@ -189,6 +194,13 @@ def extract_features_for_sample(
             if horizon_sec > 10.0:
                 speed_needed_kmh = float((dist_to_target_m / horizon_sec) * 3.6)
 
+    # 5. Route-progress features from PLANNED schedule times only (leakage-free).
+    #    These measure where the bus sits along its route relative to the plan.
+    target_epoch = to_epoch_s(target_time_begin)
+    progress = PlanProgress(stops_remaining=0, plan_time_to_target_s=None, time_since_last_stop_s=None, plan_sec_per_stop=None)
+    if schedule_index is not None:
+        progress = schedule_index.plan_progress(tr_id, t_epoch, target_epoch)
+
     # Compile feature dictionary
     feat: Dict[str, Any] = {
         # Identifiers
@@ -213,10 +225,15 @@ def extract_features_for_sample(
         "idle_time_5m": idle_time_5m,
         "telemetry_age_s": telemetry_age_s,
         "points_count_5m": points_count_5m,
-        "heading_diff_3m": heading_diff_3m,
+        "heading_std_3m": heading_std_3m,
         # Spatial features
         "dist_to_target_m": dist_to_target_m,
         "speed_needed_kmh": speed_needed_kmh,
+        # Route-progress (plan-time based, leakage-free)
+        "stops_remaining": progress.stops_remaining,
+        "plan_time_to_target_s": progress.plan_time_to_target_s,
+        "time_since_last_stop_s": progress.time_since_last_stop_s,
+        "plan_sec_per_stop": progress.plan_sec_per_stop,
         # Temporal & cyclical
         "hour_of_day": hour_val,
         "hour_sin": hour_sin,
