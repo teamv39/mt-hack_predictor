@@ -31,6 +31,10 @@
    * Завершил задачу — **НЕМЕДЛЕННО** поставь `[x]` в [docs/implementation_plan.md](file:///Users/shteppinson/dev/hacks/mt-hack_predictor/docs/implementation_plan.md) и обнови таблицу готовности. Следующий агент начинает работу с чтения этого плана. Неактуальный план приводит к потере токенов и поломке существующего функционала.
 5. **Детерминированная проверяемость:**
    * Любые изменения должны верифицироваться одной детерминированной командой: `make check` (Go сборка + тесты, Vite build, pytest). Никаких коммитов со сломанными тестами.
+6. **Обязательная синхронизация с Git (Always Fetch & Pull before work):**
+   * Любой агент ПЕРЕД началом любой задачи ОБЯЗАН зафетчить и обновить актуальное состояние репозитория: `git fetch origin && git checkout dev && git pull origin dev`.
+   * Параллельно могут работать другие AI-агенты и члены команды. Работа на устаревшем коммите гарантированно приведет к мерж-конфликтам и затиранию чужого кода!
+   * После завершения задачи агент ОБЯЗАН выполнить полный цикл Git Flow: слить ветку в `dev` через `--no-ff` и немедленно запушить `git push origin dev`.
 
 ---
 
@@ -177,15 +181,33 @@ uv run uvicorn src.api.server:app --reload --port 8000 # Запуск серви
 
 ### 6.3. Порядок работы агента (Workflow)
 
-```
-1. Получил задачу от пользователя
-2. Прочитал docs/implementation_plan.md (текущий статус, что уже сделано)
-3. Прочитал релевантные P0/P1 документы (контракты, архитектура)
-4. Создал ветку от актуального dev (git checkout dev && git pull && git checkout -b feat/...)
-5. Выполнил задачу в коде
-6. Обновил все затронутые документы (контракты, план, чеклист)
-7. Проверил сборку (make check)
-8. Запушил ветку и слил в dev (или открыл PR в dev)
+```bash
+# 1. ОБЯЗАТЕЛЬНАЯ СИНХРОНИЗАЦИЯ: подтянуть свежайшие изменения от других агентов
+git fetch origin
+git checkout dev
+git pull origin dev
+
+# 2. Прочитать docs/implementation_plan.md (текущий статус, что уже сделано)
+# 3. Прочитать релевантные P0/P1 документы (api_contracts.md, architecture.md)
+
+# 4. Создать новую ветку от актуального origin/dev
+git checkout -b <prefix>/<short-description>
+
+# 5. Выполнить задачу в коде
+# 6. Обновить все затронутые документы (контракты, план, чеклист, индекс)
+
+# 7. Проверить сборку всего стека
+make check
+
+# 8. Запушить ветку, слить в dev и запушить origin/dev
+git add <files>
+git commit -m "<prefix>(<scope>): <message>"
+git push -u origin <имя-ветки>
+git checkout dev
+git pull origin dev
+git merge --no-ff <имя-ветки> -m "Merge branch '<имя-ветки>' into dev"
+git branch -d <имя-ветки>
+git push origin dev
 ```
 
 ---
@@ -194,14 +216,19 @@ uv run uvicorn src.api.server:app --reload --port 8000 # Запуск серви
 
 > **КРИТИЧЕСКИ ВАЖНОЕ ПРАВИЛО:** Все разработчики и AI-агенты работают **ТОЛЬКО от ветки `dev`**. Прямые коммиты и пуши в `main` **СТРОГО ЗАПРЕЩЕНЫ**. `main` используется исключительно для финальных стабильных релизов на защиту.
 
-### 7.1. Правила ветвления
-1. **Базовая ветка:** Все ветки создаются строго от актуального `origin/dev`:
+### 7.1. Правила ветвления и обязательный Fetch
+1. **Каждая сессия начинается с Fetch & Pull:**
+   Агент **ни при каких обстоятельствах** не начинает работу без предварительного обновления `dev`:
    ```bash
+   git fetch origin
    git checkout dev
    git pull origin dev
+   ```
+2. **Базовая ветка:** Все рабочие ветки создаются строго от актуального `origin/dev`:
+   ```bash
    git checkout -b <prefix>/<short-description>
    ```
-2. **Именование веток (префиксы):**
+3. **Именование веток (префиксы):**
    * `feat/<name>` — новая фича или компонент (например, `feat/ndtp-tcp-receiver`, `feat/catboost-training`, `feat/inspector-card`).
    * `fix/<name>` — исправление бага или ошибки в логике (например, `fix/websocket-reconnect`).
    * `docs/<name>` — добавление или актуализация документации.
@@ -210,25 +237,30 @@ uv run uvicorn src.api.server:app --reload --port 8000 # Запуск серви
 
 ### 7.2. Чеклист перед коммитом и пушем
 Перед каждым коммитом и пушем агент **ОБЯЗАН**:
-1. Запустить `make check` (проверка компиляции Go и сборки Vite). Никаких сломанных билдов!
+1. Запустить `make check` (проверка компиляции Go, сборки Vite и тестов ML). Никаких сломанных билдов!
 2. Проверить `git status` — никаких лишних тяжелых файлов (датасеты, логи, бинарники).
 3. Написать осмысленное сообщение коммита по Conventional Commits:
    * `feat(backend): add NDTP TCP listener on port 9201`
    * `fix(ml): resolve process substitution syntax in Dockerfile`
    * `docs(plan): update Phase 7 roadmap with official case criteria`
-4. Запушить ветку в `origin`:
+4. Запушить ветку фичи в `origin`:
    ```bash
    git push -u origin <имя-ветки>
    ```
-5. Слить в `dev` (или создать Pull Request в `dev`):
+5. **Слить в `dev` и ОБЯЗАТЕЛЬНО запушить в `origin/dev`:**
    ```bash
    git checkout dev
    git pull origin dev
-   git merge --no-ff <имя-ветки>
+   git merge --no-ff <имя-ветки> -m "Merge branch '<имя-ветки>' into dev"
+   git branch -d <имя-ветки>
    git push origin dev
    ```
+6. Убедиться через `git status`, что на ветке `dev` нет незапушенных коммитов:  
+   `Your branch is up to date with 'origin/dev'. nothing to commit, working tree clean`.
 
 ### 7.3. Запрещенные действия
+* ❌ Начинать работу без `git fetch origin && git pull origin dev`.
+* ❌ Оставлять изменения локально неслитыми в `dev` и незапушенными в `origin/dev`.
 * ❌ Коммитить или пушить напрямую в ветку `main`.
 * ❌ Делать `git push --force` в `dev` или `main`.
 * ❌ Добавлять тяжелые файлы (> 10 МБ, `.tar`, `.csv`, `.parquet`, модели) в Git в обход `.gitignore`.
