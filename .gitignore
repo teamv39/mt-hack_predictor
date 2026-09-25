@@ -66,8 +66,7 @@ htmlcov/
 catboost_info/
 **/catboost_info/
 
-# Datasets & Large Archives (competition data, emulator images)
-dataset/
+# Datasets & Large Archives (emulator images and archives >100MB)
 *.tar
 *.tar.gz
 *.zip
@@ -80,7 +79,6 @@ data/processed/*
 !data/processed/.gitkeep
 data/models/*
 !data/models/.gitkeep
-dataset
 *.parquet
 *.h5
 *.pkl
