@@ -19,7 +19,8 @@ const (
 	defaultDebounce = 10 * time.Second
 )
 
-// PredictRequest is the legacy/Go payload accepted by ML /predict.
+// PredictRequest is the payload accepted by ML /predict, containing both
+// official competition fields and DSS operational telemetry.
 type PredictRequest struct {
 	VehicleID                 string  `json:"vehicle_id"`
 	RouteID                   string  `json:"route_id,omitempty"`
@@ -37,6 +38,52 @@ type PredictRequest struct {
 	LocationValid             bool    `json:"location_valid,omitempty"`
 	CurDevS                   float64 `json:"cur_dev_s,omitempty"`
 	TrID                      string  `json:"tr_id,omitempty"`
+
+	// Extended telemetry features (from tracker.go)
+	AvgSpeedWindowKmh         float64 `json:"avg_speed_window_kmh,omitempty"`
+	SpeedMean5m               float64 `json:"speed_mean_5m,omitempty"`
+	SpeedMean10m              float64 `json:"speed_mean_10m,omitempty"`
+	AvgSpeed5m                float64 `json:"avg_speed_5m,omitempty"`
+	AvgSpeed10m               float64 `json:"avg_speed_10m,omitempty"`
+	IdleTime5m                float64 `json:"idle_time_5m,omitempty"`
+	StopRatio5m               float64 `json:"stop_ratio_5m,omitempty"`
+	StopRatioWindow           float64 `json:"stop_ratio_window,omitempty"`
+	SpeedTrend                float64 `json:"speed_trend,omitempty"`
+	TelemetryAgeS             float64 `json:"telemetry_age_s,omitempty"`
+	PointsCount5m             int     `json:"points_count_5m,omitempty"`
+
+	// Extended schedule & route progress features (from matcher.go)
+	DistanceMeters            float64 `json:"distance_meters,omitempty"`
+	DistToTargetM             float64 `json:"dist_to_target_m,omitempty"`
+	HorizonSec                float64 `json:"horizon_sec,omitempty"`
+	HorizonSeconds            float64 `json:"horizon_seconds,omitempty"`
+	TargetStopID              string  `json:"target_stop_id,omitempty"`
+	NextStopID                string  `json:"next_stop_id,omitempty"`
+	NextStopName              string  `json:"next_stop_name,omitempty"`
+	SpeedNeededKmh            float64 `json:"speed_needed_kmh,omitempty"`
+}
+
+// EnrichedFeatures carries sliding-window telemetry metrics and schedule matching output for ML inference.
+type EnrichedFeatures struct {
+	CurDevSec      float64
+	AvgSpeed       float64
+	HeadwaySec     float64
+
+	// From tracker.go
+	AvgSpeed3m    float64
+	AvgSpeed5m    float64
+	AvgSpeed10m   float64
+	IdleTime5m    float64 // Seconds with speed < 2 km/h in last 5m
+	StopRatio5m   float64 // Fraction of time idle in last 5m
+	SpeedTrend    float64 // avg3m - avg10m
+	TelemetryAgeS float64
+	PointsCount   int
+
+	// From matcher.go
+	DistanceMeters float64 // Haversine distance to target stop
+	HorizonSeconds float64 // Horizon to planned arrival
+	StopID         string
+	StopName       string
 }
 
 // SHAPFactor mirrors ML response factors.
@@ -119,6 +166,7 @@ func (c *Client) PredictForVehicle(ctx context.Context, v models.Vehicle) Predic
 		CurDevS:            v.DelaySeconds,
 		CurrentHeadwaySec:  v.HeadwaySeconds,
 		HistoricalAvgSpeed: v.SpeedKmH,
+		AvgSpeedWindowKmh:  v.SpeedKmH,
 		SpeedKmh:           v.SpeedKmH,
 		Heading:            v.Bearing,
 		Latitude:           v.Latitude,
@@ -127,17 +175,22 @@ func (c *Client) PredictForVehicle(ctx context.Context, v models.Vehicle) Predic
 		WeatherFactor:      1.0,
 		HourOfDay:          now.Hour(),
 		DayOfWeek:          dow,
+		TargetStopID:       v.NextStopID,
+		NextStopID:         v.NextStopID,
+		NextStopName:       v.NextStopName,
 	}
 	return c.Predict(ctx, req)
 }
 
-// PredictEnriched builds a prediction request with externally computed schedule deviation, rolling speed, and headway.
+// PredictEnriched builds a prediction request with externally computed schedule deviation, rolling speed, headway,
+// and optionally merges extended features (sliding window speed/idle stats from tracker.go and distance/horizon from matcher.go).
 func (c *Client) PredictEnriched(
 	ctx context.Context,
 	v models.Vehicle,
 	curDevSec float64,
 	avgSpeed float64,
 	headwaySec float64,
+	extras ...EnrichedFeatures,
 ) PredictResponse {
 	now := v.Timestamp
 	if now.IsZero() {
@@ -161,6 +214,7 @@ func (c *Client) PredictEnriched(
 		CurDevS:            curDevSec,
 		CurrentHeadwaySec:  headwaySec,
 		HistoricalAvgSpeed: avgSpeed,
+		AvgSpeedWindowKmh:  avgSpeed,
 		SpeedKmh:           v.SpeedKmH,
 		Heading:            v.Bearing,
 		Latitude:           v.Latitude,
@@ -169,8 +223,64 @@ func (c *Client) PredictEnriched(
 		WeatherFactor:      1.0,
 		HourOfDay:          now.Hour(),
 		DayOfWeek:          dow,
+		TargetStopID:       v.NextStopID,
+		NextStopID:         v.NextStopID,
+		NextStopName:       v.NextStopName,
 	}
+
+	if len(extras) > 0 {
+		e := extras[0]
+		if e.AvgSpeed5m > 0 {
+			req.AvgSpeed5m = e.AvgSpeed5m
+			req.SpeedMean5m = e.AvgSpeed5m
+		}
+		if e.AvgSpeed10m > 0 {
+			req.AvgSpeed10m = e.AvgSpeed10m
+			req.SpeedMean10m = e.AvgSpeed10m
+		}
+		if e.AvgSpeed3m > 0 {
+			req.AvgSpeedWindowKmh = e.AvgSpeed3m
+		}
+		req.IdleTime5m = e.IdleTime5m
+		req.StopRatio5m = e.StopRatio5m
+		req.StopRatioWindow = e.StopRatio5m
+		req.SpeedTrend = e.SpeedTrend
+		if e.TelemetryAgeS > 0 {
+			req.TelemetryAgeS = e.TelemetryAgeS
+		}
+		if e.PointsCount > 0 {
+			req.PointsCount5m = e.PointsCount
+		}
+		if e.DistanceMeters > 0 {
+			req.DistanceMeters = e.DistanceMeters
+			req.DistToTargetM = e.DistanceMeters
+		}
+		if e.HorizonSeconds > 0 {
+			req.HorizonSeconds = e.HorizonSeconds
+			req.HorizonSec = e.HorizonSeconds
+		}
+		if e.StopID != "" {
+			req.TargetStopID = e.StopID
+			req.NextStopID = e.StopID
+		}
+		if e.StopName != "" {
+			req.NextStopName = e.StopName
+		}
+		if req.DistToTargetM > 0 && req.HorizonSec > 10.0 {
+			req.SpeedNeededKmh = (req.DistToTargetM / req.HorizonSec) * 3.6
+		}
+	}
+
 	return c.Predict(ctx, req)
+}
+
+// PredictWithEnrichment builds a prediction request directly from EnrichedFeatures.
+func (c *Client) PredictWithEnrichment(
+	ctx context.Context,
+	v models.Vehicle,
+	e EnrichedFeatures,
+) PredictResponse {
+	return c.PredictEnriched(ctx, v, e.CurDevSec, e.AvgSpeed, e.HeadwaySec, e)
 }
 
 // Predict posts to /predict. On timeout/error returns persistence fallback (cur_dev_s).
@@ -280,14 +390,20 @@ func fallbackFrom(req PredictRequest, reason string) PredictResponse {
 	} else if delay > 120 {
 		cls = "late"
 	}
+	horizon := 750.0
+	if req.HorizonSec > 0 {
+		horizon = req.HorizonSec
+	} else if req.HorizonSeconds > 0 {
+		horizon = req.HorizonSeconds
+	}
 	return PredictResponse{
 		VehicleID:               req.VehicleID,
 		TrID:                    req.TrID,
 		PredictedDelaySec:       delay,
 		PredictedClass:          cls,
-		HorizonSec:              750,
+		HorizonSec:              horizon,
 		BunchingRiskProbability: 0,
-		IncidentPredictedInMin:  12.5,
+		IncidentPredictedInMin:  horizon / 60.0,
 		Severity:                sev,
 		Factors: []SHAPFactor{{
 			Feature:     "cur_dev_s",

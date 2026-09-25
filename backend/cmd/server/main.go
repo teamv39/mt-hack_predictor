@@ -141,11 +141,27 @@ func main() {
 		}
 
 		// 5. Asynchronous ML prediction & DSS Alert evaluation
-		go func(veh models.Vehicle, curDev float64, avgSpeed float64, hwSec float64, hw engine.HeadwayInfo, horizonSec float64) {
+		go func(veh models.Vehicle, feat telemetry.Features, match schedule.MatchResult, hwSec float64, hw engine.HeadwayInfo) {
 			predCtx, predCancel := context.WithTimeout(context.Background(), 250*time.Millisecond)
 			defer predCancel()
 
-			pred := mlCli.PredictEnriched(predCtx, veh, curDev, avgSpeed, hwSec)
+			pred := mlCli.PredictEnriched(predCtx, veh, match.CurDevSeconds, feat.AvgSpeed3m, hwSec, mlclient.EnrichedFeatures{
+				CurDevSec:      match.CurDevSeconds,
+				AvgSpeed:       feat.AvgSpeed3m,
+				HeadwaySec:     hwSec,
+				AvgSpeed3m:     feat.AvgSpeed3m,
+				AvgSpeed5m:     feat.AvgSpeed5m,
+				AvgSpeed10m:    feat.AvgSpeed10m,
+				IdleTime5m:     feat.IdleTime5m,
+				StopRatio5m:    feat.StopRatio5m,
+				SpeedTrend:     feat.SpeedTrend,
+				TelemetryAgeS:  feat.TelemetryAgeS,
+				PointsCount:    feat.PointsCount,
+				DistanceMeters: match.DistanceMeters,
+				HorizonSeconds: match.HorizonSeconds,
+				StopID:         match.StopID,
+				StopName:       match.StopName,
+			})
 
 			fleetMgr.SetPrediction(veh.ID, pred.PredictedDelaySec, pred.BunchingRiskProbability, hwSec)
 
@@ -162,8 +178,8 @@ func main() {
 
 			// Update alert state in DSS AlertManager
 			veh.DelaySeconds = pred.PredictedDelaySec
-			alertMgr.UpsertVehicleAlert(veh, hw, shapFactors, horizonSec)
-		}(*v, match.CurDevSeconds, feat.AvgSpeed3m, headwaySec, hwInfo, match.HorizonSeconds)
+			alertMgr.UpsertVehicleAlert(veh, hw, shapFactors, match.HorizonSeconds)
+		}(*v, feat, match, headwaySec, hwInfo)
 	})
 
 	go func() {

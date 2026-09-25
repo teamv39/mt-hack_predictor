@@ -169,6 +169,13 @@ class FeatureVector(BaseModel):
     time_since_last_stop_s: Optional[float] = Field(default=None, ge=0.0, description="Seconds since planned departure of last passed stop")
     plan_sec_per_stop: Optional[float] = Field(default=None, ge=0.0, description="plan_time_to_target_s / stops_remaining")
 
+    # --- Tracker & Matcher aliases from Go backend -------------------------
+    avg_speed_5m: Optional[float] = Field(default=None, ge=0.0, description="Alias of speed_mean_5m from Go tracker")
+    avg_speed_10m: Optional[float] = Field(default=None, ge=0.0, description="Alias of speed_mean_10m from Go tracker")
+    stop_ratio_5m: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="Alias of stop_ratio_window from Go tracker")
+    distance_meters: Optional[float] = Field(default=None, ge=0.0, description="Alias of dist_to_target_m from Go matcher")
+    horizon_seconds: Optional[float] = Field(default=None, ge=0.0, description="Alias of horizon_sec from Go matcher")
+
     @model_validator(mode="before")
     @classmethod
     def _align_aliases(cls, data: Any) -> Any:
@@ -216,19 +223,45 @@ class FeatureVector(BaseModel):
 
         # horizon from T and target_time_begin when possible
         if payload.get("horizon_sec") is None:
-            t_val = payload.get("T")
-            target = payload.get("target_time_begin")
-            if t_val is not None and target is not None:
-                try:
-                    t_dt = t_val if isinstance(t_val, datetime) else datetime.fromisoformat(str(t_val))
-                    tgt_dt = (
-                        target
-                        if isinstance(target, datetime)
-                        else datetime.fromisoformat(str(target))
-                    )
-                    payload["horizon_sec"] = max(0.0, (tgt_dt - t_dt).total_seconds())
-                except (TypeError, ValueError):
-                    pass
+            if payload.get("horizon_seconds") is not None:
+                payload["horizon_sec"] = payload["horizon_seconds"]
+            else:
+                t_val = payload.get("T")
+                target = payload.get("target_time_begin")
+                if t_val is not None and target is not None:
+                    try:
+                        t_dt = t_val if isinstance(t_val, datetime) else datetime.fromisoformat(str(t_val))
+                        tgt_dt = (
+                            target
+                            if isinstance(target, datetime)
+                            else datetime.fromisoformat(str(target))
+                        )
+                        payload["horizon_sec"] = max(0.0, (tgt_dt - t_dt).total_seconds())
+                    except (TypeError, ValueError):
+                        pass
+        elif payload.get("horizon_seconds") is None and payload.get("horizon_sec") is not None:
+            payload["horizon_seconds"] = payload["horizon_sec"]
+
+        # tracker & matcher aliases from Go backend
+        if payload.get("speed_mean_5m") is None and payload.get("avg_speed_5m") is not None:
+            payload["speed_mean_5m"] = payload["avg_speed_5m"]
+        elif payload.get("avg_speed_5m") is None and payload.get("speed_mean_5m") is not None:
+            payload["avg_speed_5m"] = payload["speed_mean_5m"]
+
+        if payload.get("speed_mean_10m") is None and payload.get("avg_speed_10m") is not None:
+            payload["speed_mean_10m"] = payload["avg_speed_10m"]
+        elif payload.get("avg_speed_10m") is None and payload.get("speed_mean_10m") is not None:
+            payload["avg_speed_10m"] = payload["speed_mean_10m"]
+
+        if payload.get("stop_ratio_window") is None and payload.get("stop_ratio_5m") is not None:
+            payload["stop_ratio_window"] = payload["stop_ratio_5m"]
+        elif payload.get("stop_ratio_5m") is None and payload.get("stop_ratio_window") is not None:
+            payload["stop_ratio_5m"] = payload["stop_ratio_window"]
+
+        if payload.get("dist_to_target_m") is None and payload.get("distance_meters") is not None:
+            payload["dist_to_target_m"] = payload["distance_meters"]
+        elif payload.get("distance_meters") is None and payload.get("dist_to_target_m") is not None:
+            payload["distance_meters"] = payload["dist_to_target_m"]
 
         return payload
 
