@@ -63,8 +63,8 @@ export default function App() {
           camera={camera}
         />
 
-        {/* Floating Side Panels Overlay (Glassmorphism & Cards) */}
-        <div className="absolute inset-0 pointer-events-none flex justify-between z-10">
+        {/* Floating Side Panels Overlay (Glassmorphism & Cards with 20px edge margin) */}
+        <div className="absolute top-4 bottom-4 left-5 right-5 pointer-events-none flex justify-between gap-6 z-10">
           {/* Left Column: Center of Incidents / Alert Radar */}
           <AlertRadar
             alerts={alerts}
