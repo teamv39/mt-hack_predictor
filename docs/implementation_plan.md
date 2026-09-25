@@ -112,19 +112,19 @@
 
 #### **Задача 7.1.1 (P0): Генерация и отправка первого Baseline сабмита**
 * **Цель:** Закрепить стартовые **3 балла из 6** в лидерборде (score ≈ 0.40) и проверить валидность формата до начала сложного ML.
-* **Входные данные:** `dataset/validate/points.csv` (104 прогнозные точки: `sample_id`, `tr_id`, `T`, `target_stop_id`, `target_time_begin`, `cur_dev_s`).
+* **Входные данные:** `dataset/validate/points.csv` (151 прогнозная точка: `sample_id`, `tr_id`, `T`, `target_stop_id`, `target_time_begin`, `cur_dev_s`).
 * **Логика:**
   * Эвристика: прогноз задержки на целевой остановке равен задержке на последней пройденной остановке (`prediction = cur_dev_s`).
-  * Скрипт: создать `ml/src/features/make_baseline_sub.py`.
-  * Валидация формата: разделитель `;`, заголовок `sample_id;prediction`, кодировка `UTF-8`, без пробелов, ровно 104 строки без `NaN`/`null`.
+  * Скрипт: `ml/src/features/make_baseline_sub.py`.
+  * Валидация формата: разделитель `;`, заголовок `sample_id;prediction`, кодировка `UTF-8`, без пробелов, ровно 151 запись без `NaN`/`null`.
 * **Выходной артефакт:** `data/submissions/submission_baseline.csv`.
 * **Definition of Done (DoD):**
   ```bash
   cd ml && uv run python -m src.features.make_baseline_sub
   head -n 5 ../data/submissions/submission_baseline.csv
-  wc -l ../data/submissions/submission_baseline.csv # Ровно 105 строк (1 заголовок + 104 записи)
+  wc -l ../data/submissions/submission_baseline.csv # Ровно 152 строки (1 заголовок + 151 запись)
   ```
-  Сабмит загружен в форму «Data Science» на платформе хакатона, получен первый положительный скор (> 0.38).
+  Сабмит сформирован и готов к загрузке в форму «Data Science» на платформе хакатона.
 
 ---
 
@@ -234,7 +234,7 @@
 
 ---
 
-#### **Задача 7.2.3 (P1): Расчет динамического Headway и риска пачкования**
+#### **Задача 7.2.3 (P1): Расчет динамического Headway и риска пачкования [ВЫПОЛНЕНО]**
 * **Цель:** Вычислять временной интервал между автобусами одного маршрута в реальном времени.
 * **Формула:**
   $$Headway_{curr} = t_{arr}(борт_i) - t_{arr}(борт_{i-1})$$
@@ -242,7 +242,10 @@
 * **Критерии риска:**
   * $Headway\_Ratio < 0.35$ (интервал схлопнулся более чем в 3 раза) $\to$ Критический риск пачкования (Красный статус).
   * $0.35 \le Headway\_Ratio < 0.65$ $\to$ Желтый статус предупреждения.
-* **DoD:** Расчет Headway включен в поток телеметрии, бэкенд выставляет флаг `bunching_risk = true` при сближении бортов.
+* **Реализация:**
+  * Бэкенд Go: `backend/internal/engine/headway.go` (`AssessFleetHeadways`, расчет времени Holding).
+  * Feature pipeline: `ml/src/features/build_features.py` (`current_headway_sec`, `delay_to_headway_ratio`).
+* **DoD:** Юнит-тест `headway_test.go` проходит успешно, расчет Headway включен в цикл телеметрии, бэкенд выставляет статус `BUNCHING_RISK` при сближении бортов.
 
 ---
 
@@ -393,18 +396,18 @@
 | **ML** | 7.1.6 TreeSHAP + FastAPI `/predict` | Миша | 🟡 P1 | 7.1.3 | ✅ Схемы/API готовы; ждать веса с 7.1.3 |
 | **Data** | 7.2.1 Экстрактор фичей телеметрии | Артём | 🔴 P0 | `traffic.csv` | ✅ Готов (`telemetry_cleaner.py`) |
 | **Data** | 7.2.2 Map-matching к остановкам | Артём | 🟡 P1 | `schedule.csv` | ✅ Готов (`schedule_matcher.py`) |
-| **Data** | 7.2.3 Расчет Headway и рисков | Артём | 🟡 P1 | 7.2.1 | ⏳ В плане |
+| **Data** | 7.2.3 Расчет Headway и рисков | Артём / Денис | 🟡 P1 | 7.2.1 | ✅ Реализован (`engine/headway.go`, `build_features.py`) |
 | **Backend** | 7.3.1 NDTP TCP Listener (:9201) | Денис | 🔴 P0 | `ndtp_emulator_spec.md` | ✅ Реализован (пакеты, CRC, G6CellNav00, unitId) |
 | **Backend** | 7.3.2 Интеграция с ML + Fallback | Денис | 🔴 P0 | 7.1.6 | ✅ Реализован (debounced клиент, graceful fallback) |
 | **Backend** | 7.3.3 Swagger UI (`/swagger`) | Денис | 🔴 P0 | `backend/main.go` | ✅ Реализован (Swagger UI, /swagger/doc.json) |
 | **Backend** | 7.3.4 Docker Compose со стеком | Денис | 🟡 P1 | 7.3.1, 7.3.3 | ✅ Реализован (порты :8080, :9201, :8000, :5173, :18080) |
 | **Backend** | 7.3.5 Schedule, Headway & Alerts | Денис | 🔴 P0 | 7.3.1, 7.3.2 | ✅ Реализован (привязка к расписанию, интервалы, алерты, Holding) |
-| **Frontend** | 7.4.1 Карточка инцидента по ТЗ | Кирилл | 🔴 P0 | `Inspector.jsx` | ⏳ В плане |
-| **Frontend** | 7.4.2 Светофорная шкала рисков | Кирилл | 🔴 P0 | `MapView.jsx` | ⏳ В плане |
-| **Frontend** | 7.4.3 Actionable UI (Holding) | Кирилл | 🟡 P1 | `Inspector.jsx` | ⏳ В плане |
+| **Frontend** | 7.4.1 Карточка инцидента по ТЗ | Кирилл | 🔴 P0 | `Inspector.jsx` | ⏳ В плане (финализация таймера горизонта) |
+| **Frontend** | 7.4.2 Светофорная шкала рисков | Кирилл | 🔴 P0 | `MapView.jsx` | ✅ Реализован (цвета бортов, линия пачкования) |
+| **Frontend** | 7.4.3 Actionable UI (Holding) | Кирилл | 🟡 P1 | `Inspector.jsx` | ✅ Реализован (кнопка Holding, график траекторий) |
 | **Frontend** | 7.4.4 Отрисовка реальных остановок | Кирилл | 🟡 P1 | `schedule.csv` | ⏳ В плане |
 | **Питч** | 7.5.1 Слайды презентации (8 шт) | Денис / Все | 🔴 P0 | Результаты сабмитов | ⏳ В плане |
-| **Питч** | 7.5.2 Защита от атак жюри | Денис | 🔴 P0 | `product_attacks_and_backlog.md` | ⏳ В плане |
+| **Питч** | 7.5.2 Защита от атак жюри | Денис | 🔴 P0 | `product_attacks_and_backlog.md` | ✅ Готов (`docs/product_attacks_and_backlog.md`) |
 | **Питч** | 7.5.3 Видео скрипкаста (бэкап) | Кирилл | 🟡 P1 | Готовый UI | ⏳ В плане |
 
 ---
