@@ -5,7 +5,6 @@ Designed for Artyom (Data Eng) & Misha (Lead ML) to run immediately on incoming 
 """
 
 import json
-import math
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -13,14 +12,6 @@ from sklearn.model_selection import TimeSeriesSplit
 from sklearn.metrics import mean_absolute_error, roc_auc_score
 from catboost import CatBoostRegressor, CatBoostClassifier, Pool
 
-def haversine_m(lat1, lon1, lat2, lon2):
-    """Calculates geodesic distance in meters between two WGS84 points."""
-    R = 6371000.0  # Earth radius in meters
-    phi1, phi2 = math.radians(lat1), math.radians(lat2)
-    dphi = math.radians(lat2 - lat1)
-    dlambda = math.radians(lon2 - lon1)
-    a = math.sin(dphi / 2.0) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2.0) ** 2
-    return 2.0 * R * math.atan2(math.sqrt(a), math.sqrt(1.0 - a))
 
 def load_scenario_as_df(scenario_path: str) -> pd.DataFrame:
     """Flattens scenario JSON into a tabular DataFrame for ML training."""

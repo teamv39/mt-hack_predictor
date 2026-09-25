@@ -19,8 +19,9 @@ a compliance and audit record, while random KFold remains the deliberate choice 
 hyperparameter and feature selection.
 
 Early stopping in final export:
-Final model export holds out the last 10% of time-sorted labeled rows as an eval_set
-with early_stopping_rounds=30 to prevent overfitting the exported checkpoint.
+Final model export holds out the last fraction of time-sorted labeled rows as an eval_set
+with early_stopping_rounds=30 when --eval-holdout > 0.0, or trains on 100% of labeled data
+when --eval-holdout=0.0 (default, reproducing the verified 1.00-score competition model).
 
 Anti-leakage is guaranteed upstream by the feature builder (event_time <= T,
 planned schedule times only); this script never uses identifier/target columns.
@@ -48,61 +49,19 @@ logger = logging.getLogger("train_competition")
 SEED = 42
 TARGET = "target_delay_s"
 
-# Numeric features consumed by the competition model. Excluded deliberately:
-# - identifiers & targets: sample_id, tr_id, T, target_stop_id, target_time_begin,
-#   target_delay_s, target_class
-# - cumulative_delay_prev_stops: exact duplicate of cur_dev_s in the pipeline
-# - current_headway_sec / weather_factor / delay_to_headway_ratio: constant
-#   offline dummies (no real headway/weather), zero information
-# - day_of_week / is_weekend: single-day dataset, near-constant
-FEATURE_COLS = [
-    "cur_dev_s",
-    "horizon_sec",
-    "speed_kmh",
-    "avg_speed_window_kmh",
-    "speed_mean_5m",
-    "speed_mean_10m",
-    "speed_std_3m",
-    "speed_min_3m",
-    "speed_max_3m",
-    "speed_trend",
-    "stop_ratio_window",
-    "idle_time_5m",
-    "telemetry_age_s",
-    "points_count_5m",
-    "heading_std_3m",
-    "dist_to_target_m",
-    "speed_needed_kmh",
-    # Route-progress features from planned schedule times (leakage-free)
-    "stops_remaining",
-    "plan_time_to_target_s",
-    "time_since_last_stop_s",
-    "plan_sec_per_stop",
-    # Temporal
-    "hour_of_day",
-    "hour_sin",
-    "hour_cos",
-]
+try:
+    from ..features.extractor import LEGACY_FEATURE_NAMES, MODEL_FEATURE_NAMES
+except (ImportError, ValueError):
+    from src.features.extractor import LEGACY_FEATURE_NAMES, MODEL_FEATURE_NAMES
+
+# Numeric features consumed by the competition model (SSOT from extractor.py)
+FEATURE_COLS = list(MODEL_FEATURE_NAMES)
 
 REQUIRED_PLAN_COLS = ["stops_remaining", "plan_time_to_target_s"]
 
 # Production-inference feature set (what the online API can deliver today via
 # FeatureVector) — trained separately to quantify the offline/online gap.
-PROD_FEATURE_COLS = [
-    "cur_dev_s",
-    "horizon_sec",
-    "speed_kmh",
-    "avg_speed_window_kmh",
-    "stop_ratio_window",
-    "cumulative_delay_prev_stops",
-    "hour_sin",
-    "hour_cos",
-    "day_of_week",
-    "is_weekend",
-    "current_headway_sec",
-    "weather_factor",
-    "delay_to_headway_ratio",
-]
+PROD_FEATURE_COLS = list(LEGACY_FEATURE_NAMES)
 
 
 def repo_root() -> Path:
@@ -165,6 +124,8 @@ def main() -> int:
                         help="Feature parquet dir (default: data/processed/_snapshot)")
     parser.add_argument("--output-dir", type=Path, default=None,
                         help="Model artifact dir (default: data/models/competition)")
+    parser.add_argument("--eval-holdout", type=float, default=0.0,
+                        help="Fraction of time-sorted data for early stopping eval_set (default: 0.0 = 100% full-data fit)")
     args = parser.parse_args()
 
     root = repo_root()
@@ -274,19 +235,29 @@ def main() -> int:
 
     # --- Final export: refit best config on train+test labeled rows ---
     labeled = pd.concat([train, test], ignore_index=True)
-    # Hold out the last 10% of labeled rows (time-sorted) as eval_set for early
-    # stopping; full-data fit without eval overfits the exported checkpoint.
     labeled_sorted = labeled.sort_values("T", kind="stable").reset_index(drop=True)
-    n = len(labeled_sorted)
-    n_eval = max(1, int(n * 0.10))
-    eval_df = labeled_sorted.iloc[-n_eval:]
-    train_df = labeled_sorted.iloc[:-n_eval]
     export_model = make_model(best["loss"], best["depth"], best["lr"], best["iterations"])
-    export_model.fit(
-        train_df[FEATURE_COLS], train_df[TARGET].to_numpy(float),
-        eval_set=(eval_df[FEATURE_COLS], eval_df[TARGET].to_numpy(float)),
-        early_stopping_rounds=30,
-    )
+
+    if args.eval_holdout > 0.0:
+        n = len(labeled_sorted)
+        n_eval = max(1, int(n * args.eval_holdout))
+        eval_df = labeled_sorted.iloc[-n_eval:]
+        train_df = labeled_sorted.iloc[:-n_eval]
+        logger.info(
+            f"Fitting final model with early stopping (eval_holdout={args.eval_holdout:.2%}, "
+            f"train={len(train_df)}, eval={len(eval_df)})"
+        )
+        export_model.fit(
+            train_df[FEATURE_COLS], train_df[TARGET].to_numpy(float),
+            eval_set=(eval_df[FEATURE_COLS], eval_df[TARGET].to_numpy(float)),
+            early_stopping_rounds=30,
+        )
+    else:
+        logger.info(f"Fitting final model on 100% of labeled data ({len(labeled_sorted)} rows, no early stopping)")
+        export_model.fit(
+            labeled_sorted[FEATURE_COLS], labeled_sorted[TARGET].to_numpy(float),
+        )
+
     model_path = out_dir / "catboost_competition.cbm"
     gold_path = out_dir / "catboost_competition_gold_score1.0.cbm"
     if model_path.exists() and not gold_path.exists():
@@ -299,11 +270,16 @@ def main() -> int:
 
     prod_path = out_dir / "catboost_prod13.cbm"
     prod_export = make_model(best["loss"], best["depth"], best["lr"], best["iterations"])
-    prod_export.fit(
-        train_df[PROD_FEATURE_COLS], train_df[TARGET].to_numpy(float),
-        eval_set=(eval_df[PROD_FEATURE_COLS], eval_df[TARGET].to_numpy(float)),
-        early_stopping_rounds=30,
-    )
+    if args.eval_holdout > 0.0:
+        prod_export.fit(
+            train_df[PROD_FEATURE_COLS], train_df[TARGET].to_numpy(float),
+            eval_set=(eval_df[PROD_FEATURE_COLS], eval_df[TARGET].to_numpy(float)),
+            early_stopping_rounds=30,
+        )
+    else:
+        prod_export.fit(
+            labeled_sorted[PROD_FEATURE_COLS], labeled_sorted[TARGET].to_numpy(float),
+        )
     prod_export.save_model(str(prod_path))
     logger.info(f"Exported prod-13 model → {prod_path}")
 

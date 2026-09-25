@@ -321,7 +321,7 @@ def process_dataset_split(
     return output_parquet
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Moscow Transport Feature Pipeline")
     parser.add_argument(
         "--split",
