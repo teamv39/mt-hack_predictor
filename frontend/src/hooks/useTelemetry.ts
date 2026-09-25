@@ -102,10 +102,10 @@ export function useTelemetry() {
   const [alerts, setAlerts] = useState<AlertItem[]>(MOCK_ALERTS);
   const [selectedAlertId, setSelectedAlertId] = useState<string>("alert_1042");
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>("P1042");
-  const [timeStep, setTimeStep] = useState<string>("+30 мин");
+  const [timeStep, setTimeStep] = useState<string>("Сейчас");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [activeFilter, setActiveFilter] = useState<"all" | "critical" | "bunching">("all");
-  const [activeTab, setActiveTab] = useState<string>("Ситуационный зал");
+  const [activeTab, setActiveTab] = useState<string>("hall");
   const [isSimPlaying, setIsSimPlaying] = useState<boolean>(true);
   const [simSpeed, setSimSpeed] = useState<number>(1.0);
   const [flyToTarget, setFlyToTarget] = useState<{ lat: number; lon: number; zoom?: number } | null>(null);
@@ -408,12 +408,6 @@ export function useTelemetry() {
       } catch {
         // Fallback
       }
-
-      addToast({
-        type: "info",
-        title: "Параметры симуляции",
-        description: action === "step" ? `Срез времени: ${value}` : `Режим: ${action} ${value || ""}`,
-      });
     },
     [addToast]
   );
