@@ -106,6 +106,43 @@ export const TopBar: React.FC<TopBarProps> = ({
             </span>
           </div>
         </div>
+
+        {/* Разделитель */}
+        <div className="h-6 w-px bg-slate-200 mx-1" />
+
+        {/* Навигационные табы режимов */}
+        <nav className="flex items-center gap-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200/80">
+          <button
+            onClick={() => setActiveTab("hall")}
+            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              activeTab === "hall" || activeTab === "map"
+                ? "bg-white text-slate-900 shadow-2xs"
+                : "text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            <span>🗺 Карта GIS</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("marey")}
+            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              activeTab === "marey"
+                ? "bg-[#2563eb] text-white shadow-xs"
+                : "text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            <span>📈 График Марея (м3)</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("terminal")}
+            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              activeTab === "terminal"
+                ? "bg-slate-900 text-amber-400 shadow-xs border border-amber-500/50"
+                : "text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            <span>📱 Терминал борта №1043</span>
+          </button>
+        </nav>
       </div>
 
       {/* 2. ЦЕНТР: ЭЛЕКТРОННЫЕ ЧАСЫ (МСК) С ЖИВЫМ БИКОНОМ */}

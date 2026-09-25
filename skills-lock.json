@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "skills": {
+    "frontend-ui-ux": {
+      "source": "smithery.ai",
+      "sourceUrl": "https://smithery.ai/skills/devkade/frontend-ui-ux",
+      "sourceType": "well-known",
+      "computedHash": "13a1fd45e77663436fe430b6acb7e4882e0a5fd04884b94f3f27497dbbe658c7",
+      "wellKnownDigest": "sha256:b48e69d10c9381f25a01bc242b9c57191040038dcc7775f01009e41440a0fc4b"
+    }
+  }
+}

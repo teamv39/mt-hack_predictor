@@ -19,6 +19,7 @@ export interface InspectorProps {
   vehicle?: Vehicle | null;
   alert?: AlertItem | null;
   onApplyHolding?: (alertId: string) => void;
+  onOpenScenarios?: () => void;
   onClose?: () => void;
 }
 
@@ -26,6 +27,7 @@ export const Inspector: React.FC<InspectorProps> = ({
   vehicle,
   alert,
   onApplyHolding,
+  onOpenScenarios,
   onClose,
 }) => {
   const chartData = [
@@ -221,6 +223,14 @@ export const Inspector: React.FC<InspectorProps> = ({
           <span>
             {isApplied ? "✓ Команда передана на борт №1043" : "✓ Применить Holding / Задержку 90 сек"}
           </span>
+        </button>
+
+        {/* Alternative Scenarios Button */}
+        <button
+          onClick={() => onOpenScenarios && onOpenScenarios()}
+          className="w-full py-2 px-3 rounded-lg border border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-800 text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs hover:border-emerald-400"
+        >
+          <span>⚡ Ситуационная матрица СППР (4 сценария) ▾</span>
         </button>
 
         <span className="text-[9px] text-slate-400 text-center font-medium">
