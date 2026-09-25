@@ -332,6 +332,63 @@ export function useTelemetry() {
     });
   }, [addToast]);
 
+  const applyScenario = useCallback(
+    (scenarioId: string, title: string) => {
+      // 1. Mark alert as resolved / scenario applied
+      setAlerts((prevAlerts) =>
+        prevAlerts.map((alt) => {
+          if (alt.id === "alert_1042" || alt.vehicleId === "1042" || alt.vehicleId === "P1042") {
+            return {
+              ...alt,
+              recommendation: {
+                ...alt.recommendation,
+                applied: true,
+                action: `${scenarioId.toUpperCase()}_APPLIED`,
+              },
+            };
+          }
+          return alt;
+        })
+      );
+
+      // 2. Adjust metrics
+      setMetrics((prev) => ({
+        ...prev,
+        preventedIncidentsCount: prev.preventedIncidentsCount + 1,
+        activeIncidentsCount: Math.max(0, prev.activeIncidentsCount - 1),
+        punctualityRate: 96.8,
+      }));
+
+      // 3. Provide scenario-specific dispatch toast
+      if (scenarioId === "holding") {
+        addToast({
+          type: "success",
+          title: "Команда Holding отправлена (Сценарий 1)",
+          description: "Борт №1043 придержан на 2.5 мин на м. Бауманская. Такт восстановлен до 7.5 мин.",
+        });
+      } else if (scenarioId === "skip_stop") {
+        addToast({
+          type: "warning",
+          title: "Включен режим Skip-Stop (Сценарий 2)",
+          description: "Борт №1042 следует в экспресс-режиме без остановок до м. Бауманская. Опоздание -4.5 мин.",
+        });
+      } else if (scenarioId === "short_turning") {
+        addToast({
+          type: "info",
+          title: "Оперативный разворот (Сценарий 3)",
+          description: "Борт №1042 направлен на разворотную петлю «пл. Разгуляй» для ликвидации встречной дыры.",
+        });
+      } else {
+        addToast({
+          type: "success",
+          title: "Ввод резерва из парка (Сценарий 4)",
+          description: "Электробус №3105 вышел из парка Сокольники на ост. Электрозаводская. Выпуск +1 борт.",
+        });
+      }
+    },
+    [addToast]
+  );
+
   const controlSimulation = useCallback(
     async (action: "play" | "pause" | "speed" | "step" | "reset", value?: number | string) => {
       if (action === "play") setIsSimPlaying(true);
@@ -388,6 +445,7 @@ export function useTelemetry() {
     handleSelectAlert,
     handleSelectVehicle,
     applyHolding,
+    applyScenario,
     controlSimulation,
   };
 }
