@@ -6,16 +6,12 @@ import {
   Wifi,
   PhoneCall,
   AlertTriangle,
-  Battery,
   ShieldCheck,
-  DoorOpen,
-  DoorClosed,
   Volume2,
   Sun,
   Moon,
   User,
   Users,
-  Gauge,
   RotateCcw,
   Navigation,
   ArrowRight,
@@ -39,7 +35,7 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
 }) => {
   const initialPrefs = useMemo(() => loadPreferences(), []);
 
-  // Theme control: syncs with global, but driver can also override in cab
+  // Theme control: cab defaults to Daylight mode unless overridden
   const [internalDarkMode, setInternalDarkMode] = useState<boolean>(propDarkMode);
 
   // Sync with prop if changed from top bar
@@ -125,581 +121,752 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
 
   return (
     <div
-      className={`w-full h-full flex flex-col font-sans select-none overflow-hidden p-3 gap-2.5 transition-colors duration-200 ${
-        isDark ? "bg-[#0b1326] text-[#dae2fd]" : "bg-slate-100 text-slate-800"
+      className={`w-full h-full flex flex-col font-sans select-none overflow-y-auto p-2 lg:p-3 gap-2.5 transition-colors duration-200 ${
+        isDark ? "bg-[#0b1326] text-[#dae2fd]" : "bg-[#eef2f6] text-slate-900"
       }`}
+      data-purpose="cockpit-root"
     >
-      {/* 0. SYSTEM CONTEXT EXPLANATION BANNER (Task Relevance) */}
-      <div
-        className={`px-3 py-1.5 rounded-lg border flex items-center justify-between text-xs font-mono shrink-0 shadow-sm transition-colors ${
-          isDark
-            ? "bg-[#171f33]/90 border-slate-700/80 text-slate-300"
-            : "bg-white border-slate-300 text-slate-700"
-        }`}
-      >
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
-          <span className="font-bold text-emerald-600 dark:text-emerald-400">
-            КОМПЛЕКС АСУ-РДС / NDTP
-          </span>
-          <span className="text-slate-400">|</span>
-          <span className="font-semibold text-slate-600 dark:text-slate-300">
-            Бортовой терминал «Гранит-Навигатор v4.2» • Исполнительное звено СППР ЦОДД
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span
-            className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-              isDark ? "bg-amber-950 text-amber-300 border border-amber-800" : "bg-amber-100 text-amber-900 border border-amber-300"
-            }`}
-          >
-            ML T+15 мин ➔ Holding по TCP :9201
-          </span>
-          <button
-            onClick={handleResetDemo}
-            className={`px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 border transition-colors cursor-pointer ${
-              isDark
-                ? "bg-slate-800 hover:bg-slate-700 border-slate-600 text-slate-300"
-                : "bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700"
-            }`}
-            title="Сбросить таймер стоянки на 150 сек для повторной демонстрации"
-          >
-            <RotateCcw size={10} />
-            <span>Сброс 150с</span>
-          </button>
-          <button
-            onClick={() => setInternalDarkMode(!internalDarkMode)}
-            className={`px-2 py-0.5 rounded text-[11px] font-bold flex items-center gap-1 border transition-colors cursor-pointer ${
-              isDark
-                ? "bg-slate-800 hover:bg-slate-700 border-slate-600 text-amber-300"
-                : "bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700"
-            }`}
-            title="Переключить день/ночь в кабине водителя"
-          >
-            {isDark ? <Sun size={12} className="text-amber-400" /> : <Moon size={12} className="text-blue-600" />}
-            <span>{isDark ? "День" : "Ночь"}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* 1. TOP HARDWARE STATUS BAR */}
+      {/* 1. TOP HARDWARE & TELEMETRY STATUS BAR */}
       <header
-        className="border-2 border-slate-700/80 rounded-xl px-4 py-2 flex justify-between items-center shrink-0 shadow-md bg-[#080E1C] text-white transition-colors"
+        className={`border rounded-lg p-2.5 flex flex-wrap items-center justify-between gap-3 shadow-sm transition-colors shrink-0 ${
+          isDark
+            ? "bg-[#171f33] border-slate-700/80 text-white"
+            : "bg-white border-[#dbe2ea] text-slate-900"
+        }`}
+        data-purpose="top-navigation-telemetry"
       >
-        {/* Brand Anchor & Vehicle Stamp */}
+        {/* Left: Transport Brand & Route Ident */}
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-[#d32f2f] flex items-center justify-center border border-[#ffb3ac] shrink-0 shadow-md">
-            <span className="font-mono font-black text-white text-xs">МТ</span>
+          {/* Moscow Transport Brand Badge */}
+          <div className="flex items-center gap-2 bg-[#d62828] text-white font-bold px-2.5 py-1 rounded text-xs tracking-wider shadow-sm">
+            <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" fill="none" r="10" stroke="currentColor" strokeWidth="2.5" />
+              <path d="M12 2a10 10 0 0 1 10 10" fill="none" stroke="#fff" strokeWidth="3" />
+            </svg>
+            <span>МОСКОВСКИЙ ТРАНСПОРТ</span>
+            <span className="text-[10px] bg-red-950/40 px-1.5 py-0.5 rounded text-red-100 font-bold">ЦОДД</span>
           </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <span className="font-mono font-black text-sm tracking-wider uppercase text-white">
-                GRANIT-NAVIGATOR v4.2 [МАРШРУТ {routeNumber} | БОРТ {vehicleId}]
-              </span>
-              <span className="bg-[#008058] text-[#d3ffe5] px-2 py-0.5 rounded text-[10px] font-mono font-bold">
-                КАМАЗ-6282 ЭЛЕКТРОБУС
-              </span>
+
+          {/* Terminal & Hardware Identity */}
+          <div className={`flex items-center gap-2 border-l pl-3 ${isDark ? "border-slate-700" : "border-[#dbe2ea]"}`}>
+            <span
+              className={`font-mono text-[11px] font-bold px-2 py-0.5 rounded border ${
+                isDark
+                  ? "bg-emerald-950/80 text-emerald-300 border-emerald-700"
+                  : "bg-emerald-100 text-emerald-800 border-emerald-300"
+              }`}
+            >
+              {routeNumber}
+            </span>
+            <div className="flex flex-col">
+              <div className="text-xs font-bold flex items-center gap-2">
+                <span className={isDark ? "text-white" : "text-slate-900"}>ГРАНИТ-НАВИГАТОР v4.2</span>
+                <span className={`font-mono text-[11px] ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+                  • БОРТ {vehicleId} [КАМАЗ-6282]
+                </span>
+              </div>
+              <div className={`text-[10px] font-mono tracking-tight font-medium ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+                ЕГПТС МОСГОРТРАНС • ФИЛИАЛ СЕВЕРО-ВОСТОЧНЫЙ • ПАРК 6 • Е 143 СК 777
+              </div>
             </div>
-            <span className="text-[10px] font-mono tracking-tight text-slate-400">
-              ЕГПТС МОСГОРТРАНС • ФИЛИАЛ СЕВЕРО-ВОСТОЧНЫЙ • ПАРК 6 • ГОСНОМЕР Е 143 СК 777
+          </div>
+        </div>
+
+        {/* Center: System Telemetry Status Badges */}
+        <div className="hidden xl:flex items-center gap-2.5 font-mono text-xs">
+          {/* Clock & Sync Status */}
+          <div
+            className={`flex items-center gap-2 px-3 py-1.5 rounded shadow-sm border ${
+              isDark
+                ? "bg-[#0b1326] border-amber-600/40 text-amber-300"
+                : "bg-[#f8fafc] border-amber-300/80 text-amber-900"
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+            <span className="font-bold tracking-wider">{liveClockStr}</span>
+            <span className="text-[10px] opacity-75 font-medium">МСК (UTC+3)</span>
+          </div>
+
+          {/* GLONASS */}
+          <div
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded shadow-sm border ${
+              isDark
+                ? "bg-[#0b1326] border-slate-700 text-slate-300"
+                : "bg-[#f8fafc] border-[#dbe2ea] text-slate-700"
+            }`}
+          >
+            <Radio className="w-3.5 h-3.5 text-sky-600" />
+            <span>
+              ГЛОНАСС: <strong className={isDark ? "text-white" : "text-slate-900"}>18 СПУТН.</strong>
             </span>
           </div>
+
+          {/* Protocol & Network Latency */}
+          <div
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded shadow-sm border ${
+              isDark
+                ? "bg-[#0b1326] border-slate-700 text-slate-300"
+                : "bg-[#f8fafc] border-[#dbe2ea] text-slate-700"
+            }`}
+          >
+            <span className="text-sky-700 font-bold">NDTP :9201</span>
+            <span
+              className={`text-[10px] border px-1 rounded font-bold ${
+                isDark
+                  ? "bg-sky-950 text-sky-300 border-sky-700"
+                  : "bg-sky-100 text-sky-800 border-sky-300"
+              }`}
+            >
+              12 мс
+            </span>
+          </div>
+
+          {/* Regularity Takt Quality Factor */}
+          <div
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded shadow-sm border ${
+              isDark
+                ? "bg-emerald-950/60 border-emerald-800 text-emerald-300"
+                : "bg-emerald-50 border-emerald-300 text-emerald-800"
+            }`}
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+            <span className="font-bold">96.2% ТАКТ</span>
+          </div>
+
+          {/* Failures / Incidents */}
+          <div
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded shadow-sm border ${
+              isDark
+                ? "bg-[#0b1326] border-slate-700 text-slate-300"
+                : "bg-[#f8fafc] border-[#dbe2ea] text-slate-700"
+            }`}
+          >
+            <span className={isDark ? "text-slate-400" : "text-slate-500"}>Сбои:</span>
+            <span className="text-emerald-600 font-bold">0</span>
+          </div>
         </div>
 
-        {/* Telemetry Links & Driver ID */}
-        <div className="flex items-center gap-2.5 font-mono text-xs">
-          {/* Clock */}
-          <div className="flex items-center gap-1.5 px-3 py-1 border border-slate-700 rounded-lg font-bold bg-[#141C2D] text-amber-400">
-            <Clock className="w-3.5 h-3.5 text-amber-400" />
-            <span>{liveClockStr} МСК</span>
-          </div>
-
-          {/* GLONASS / GPS */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1 border border-slate-700 rounded-lg text-[11px] font-bold bg-[#141C2D] text-emerald-400">
-            <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-            <span>ГЛОНАСС: 18 СПУТН.</span>
-          </div>
-
-          {/* 4G LTE / NDTP */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1 border border-slate-700 rounded-lg text-[11px] font-bold bg-[#141C2D] text-cyan-400">
-            <Wifi className="w-3.5 h-3.5 text-cyan-400" />
-            <span>NDTP :9201 [12мс]</span>
-          </div>
-
-          {/* Driver Badge */}
-          <div className="flex items-center gap-1.5 px-3 py-1 border border-slate-700 rounded-lg text-[11px] bg-[#141C2D] text-slate-300">
+        {/* Right: Driver Info & Cockpit Mode Controls */}
+        <div className="flex items-center gap-2">
+          {/* Driver Identity */}
+          <div
+            className={`flex items-center gap-2 px-2.5 py-1 rounded text-xs shadow-sm border ${
+              isDark
+                ? "bg-[#0b1326] border-slate-700 text-slate-300"
+                : "bg-[#f8fafc] border-[#dbe2ea] text-slate-700"
+            }`}
+          >
             <User className="w-3.5 h-3.5 text-slate-400" />
-            <span>ТАБ. №08412 • ИВАНОВ А.В.</span>
+            <div className="text-left leading-tight">
+              <div className="text-[10px] text-slate-400 font-mono font-medium">ТАБ. №08412</div>
+              <div className={`font-bold ${isDark ? "text-white" : "text-slate-900"}`}>Иванов А.В.</div>
+            </div>
+          </div>
+
+          {/* Reset Demo & Day/Night Toggle */}
+          <div className={`flex items-center rounded p-0.5 border ${isDark ? "bg-slate-800 border-slate-700" : "bg-slate-100 border-slate-300"}`}>
+            <button
+              onClick={handleResetDemo}
+              className={`px-2.5 py-1 text-xs rounded font-medium border flex items-center gap-1 transition-colors cursor-pointer shadow-sm ${
+                isDark
+                  ? "bg-slate-800 hover:bg-slate-700 border-slate-600 text-slate-300"
+                  : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700"
+              }`}
+              title="Сбросить таймер стоянки на 150 сек для повторной демонстрации"
+            >
+              <RotateCcw size={10} />
+              <span className="text-[11px] font-mono">150с</span>
+            </button>
+            <button
+              onClick={() => setInternalDarkMode(!internalDarkMode)}
+              className={`px-2.5 py-1 text-xs rounded font-bold border flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm ml-1 ${
+                !isDark
+                  ? "bg-white text-slate-900 border-slate-200"
+                  : "bg-slate-800 text-amber-300 border-slate-600"
+              }`}
+              title="Переключить День/Ночь"
+            >
+              {isDark ? <Moon size={12} className="text-amber-400" /> : <Sun size={12} className="text-amber-500" />}
+              <span className="text-[11px]">{isDark ? "Ночь" : "День"}</span>
+            </button>
           </div>
         </div>
       </header>
 
       {/* 2. MAIN COCKPIT BODY (Split Grid: Left Route & Cab Telemetry, Right Directive & Holding Execution) */}
-      <div className="flex-1 grid grid-cols-12 gap-3 min-h-0">
-        {/* LEFT COLUMN: Route Schedule Horizon & Cab Subsystems (4 cols) */}
-        <div className="col-span-4 flex flex-col gap-2.5 min-h-0">
-          {/* Current Stop Box */}
+      <main className="grid grid-cols-1 lg:grid-cols-12 gap-2.5 flex-1" data-purpose="primary-cockpit-layout">
+        {/* BEGIN: LeftColumnRoute (4 cols) */}
+        <section className="lg:col-span-4 flex flex-col gap-2.5" data-purpose="route-status-panel">
+          {/* Current Stop Guidance Card */}
           <div
-            className="border-2 border-slate-700/80 rounded-xl p-3 shadow-md flex flex-col gap-1 shrink-0 bg-[#0F172A] text-white transition-colors"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono font-bold text-amber-400 uppercase tracking-wider">
-                ТЕКУЩИЙ ПУТЕВОЙ ОРИЕНТИР
-              </span>
-              <span className="px-1.5 py-0.2 bg-[#d32f2f] text-white rounded text-[9px] font-mono font-bold">
-                МАРШРУТ {routeNumber}
-              </span>
-            </div>
-            <span className="text-[11px] font-medium text-slate-400">
-              ТЕКУЩАЯ ОСТАНОВКА (ОСТАНОВОЧНЫЙ КАРМАН):
-            </span>
-            <div className="text-lg font-black font-mono tracking-tight flex items-center gap-2 text-white">
-              <span>МЕТРО БАУМАНСКАЯ</span>
-            </div>
-            <span className="text-[10px] font-mono text-slate-400">
-              ➔ Направление: Серебряный бор ➔ Семёновская
-            </span>
-          </div>
-
-          {/* Full Route Stops Schedule Progression (Filling space properly without empty voids) */}
-          <div
-            className={`flex-1 border-2 rounded-xl p-3 shadow-md flex flex-col justify-between overflow-hidden transition-colors min-h-0 ${
-              isDark ? "bg-[#171f33] border-[#2d3449]" : "bg-white border-slate-300"
+            className={`border rounded-lg p-3 relative overflow-hidden shadow-sm transition-colors ${
+              isDark ? "bg-[#171f33] border-slate-700" : "bg-white border-[#dbe2ea]"
             }`}
           >
-            <div className="flex items-center justify-between">
-              <span className={`text-[10px] font-mono font-bold uppercase tracking-wider ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-                ГОРИЗОНТ МАРШРУТА • ТАКТОВОЕ ОКНО
+            <div className={`flex items-center justify-between border-b pb-2 mb-2.5 ${isDark ? "border-slate-700" : "border-[#e2e8f0]"}`}>
+              <div className="text-[10px] font-mono tracking-wider text-amber-700 font-bold flex items-center gap-1.5 uppercase">
+                <span className="w-2 h-2 rounded-full bg-amber-500" />
+                Текущий путевой ориентир
+              </div>
+              <div className="text-[10px] bg-red-100 border border-red-300 text-red-800 px-2 py-0.5 rounded font-mono font-bold">
+                ОСТАНОВОЧНЫЙ КАРМАН
+              </div>
+            </div>
+            <h1 className={`text-xl font-extrabold tracking-tight mb-1 uppercase font-sans ${isDark ? "text-white" : "text-slate-900"}`}>
+              Метро «Бауманская»
+            </h1>
+            <div className={`text-xs flex items-center gap-1.5 font-medium ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+              <ArrowRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              <span className="truncate">Направление: Серебряный бор → Семёновская</span>
+            </div>
+          </div>
+
+          {/* Route Horizon Timeline Card */}
+          <div
+            className={`border rounded-lg p-3 flex-1 flex flex-col shadow-sm transition-colors ${
+              isDark ? "bg-[#171f33] border-slate-700" : "bg-white border-[#dbe2ea]"
+            }`}
+            data-purpose="route-horizon"
+          >
+            <div className={`flex items-center justify-between text-xs mb-3 pb-2 border-b ${isDark ? "border-slate-700" : "border-[#e2e8f0]"}`}>
+              <span className={`font-bold uppercase tracking-wide text-[11px] ${isDark ? "text-slate-200" : "text-slate-800"}`}>
+                Горизонт маршрута
               </span>
-              <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">
-                ЦЕЛЕВОЙ ТАКТ: 7.5 МИН
+              <span className="font-mono text-emerald-800 text-xs font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-300">
+                Целевой такт: 7.5 мин
               </span>
             </div>
 
-            <div className="flex flex-col gap-1.5 mt-2 overflow-y-auto">
-              {/* Stop 13 (Passed) */}
+            {/* Vertical Timeline Stops */}
+            <div className="space-y-2 overflow-y-auto pr-1 flex-1 custom-scroll max-h-[380px] lg:max-h-none">
+              {/* Stop 13: Past Stop */}
               <div
-                className={`p-2 rounded-lg border flex items-center justify-between opacity-70 ${
-                  isDark ? "bg-[#0b1326] border-slate-800 text-slate-400" : "bg-slate-50 border-slate-200 text-slate-500"
+                className={`flex items-center justify-between p-2 rounded border opacity-75 ${
+                  isDark ? "bg-[#0b1326] border-slate-800 text-slate-400" : "bg-slate-50 border-slate-200 text-slate-400"
                 }`}
               >
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-full bg-slate-300 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-[9px] flex items-center justify-center">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-6 h-6 rounded bg-slate-200 text-slate-600 font-mono text-xs flex items-center justify-center font-bold">
                     13
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[11px] font-semibold line-through">ул. Покровка</span>
-                    <span className="text-[9px] font-mono">Пройдена в 14:41:10</span>
+                  </span>
+                  <div>
+                    <div className="text-xs font-semibold line-through text-slate-500">ул. Покровка</div>
+                    <div className="text-[10px] font-mono text-slate-400">Пройдена в 14:41:10</div>
                   </div>
                 </div>
-                <span className="text-[9px] font-mono text-slate-400">В ГРАФИКЕ</span>
+                <span className="text-[10px] font-mono text-slate-500 bg-slate-200/80 px-1.5 py-0.5 rounded font-medium">
+                  В ГРАФИКЕ
+                </span>
               </div>
 
-              {/* Stop 14 (Active Holding Stop) */}
+              {/* Stop 14: ACTIVE REGULATORY HOLDING (CURRENT) */}
               <div
-                className={`p-2.5 rounded-lg border-2 flex items-center justify-between shadow-sm ${
+                className={`flex items-center justify-between p-2.5 rounded-lg border-2 relative shadow-sm ${
                   isDark
-                    ? "bg-amber-500/10 border-amber-500"
-                    : "bg-amber-50 border-amber-500"
+                    ? "bg-amber-950/40 border-amber-500 text-white"
+                    : "bg-amber-50 border-amber-500 text-slate-900"
                 }`}
               >
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-[#d32f2f] text-white font-bold text-xs flex items-center justify-center shadow">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-6 h-6 rounded bg-amber-500 text-white font-mono text-xs flex items-center justify-center font-black animate-pulse shadow-sm">
                     14
-                  </div>
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-1.5">
-                      <span className={`text-xs font-black ${isDark ? "text-white" : "text-slate-900"}`}>
-                        МЕТРО «БАУМАНСКАЯ»
-                      </span>
-                      <span className="px-1 py-0.2 bg-amber-500 text-black text-[9px] font-extrabold rounded">
+                  </span>
+                  <div>
+                    <div className="text-xs font-extrabold flex items-center gap-1.5">
+                      <span className={isDark ? "text-amber-200" : "text-amber-950"}>МЕТРО «БАУМАНСКАЯ»</span>
+                      <span className="bg-amber-200 text-amber-900 text-[9px] font-mono px-1.5 py-0.2 rounded font-bold border border-amber-300">
                         ТЕКУЩАЯ
                       </span>
                     </div>
-                    <span className="text-[10px] font-mono text-amber-600 dark:text-amber-400 font-bold">
-                      РЕГУЛИРОВОЧНАЯ СТОЯНКА: {timerDisplay}
-                    </span>
+                    <div className="text-[11px] font-mono text-amber-800 font-bold mt-0.5">
+                      РЕГУЛИРОВОЧНАЯ СТОЯНКА:{" "}
+                      <span className={`font-extrabold ${isDark ? "text-white" : "text-amber-950"}`}>
+                        {timerDisplay}
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <div className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 ring-4 ring-amber-200" />
               </div>
 
-              {/* Stop 15 */}
+              {/* Stop 15: Ahead */}
               <div
-                className={`p-2 rounded-lg border flex items-center justify-between ${
-                  isDark ? "bg-[#0b1326] border-[#2d3449]" : "bg-slate-50 border-slate-200"
+                className={`flex items-center justify-between p-2 rounded border ${
+                  isDark
+                    ? "bg-[#0b1326] border-slate-800 text-slate-300"
+                    : "bg-slate-50 border-slate-200 text-slate-700"
                 }`}
               >
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-full font-bold text-[10px] flex items-center justify-center bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-6 h-6 rounded bg-slate-200 text-slate-800 font-mono text-xs flex items-center justify-center font-bold">
                     15
-                  </div>
-                  <div className="flex flex-col">
-                    <span className={`text-[11px] font-medium ${isDark ? "text-slate-300" : "text-slate-800"}`}>
+                  </span>
+                  <div>
+                    <div className={`text-xs font-bold ${isDark ? "text-slate-200" : "text-slate-800"}`}>
                       Бакунинская ул., 84
-                    </span>
-                    <span className={`text-[9px] font-mono ${isDark ? "text-slate-500" : "text-slate-400"}`}>
+                    </div>
+                    <div className="text-[10px] font-mono text-slate-500">
                       Расчет: 14:51:00 (Такт восстанавливается)
-                    </span>
+                    </div>
                   </div>
                 </div>
-                <span className="text-[9px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">Δ 7.5 МИН</span>
+                <span className="text-[11px] font-mono text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                  Δ 7.5 МИН
+                </span>
               </div>
 
-              {/* Stop 16 */}
+              {/* Stop 16: Ahead */}
               <div
-                className={`p-2 rounded-lg border flex items-center justify-between ${
-                  isDark ? "bg-[#0b1326] border-[#2d3449]" : "bg-slate-50 border-slate-200"
+                className={`flex items-center justify-between p-2 rounded border ${
+                  isDark
+                    ? "bg-[#0b1326] border-slate-800 text-slate-300"
+                    : "bg-slate-50 border-slate-200 text-slate-700"
                 }`}
               >
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-full font-bold text-[10px] flex items-center justify-center bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-6 h-6 rounded bg-slate-200 text-slate-800 font-mono text-xs flex items-center justify-center font-bold">
                     16
-                  </div>
-                  <div className="flex flex-col">
-                    <span className={`text-[11px] font-medium ${isDark ? "text-slate-300" : "text-slate-800"}`}>
+                  </span>
+                  <div>
+                    <div className={`text-xs font-semibold ${isDark ? "text-slate-200" : "text-slate-800"}`}>
                       м. Электрозаводская
-                    </span>
-                    <span className={`text-[9px] font-mono ${isDark ? "text-slate-500" : "text-slate-400"}`}>
-                      Расчет: 14:54:30
-                    </span>
+                    </div>
+                    <div className="text-[10px] font-mono text-slate-500">Расчет: 14:54:30</div>
                   </div>
                 </div>
-                <span className="text-[9px] font-mono text-slate-400">Δ 7.8 МИН</span>
+                <span className="text-[11px] font-mono text-slate-600 font-medium">Δ 7.8 МИН</span>
               </div>
 
-              {/* Stop 17 (Terminus) */}
+              {/* Stop 17: Destination */}
               <div
-                className={`p-2 rounded-lg border flex items-center justify-between ${
-                  isDark ? "bg-[#0b1326] border-[#2d3449]" : "bg-slate-50 border-slate-200"
+                className={`flex items-center justify-between p-2 rounded border ${
+                  isDark
+                    ? "bg-[#0b1326] border-slate-800 text-slate-400"
+                    : "bg-slate-50 border-slate-200 text-slate-500"
                 }`}
               >
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-full font-bold text-[10px] flex items-center justify-center bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-6 h-6 rounded bg-slate-200 text-slate-500 font-mono text-xs flex items-center justify-center font-bold">
                     17
-                  </div>
-                  <div className="flex flex-col">
-                    <span className={`text-[11px] font-medium ${isDark ? "text-slate-300" : "text-slate-800"}`}>
+                  </span>
+                  <div>
+                    <div className={`text-xs font-semibold ${isDark ? "text-slate-300" : "text-slate-700"}`}>
                       м. Семёновская (Конечная)
-                    </span>
-                    <span className={`text-[9px] font-mono ${isDark ? "text-slate-500" : "text-slate-400"}`}>
-                      Расчет: 15:01:20
-                    </span>
+                    </div>
+                    <div className="text-[10px] font-mono text-slate-400">Расчет: 15:01:20</div>
                   </div>
                 </div>
-                <span className="text-[9px] font-mono text-slate-400">---</span>
+                <span className="text-[11px] font-mono text-slate-400 font-medium">— —</span>
               </div>
             </div>
 
-            {/* Passenger Load & NDTP Safety Interlocks */}
-            <div className={`mt-2 pt-2 border-t flex flex-col gap-1.5 ${isDark ? "border-[#2d3449]" : "border-slate-200"}`}>
-              {/* Passenger count (АСМПП) */}
-              <div className="flex items-center justify-between text-[10px] font-mono px-1">
-                <span className="text-slate-500 flex items-center gap-1">
-                  <Users size={12} className="text-blue-500" />
-                  <span>Пассажиропоток АСМПП:</span>
-                </span>
-                <span className="font-bold text-blue-600 dark:text-blue-400">
-                  48 / 85 пасс. (56% мест)
-                </span>
+            {/* Passenger Count & Door Interlock Status */}
+            <div className={`mt-3 pt-2.5 border-t grid grid-cols-2 gap-2 text-xs ${isDark ? "border-slate-700" : "border-[#e2e8f0]"}`}>
+              <div
+                className={`border rounded p-2 shadow-sm ${
+                  isDark
+                    ? "bg-[#0b1326] border-slate-800 text-slate-300"
+                    : "bg-slate-50 border-[#dbe2ea] text-slate-700"
+                }`}
+              >
+                <div className="text-[10px] text-slate-500 font-mono font-bold flex items-center gap-1">
+                  <Users className="w-3 h-3 text-sky-600" />
+                  АСМПП САЛОН
+                </div>
+                <div className={`font-mono text-sm font-black mt-0.5 ${isDark ? "text-white" : "text-slate-900"}`}>
+                  48 <span className="text-slate-500 text-xs font-normal">/ 85 пасс.</span>
+                </div>
+                <div className="text-[10px] text-emerald-700 font-mono font-semibold">
+                  56% номинал (комфорт)
+                </div>
               </div>
 
-              {/* Interlock Safety Strip */}
-              <div className="grid grid-cols-2 gap-2">
-                <div
-                  className={`p-1.5 rounded border flex items-center gap-1.5 text-[10px] font-mono font-bold ${
-                    isDark
-                      ? "bg-[#0b1326] border-emerald-500/40 text-emerald-400"
-                      : "bg-emerald-50 border-emerald-300 text-emerald-800"
-                  }`}
-                >
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                  <span>ХОД ЗАБЛОКИРОВАН [P]</span>
+              <div
+                className={`border rounded p-2 flex flex-col justify-between shadow-sm ${
+                  isDark
+                    ? "bg-[#0b1326] border-slate-800 text-slate-300"
+                    : "bg-slate-50 border-[#dbe2ea] text-slate-700"
+                }`}
+              >
+                <div className="text-[10px] text-slate-500 font-mono font-bold flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                  БЛОКИРОВКИ ТС
                 </div>
-                <div
-                  className={`p-1.5 rounded border flex items-center gap-1.5 text-[10px] font-mono font-bold ${
-                    secondsLeft > 0
-                      ? isDark
-                        ? "bg-[#0b1326] border-amber-500/40 text-amber-400"
-                        : "bg-amber-50 border-amber-300 text-amber-800"
-                      : isDark
-                      ? "bg-[#0b1326] border-slate-700 text-slate-300"
-                      : "bg-slate-50 border-slate-300 text-slate-700"
-                  }`}
-                >
-                  {secondsLeft > 0 ? (
-                    <DoorOpen className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                  ) : (
-                    <DoorClosed className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                  )}
-                  <span>{secondsLeft > 0 ? "ПОСАДКА (ДВЕРИ ОТКР)" : "ДВЕРИ ЗАКРЫТЫ"}</span>
+                <div className="text-xs font-mono font-extrabold text-amber-700">
+                  ХОД ЗАБЛОКИРОВАН [P]
+                </div>
+                <div className="text-[10px] text-slate-500 font-mono font-medium">
+                  {secondsLeft > 0 ? "ДВЕРИ: РАЗРЕШЕНО (ОТКР.)" : "ДВЕРИ: ЗАКРЫТЫ"}
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </section>
+        {/* END: LeftColumnRoute */}
 
-        {/* CENTER/RIGHT COLUMN: Directive Callout & Big Action Box (8 cols) */}
-        <div
-          className={`col-span-8 flex flex-col justify-between border-2 border-amber-500 rounded-xl p-4 shadow-xl relative overflow-hidden transition-colors ${
-            isDark ? "bg-[#171f33]" : "bg-white"
-          }`}
-        >
-          {/* Top Header of Directive */}
+        {/* BEGIN: CenterRightStage (8 cols) */}
+        <section className="lg:col-span-8 flex flex-col gap-2.5" data-purpose="holding-central-stage">
+          {/* Holding Alert Directive Header Banner */}
           <div
-            className={`flex items-start justify-between border-b-2 pb-2.5 ${
-              isDark ? "border-[#2d3449]" : "border-slate-200"
+            className={`border-2 rounded-lg p-3 flex flex-wrap items-center justify-between gap-2 shadow-sm ${
+              isDark
+                ? "bg-amber-950/40 border-amber-600"
+                : "bg-amber-50/90 border-amber-400"
             }`}
+            data-purpose="directive-header"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500 flex items-center justify-center text-amber-500 shadow-sm shrink-0">
-                <AlertTriangle className="w-6 h-6 animate-bounce" />
+              <div
+                className={`w-10 h-10 rounded border flex items-center justify-center shrink-0 shadow-inner ${
+                  isDark
+                    ? "bg-amber-900/60 border-amber-700"
+                    : "bg-amber-100 border-amber-300"
+                }`}
+              >
+                <AlertTriangle className="w-6 h-6 text-amber-700" />
               </div>
               <div>
-                <h2
-                  className={`text-lg font-black font-mono tracking-tight uppercase ${
-                    isDark ? "text-white" : "text-slate-900"
-                  }`}
-                >
-                  ВНИМАНИЕ: РЕГУЛИРОВОЧНАЯ СТОЯНКА (HOLDING)
-                </h2>
-                <span className="text-[10px] font-mono text-amber-600 dark:text-amber-400 font-bold">
-                  ИДЕНТИФИКАТОР ДИРЕКТИВЫ: ЦОДД-АРД-2026-03-9941 • ПРИОРИТЕТ 1 (ОПЕРАТИВНЫЙ)
-                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2
+                    className={`text-base font-extrabold tracking-wide uppercase font-sans ${
+                      isDark ? "text-amber-200" : "text-amber-950"
+                    }`}
+                  >
+                    Внимание: Регулировочная стоянка (Holding)
+                  </h2>
+                  <span className="bg-amber-200/80 text-amber-900 border border-amber-400 text-[10px] font-mono px-2 py-0.5 rounded font-extrabold">
+                    ПРИОРИТЕТ 1 (ОПЕРАТИВНЫЙ)
+                  </span>
+                </div>
+                <div className="text-xs text-amber-900 font-mono mt-0.5 font-medium">
+                  Идентификатор директивы:{" "}
+                  <strong className={isDark ? "text-amber-100" : "text-amber-950"}>ЦОДД-АРД-2026-03-9941</strong> • Основание:
+                  ML-предикт пачкования T+15 мин
+                </div>
               </div>
             </div>
-            <div className="flex flex-col items-end">
-              <span className="px-3 py-1 bg-red-600 text-white font-mono font-black text-xs rounded-lg animate-pulse shadow-sm">
-                ТАКТ НАРУШЕН
+            <div className="text-right">
+              <span className={`text-[10px] font-mono uppercase block font-bold ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+                АСУ-РДС Автоматика
               </span>
-              <span className="text-[9px] font-mono text-slate-400 mt-0.5">
-                Основание: ML-предикт T+15 мин
+              <span className="text-xs font-mono text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded font-bold inline-block">
+                ВЕРИФИЦИРОВАНО
               </span>
             </div>
           </div>
 
-          {/* Central Countdown LED & Target Departure */}
-          <div className="grid grid-cols-12 gap-3.5 py-1">
-            {/* Massive LED Countdown Box */}
+          {/* Main Display: Large High-Legibility Timer & Operational Dispatch Sync */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5">
+            {/* Master Countdown Timer (7 cols) */}
             <div
-              className={`col-span-7 border-2 border-amber-500/80 rounded-2xl p-4 flex flex-col items-center justify-center shadow-inner ${
-                isDark ? "bg-[#000000]" : "bg-slate-950 text-white"
+              className={`md:col-span-7 border rounded-lg p-4 flex flex-col justify-between relative shadow-sm transition-colors ${
+                isDark ? "bg-[#171f33] border-amber-700" : "bg-white border-amber-300"
               }`}
             >
-              <div className="w-full flex items-center justify-between mb-1">
-                <span className="text-[11px] font-mono font-bold text-amber-400 tracking-wider uppercase">
+              <div className="flex items-center justify-between text-xs font-mono">
+                <span className="text-amber-900 font-bold tracking-wider flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />
                   ОСТАЛОСЬ ВРЕМЕНИ СТОЯНКИ
                 </span>
-                <span className="text-[10px] font-mono text-slate-400">
-                  {progressPercent}% пройдено
+                <span className="text-slate-500 text-[11px] font-medium bg-slate-100 px-1.5 py-0.5 rounded">
+                  Норматив: 150 сек
                 </span>
               </div>
 
-              <div
-                className={`text-6xl font-mono font-black tracking-tight leading-none drop-shadow-[0_0_20px_rgba(245,158,11,0.6)] ${
-                  secondsLeft > 0 ? "text-amber-400" : "text-emerald-400"
-                }`}
-              >
-                {secondsLeft > 0 ? timerDisplay : "00:00"}
+              {/* Massive Digits in Daylight Aviation Amber (Anti-Glare & Maximum Sunlight Contrast) */}
+              <div className="py-4 text-center">
+                <div className="text-6xl sm:text-7xl font-mono font-extrabold tracking-tight text-amber-600 glow-amber font-digital drop-shadow-sm leading-none">
+                  {secondsLeft > 0 ? timerDisplay : "00:00"}
+                </div>
+                <div className="text-xs font-mono uppercase tracking-widest text-slate-600 font-bold mt-2 flex items-center justify-center gap-2">
+                  <span className="w-2.5 h-0.5 bg-amber-400" />
+                  {secondsLeft > 0 ? "ИДЁТ ТЕХНОЛОГИЧЕСКАЯ РЕГУЛИРОВОЧНАЯ СТОЯНКА" : "СТОЯНКА ЗАВЕРШЕНА"}
+                  <span className="w-2.5 h-0.5 bg-amber-400" />
+                </div>
               </div>
 
-              {/* Visual Progress Bar of Holding */}
-              <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden mt-3">
+              {/* Holding Progress Bar */}
+              <div>
+                <div className="flex justify-between text-[11px] font-mono text-slate-600 mb-1 font-semibold">
+                  <span>Прогресс выдержки интервала</span>
+                  <span className="text-amber-700 font-bold">{progressPercent}% пройдено</span>
+                </div>
+                <div className="w-full h-3.5 bg-slate-100 border border-slate-300 rounded overflow-hidden p-0.5">
+                  <div
+                    className="h-full bg-gradient-to-r from-amber-500 to-amber-600 rounded-sm shadow-sm transition-all duration-1000 ease-linear"
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Calculated Target Departure & Passenger PA status (5 cols) */}
+            <div className="md:col-span-5 flex flex-col gap-2.5">
+              {/* Departure target */}
+              <div
+                className={`border rounded-lg p-3.5 flex-1 flex flex-col justify-center shadow-sm transition-colors ${
+                  isDark ? "bg-[#171f33] border-slate-700" : "bg-white border-[#dbe2ea]"
+                }`}
+              >
+                <div className="text-[11px] font-mono text-sky-700 font-bold flex items-center gap-1.5 mb-1 uppercase">
+                  <Clock className="w-4 h-4 text-sky-600" />
+                  Расчетное время отправления
+                </div>
+                <div className={`text-3xl font-mono font-extrabold tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
+                  {departureTimeStr} <span className="text-sm font-semibold text-slate-500">МСК</span>
+                </div>
+                <div className="text-[10px] text-slate-500 font-mono mt-1 font-medium">
+                  Синхронизировано по серверу АСУ-РДС с точностью ±0.1 сек
+                </div>
+              </div>
+
+              {/* Audio Informer Status */}
+              <div
+                className={`border rounded-lg p-3 flex-1 flex flex-col justify-center shadow-sm transition-colors ${
+                  isDark ? "bg-[#171f33] border-slate-700" : "bg-white border-[#dbe2ea]"
+                }`}
+              >
+                <div className={`text-[11px] font-mono font-bold flex items-center gap-1.5 mb-1 ${isDark ? "text-slate-300" : "text-slate-700"}`}>
+                  <Volume2 className="w-4 h-4 text-emerald-600" />
+                  Салонный автоинформатор
+                </div>
                 <div
-                  className="bg-amber-500 h-full transition-all duration-1000 ease-linear rounded-full"
-                  style={{ width: `${progressPercent}%` }}
-                />
-              </div>
-
-              <div className="mt-2.5 flex items-center justify-between w-full text-[10px] font-mono text-slate-400">
-                <div className="flex items-center gap-1.5">
-                  <span className={`w-2 h-2 rounded-full ${secondsLeft > 0 ? "bg-amber-400 animate-ping" : "bg-emerald-400"}`} />
-                  <span>{secondsLeft > 0 ? "ИДЕТ РЕГУЛИРОВОЧНАЯ СТОЯНКА" : "СТОЯНКА ЗАВЕРШЕНА"}</span>
+                  className={`text-xs italic border-l-2 border-emerald-600 pl-2.5 py-0.5 rounded-r ${
+                    isDark ? "bg-emerald-950/40 text-slate-200" : "bg-emerald-50/50 text-slate-800"
+                  }`}
+                >
+                  «Уважаемые пассажиры, технологическая регулировка интервала движения».
                 </div>
-                <span>Норматив: 150 сек</span>
-              </div>
-            </div>
-
-            {/* Target Departure & Passenger Info Box */}
-            <div className="col-span-5 flex flex-col justify-between gap-2.5">
-              <div
-                className={`border-2 border-cyan-500/80 rounded-xl p-3 flex flex-col justify-center ${
-                  isDark ? "bg-[#000000]" : "bg-cyan-950 text-white"
-                }`}
-              >
-                <span className="text-[10px] font-mono font-bold text-cyan-400 uppercase tracking-wider">
-                  РАСЧЕТНОЕ ВРЕМЯ ОТПРАВЛЕНИЯ:
-                </span>
-                <span className="text-2xl font-mono font-black text-cyan-300 drop-shadow-[0_0_12px_rgba(6,182,212,0.5)]">
-                  {departureTimeStr} МСК
-                </span>
-                <span className="text-[9px] font-mono text-cyan-100/70 mt-0.5">
-                  Синхронизировано по серверу АСУ-РДС с точностью 0.1 сек
-                </span>
-              </div>
-
-              <div
-                className={`border rounded-xl p-2.5 flex flex-col justify-center ${
-                  isDark
-                    ? "bg-[#060e20] border-[#2d3449]"
-                    : "bg-slate-50 border-slate-200"
-                }`}
-              >
-                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
-                  <Volume2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                  <span>Салонный автоинформатор</span>
+                <div className="text-[10px] text-emerald-700 font-mono mt-1 font-bold">
+                  ✓ Сообщение успешно транслировано в салон
                 </div>
-                <span className={`text-[10px] mt-0.5 leading-snug ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-                  Трансляция в салон: «Уважаемые пассажиры, технологическая регулировка интервала движения».
-                </span>
               </div>
             </div>
           </div>
 
-          {/* Interactive Route Corridor Visualizer (Why are we holding?) */}
+          {/* Situational Scheme Diagram (Схема ситуации на перегоне) */}
           <div
-            className={`p-3 border rounded-xl flex flex-col gap-1.5 ${
-              isDark ? "bg-[#060e20] border-[#2d3449]" : "bg-slate-50 border-slate-300"
+            className={`border rounded-lg p-3 shadow-sm transition-colors ${
+              isDark ? "bg-[#171f33] border-slate-700" : "bg-white border-[#dbe2ea]"
             }`}
+            data-purpose="situational-diagram"
           >
-            <div className="flex items-center justify-between text-[10px] font-mono font-bold">
-              <span className="text-amber-600 dark:text-amber-400 uppercase flex items-center gap-1">
-                <Navigation size={11} /> СХЕМА СИТУАЦИИ НА ПЕРЕГОНЕ «БАУМАНСКАЯ ➔ БАКУНИНСКАЯ»
+            <div className="flex items-center justify-between text-xs mb-2">
+              <span className="font-mono text-amber-800 font-bold uppercase flex items-center gap-1.5">
+                <Navigation className="w-4 h-4 text-amber-600" />
+                Схема ситуации: перегон «Бауманская → Бакунинская»
               </span>
-              <span className="text-slate-500">Дистанция до лидера: 480 м (Пачкование)</span>
+              <span className="text-[11px] font-mono text-slate-600 font-medium">
+                Дистанция до лидера:{" "}
+                <strong className={`font-bold ${isDark ? "text-white" : "text-slate-900"}`}>480 м</strong> (Пачкование)
+              </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-              <div
-                className={`p-2 rounded-lg border ${
-                  isDark ? "bg-[#171f33] border-red-900/60 text-red-300" : "bg-red-50 border-red-200 text-red-900"
-                }`}
-              >
-                <div className="font-bold flex items-center gap-1">
-                  <span>🚨 Борт №1042 (Впереди):</span>
+            {/* Visual schematic split */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+              {/* Leader Bus */}
+              <div className="bg-amber-50/70 border border-amber-300 rounded p-2.5 flex items-start gap-2.5 shadow-sm">
+                <div className="w-7 h-7 rounded bg-amber-200 text-amber-900 flex items-center justify-center shrink-0 text-xs font-mono font-black border border-amber-300">
+                  1042
                 </div>
-                <div className="text-[10px] mt-0.5 opacity-90">
-                  Застрял в заторе на Бакунинской (14 км/ч). Опоздание +3.2 мин.
+                <div className="text-xs">
+                  <div className="font-bold text-amber-950 flex items-center gap-1.5">
+                    <span>Борт №1042 (Впереди)</span>
+                    <span className="text-[10px] font-mono text-amber-900 bg-amber-200 px-1.5 py-0.2 rounded font-bold border border-amber-300">
+                      +3.2 мин
+                    </span>
+                  </div>
+                  <div className="text-slate-700 text-[11px] mt-0.5">
+                    Застрял в заторе на Бакунинской (скорость 14 км/ч). Создал разрыв интервала.
+                  </div>
                 </div>
               </div>
 
-              <div
-                className={`p-2 rounded-lg border ${
-                  isDark ? "bg-[#171f33] border-emerald-900/60 text-emerald-300" : "bg-emerald-50 border-emerald-200 text-emerald-900"
-                }`}
-              >
-                <div className="font-bold flex items-center gap-1">
-                  <span>✅ Борт №1043 (Ваш борт):</span>
+              {/* Current Bus Status */}
+              <div className="bg-emerald-50/70 border border-emerald-300 rounded p-2.5 flex items-start gap-2.5 shadow-sm">
+                <div className="w-7 h-7 rounded bg-emerald-200 text-emerald-900 flex items-center justify-center shrink-0 text-xs font-mono font-black border border-emerald-300">
+                  1043
                 </div>
-                <div className="text-[10px] mt-0.5 opacity-90">
-                  Стоит на Бауманской. Дает борт №1042 уехать ➔ такт восстановится до 7.5 мин.
+                <div className="text-xs">
+                  <div className="font-bold text-emerald-950 flex items-center gap-1.5">
+                    <span>Борт №1043 (Ваш борт)</span>
+                    <span className="text-[10px] font-mono text-emerald-900 bg-emerald-200 px-1.5 py-0.2 rounded font-bold border border-emerald-300">
+                      В ХОЛДИНГЕ
+                    </span>
+                  </div>
+                  <div className="text-slate-700 text-[11px] mt-0.5">
+                    Стоит на Бауманской. Дает уехать лидеру → такт линии восстановится до 7.5 мин.
+                  </div>
                 </div>
               </div>
+            </div>
+
+            {/* Mathematical formula / Dispatch order justification */}
+            <div className={`mt-2.5 pt-2 border-t text-[11px] font-mono ${isDark ? "border-slate-700 text-slate-300" : "border-[#e2e8f0] text-slate-700"}`}>
+              <span className="text-amber-800 font-bold">Директива Службы движения ЦОДД:</span>{" "}
+              ликвидация пачкования с бортом №1042. Выравнивание такта линии м3 до 7.5 мин по алгоритму Велдинга.
+              Пассажирские табло остановок оповещены.
             </div>
           </div>
 
-          {/* Official Directive Description Box */}
+          {/* Massive Ergonomic Confirm Action Button (Квитирование) */}
+          <div className="mt-auto pt-1" data-purpose="acknowledge-button-wrapper">
+            <button
+              onClick={handleAck}
+              className="w-full py-4 px-6 bg-gradient-to-r from-emerald-600 via-emerald-700 to-emerald-800 hover:from-emerald-700 hover:to-emerald-800 text-white font-extrabold rounded-lg flex items-center justify-center gap-3 shadow-md glow-emerald transition transform active:scale-[0.99] cursor-pointer"
+            >
+              <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center">
+                <CheckCircle2 className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-sm sm:text-base font-extrabold tracking-wider uppercase font-mono text-white">
+                {isAcked
+                  ? `Квитировано в ${ackTime || "23:59:24"} • Команда принята к исполнению`
+                  : secondsLeft === 0
+                  ? "Время стоянки истекло • Закрыть двери и начать движение"
+                  : "Подтвердить прием и выполнение директивы"}
+              </span>
+            </button>
+          </div>
+        </section>
+        {/* END: CenterRightStage */}
+      </main>
+
+      {/* 3. BOTTOM TELEMETRY SHELF (Speed, Headway Ahead/Behind, Traction SOC, Emergency Voice) */}
+      <footer className="grid grid-cols-2 md:grid-cols-5 gap-2.5 shrink-0" data-purpose="cockpit-hardware-shelf">
+        {/* Speedometer & Handbrake Status */}
+        <div
+          className={`border rounded-lg p-2.5 flex items-center gap-3 shadow-sm transition-colors ${
+            isDark ? "bg-[#171f33] border-slate-700" : "bg-white border-[#dbe2ea]"
+          }`}
+        >
           <div
-            className={`p-2.5 border rounded-xl text-xs font-mono leading-relaxed ${
-              isDark
-                ? "bg-[#0b1326] border-[#2d3449] text-slate-300"
-                : "bg-slate-50 border-slate-300 text-slate-700"
+            className={`w-12 h-12 rounded border flex flex-col items-center justify-center ${
+              isDark ? "bg-slate-800 border-slate-700" : "bg-slate-100 border-slate-300"
             }`}
           >
-            <span className="font-bold text-amber-600 dark:text-amber-400">Директива Службы движения ЦОДД:</span> ликвидация
-            пачкования с бортом <strong>№1042</strong>. Выравнивание такта линии м3 до <strong>7.5 мин</strong> по формуле Велдинга.
-            Пассажирские табло остановок и салонный автоинформатор уведомлены.
-          </div>
-
-          {/* Huge Touch CTA Button */}
-          <button
-            onClick={handleAck}
-            className={`w-full py-4 rounded-xl font-mono font-black text-base uppercase tracking-wider flex items-center justify-center gap-3 transition-all cursor-pointer shadow-lg ${
-              isAcked
-                ? "bg-[#008058] text-[#d3ffe5] border-2 border-[#6ffbbe]"
-                : secondsLeft === 0
-                ? "bg-blue-600 hover:bg-blue-500 text-white border-2 border-blue-400 active:scale-98 animate-pulse"
-                : "bg-[#10b981] hover:bg-[#059669] text-white border-2 border-emerald-400 active:scale-98"
-            }`}
-          >
-            <CheckCircle2 className="w-6 h-6 shrink-0" />
-            <span>
-              {isAcked
-                ? `✓ КВИТИРОВАНО В ${ackTime} • КОМАНДА ПРИНЯТА К ИСПОЛНЕНИЮ`
-                : secondsLeft === 0
-                ? "✓ ВРЕМЯ СТОЯНКИ ИСТЕКЛО • ЗАКРЫТЬ ДВЕРИ И НАЧАТЬ ДВИЖЕНИЕ"
-                : "✓ ПОДТВЕРДИТЬ ПРИЕМ И ВЫПОЛНЕНИЕ ДИРЕКТИВЫ"}
+            <span className={`font-mono text-xl font-black leading-none ${isDark ? "text-white" : "text-slate-900"}`}>
+              0
             </span>
-          </button>
-        </div>
-      </div>
-
-      {/* 3. BOTTOM TELEMETRY DOCK (NDTP Parameters: Speed, Headway, Battery, Pneumatics, Call) */}
-      <footer className="grid grid-cols-12 gap-3 h-20 shrink-0 font-mono">
-        {/* Speedometer */}
-        <div className="col-span-2 border-2 rounded-xl p-2.5 flex flex-col justify-between bg-[#080E1C] border-slate-700/80 text-white shadow-md">
-          <div className="flex items-center justify-between text-[10px] text-slate-400 font-bold uppercase">
-            <span>СКОРОСТЬ</span>
-            <span className="text-amber-400">[СТОЯНКА]</span>
+            <span className="text-[9px] font-mono text-slate-500 font-bold">КМ/Ч</span>
           </div>
-          <div className="flex items-baseline gap-1">
-            <span className="text-3xl font-black text-white">0</span>
-            <span className="text-xs text-slate-400">км/ч</span>
-          </div>
-          <span className="text-[9px] text-emerald-400 font-bold">✓ ручной тормоз [P]</span>
-        </div>
-
-        {/* Headway Back (Bunching alert) */}
-        <div className="col-span-3 border-2 rounded-xl p-2.5 flex flex-col justify-between bg-[#080E1C] border-rose-600 text-white shadow-md">
-          <div className="flex items-center justify-between text-[10px] text-rose-400 font-bold uppercase">
-            <span>СЗАДИ: БОРТ #1042</span>
-            <span className="bg-red-600 text-white px-1 rounded text-[9px]">СХЛОПЫВАНИЕ</span>
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-rose-400">1.4 МИН</span>
-            <span className="text-slate-400">➔</span>
-            <span className="text-xl font-black text-emerald-400">7.5 МИН</span>
-          </div>
-          <span className="text-[9px] text-slate-400">Дистанция: 480 м (Пачкование ликвидируется)</span>
-        </div>
-
-        {/* Headway Front */}
-        <div className="col-span-3 border-2 rounded-xl p-2.5 flex flex-col justify-between bg-[#080E1C] border-slate-700/80 text-white shadow-md">
-          <div className="flex items-center justify-between text-[10px] text-slate-400 font-bold uppercase">
-            <span>ВПЕРЕДИ: БОРТ #1041</span>
-            <span className="text-emerald-400">● НОРМА</span>
-          </div>
-          <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-black text-emerald-400">8.2</span>
-            <span className="text-xs text-slate-400">МИН</span>
-          </div>
-          <span className="text-[9px] text-slate-400">Дистанция: 2.8 км (Штатный такт)</span>
-        </div>
-
-        {/* Battery SOC & Pneumatics */}
-        <div className="col-span-2 border-2 rounded-xl p-2.5 flex flex-col justify-between bg-[#080E1C] border-slate-700/80 text-white shadow-md">
-          <div className="flex items-center justify-between text-[10px] text-slate-400 font-bold uppercase">
-            <span>ТЯГА (SOC)</span>
-            <span className="text-emerald-400">142 КМ</span>
-          </div>
-          <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-black text-white">84%</span>
-            <span className="text-[10px] text-slate-400">650V</span>
-          </div>
-          <div className="w-full h-1.5 rounded-full overflow-hidden bg-slate-800">
-            <div className="bg-emerald-500 h-full w-[84%]" />
+          <div className="text-xs">
+            <div className="text-slate-500 font-mono text-[10px] font-bold uppercase">СКОРОСТЬ ТС</div>
+            <div className="font-mono font-bold text-amber-700 flex items-center gap-1 text-[11px]">
+              <span>✓ РУЧНОЙ ТОРМОЗ [P]</span>
+            </div>
+            <div className="text-[9px] text-slate-500 font-mono font-medium">СТОЯНКА АКТИВНА</div>
           </div>
         </div>
 
-        {/* Dispatcher Quick Touch Action */}
-        <div className="col-span-2 border-2 rounded-xl p-2 flex flex-col justify-center items-center text-center cursor-pointer transition-all active:scale-95 shadow-md bg-[#171f33] border-slate-600 hover:border-slate-400 text-white">
-          <PhoneCall className="w-5 h-5 text-amber-400 mb-1" />
-          <span className="text-xs font-black uppercase tracking-tight text-white">
-            ДИСПЕТЧЕР
-          </span>
-          <span className="text-[9px] text-slate-400">СЕКТОР «ЦЕНТР»</span>
+        {/* Spacing Behind (Схлопывание сзади) */}
+        <div
+          className={`border rounded-lg p-2.5 flex flex-col justify-between shadow-sm transition-colors ${
+            isDark ? "bg-[#171f33] border-rose-900" : "bg-white border-rose-200"
+          }`}
+        >
+          <div className="flex items-center justify-between text-[10px] font-mono">
+            <span className={`font-semibold ${isDark ? "text-slate-400" : "text-slate-600"}`}>СЗАДИ: БОРТ #1042</span>
+            <span className="text-rose-700 font-bold bg-rose-100 border border-rose-300 px-1.5 rounded">
+              СХЛОПЫВАНИЕ
+            </span>
+          </div>
+          <div className={`text-sm font-mono font-bold flex items-center gap-1.5 my-0.5 ${isDark ? "text-white" : "text-slate-900"}`}>
+            <span className="text-rose-600 font-black text-base">1.4 мин</span>
+            <span className="text-slate-400 text-xs">→</span>
+            <span className="text-emerald-700 font-black text-base">7.5 мин</span>
+          </div>
+          <div className="text-[10px] text-slate-500 font-mono truncate font-medium">Дистанция 480 м (устраняется)</div>
         </div>
+
+        {/* Spacing Ahead (Штатный такт впереди) */}
+        <div
+          className={`border rounded-lg p-2.5 flex flex-col justify-between shadow-sm transition-colors ${
+            isDark ? "bg-[#171f33] border-emerald-900" : "bg-white border-emerald-200"
+          }`}
+        >
+          <div className="flex items-center justify-between text-[10px] font-mono">
+            <span className={`font-semibold ${isDark ? "text-slate-400" : "text-slate-600"}`}>ВПЕРЕДИ: БОРТ #1041</span>
+            <span className="text-emerald-800 font-bold bg-emerald-100 border border-emerald-300 px-1.5 rounded">
+              НОРМА
+            </span>
+          </div>
+          <div className="text-base font-mono font-black text-emerald-700 my-0.5">8.2 мин</div>
+          <div className="text-[10px] text-slate-500 font-mono font-medium">Дистанция: 2.8 км (Штатный такт)</div>
+        </div>
+
+        {/* High Voltage Battery SOC */}
+        <div
+          className={`border rounded-lg p-2.5 flex flex-col justify-between shadow-sm transition-colors ${
+            isDark ? "bg-[#171f33] border-slate-700" : "bg-white border-[#dbe2ea]"
+          }`}
+        >
+          <div className="flex items-center justify-between text-[10px] font-mono">
+            <span className={`font-semibold ${isDark ? "text-slate-400" : "text-slate-600"}`}>ТЯГА (SOC) • 650V</span>
+            <span className={`font-bold ${isDark ? "text-white" : "text-slate-900"}`}>142 КМ</span>
+          </div>
+          <div className="flex items-center gap-2 my-0.5">
+            <span className={`font-mono text-xl font-black leading-none ${isDark ? "text-white" : "text-slate-900"}`}>
+              84%
+            </span>
+            <div className="flex-1 h-2.5 bg-slate-100 border border-slate-300 rounded overflow-hidden p-0.5">
+              <div className="h-full bg-emerald-600 rounded-sm" style={{ width: "84%" }} />
+            </div>
+          </div>
+          <div className="text-[10px] text-emerald-800 font-mono font-semibold">
+            Батарея в оптимуме (+28°C)
+          </div>
+        </div>
+
+        {/* Dispatcher Voice Call Button */}
+        <button className="col-span-2 md:col-span-1 bg-amber-50 hover:bg-amber-100 border-2 border-amber-400 hover:border-amber-500 rounded-lg p-2.5 flex items-center justify-center gap-2.5 text-amber-900 transition cursor-pointer group shadow-sm">
+          <div className="w-8 h-8 rounded-full bg-amber-200 group-hover:bg-amber-300 flex items-center justify-center shrink-0 border border-amber-400">
+            <PhoneCall className="w-4 h-4 text-amber-800" />
+          </div>
+          <div className="text-left font-mono leading-tight">
+            <div className="text-xs font-black text-amber-950 uppercase">Диспетчер</div>
+            <div className="text-[10px] text-amber-800 font-bold">Сектор «Центр»</div>
+          </div>
+        </button>
       </footer>
+
+      {/* 4. DESIGN SYSTEM STANDARDS LEGEND FOOTNOTE */}
+      <aside
+        className={`border rounded-lg p-2 text-[11px] flex flex-wrap items-center justify-between gap-3 font-mono shadow-sm shrink-0 transition-colors ${
+          isDark ? "bg-[#171f33] border-slate-700 text-slate-400" : "bg-white border-[#dbe2ea] text-slate-600"
+        }`}
+        data-purpose="design-system-standards"
+      >
+        <div className={`flex items-center gap-2 font-bold ${isDark ? "text-slate-200" : "text-slate-800"}`}>
+          <ShieldCheck className="w-4 h-4 text-emerald-600" />
+          <span>ДНЕВНОЙ РЕЖИМ КАБИНЫ (ISO 9241-391 &amp; ГОСТ Р ИСО 15005 / SAE J1757):</span>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px]">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded bg-[#eef2f6] border border-slate-300" />
+            <span>
+              <strong>Дымчатая платина (#eef2f6)</strong>: антиблик без ослепления
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded bg-amber-500" />
+            <span>
+              <strong>Авиационный янтарь (#d97706)</strong>: эргономичный фокус внимания
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded bg-emerald-600" />
+            <span>
+              <strong>Транспортный изумруд (#059669)</strong>: стабильность и норматив
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded bg-slate-900" />
+            <span>
+              <strong>Графит Slate-900 (WCAG AAA)</strong>: читаемость под прямым солнцем
+            </span>
+          </div>
+        </div>
+      </aside>
     </div>
   );
 };
