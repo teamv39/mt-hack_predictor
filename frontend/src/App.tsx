@@ -8,12 +8,14 @@ import { ToastContainer } from "./components/Toast";
 import { ScenariosModal } from "./components/ScenariosModal";
 import { MareyDiagram } from "./components/MareyDiagram";
 import { DriverTerminal } from "./components/DriverTerminal";
+import { JuryGuideModal } from "./components/JuryGuideModal";
 import { SlidersHorizontal } from "lucide-react";
 import { loadPreferences, savePreferences } from "./utils/storage";
 
 export default function App() {
   const initialPrefs = useMemo(() => loadPreferences(), []);
   const [isScenariosOpen, setIsScenariosOpen] = useState(false);
+  const [isGuideOpen, setIsGuideOpen] = useState<boolean>(!initialPrefs.hasCompletedGuide);
   // Светлая тема по умолчанию (theme: 'light' -> isDarkMode: false)
   const [isDarkMode, setIsDarkMode] = useState<boolean>(initialPrefs.theme === "dark");
   const [isInspectorOpen, setIsInspectorOpen] = useState<boolean>(initialPrefs.isInspectorOpen);
@@ -86,6 +88,7 @@ export default function App() {
         onControl={controlSimulation}
         isDarkMode={isDarkMode}
         onToggleDarkMode={handleToggleDarkMode}
+        onOpenGuide={() => setIsGuideOpen(true)}
       />
 
       {/* 2. Main Dashboard Workspace */}
@@ -158,7 +161,7 @@ export default function App() {
                   onClick={() => handleSetInspectorOpen(true)}
                   className={`px-3.5 py-2 rounded-xl border shadow-lg flex items-center gap-2 text-xs font-bold transition-all cursor-pointer backdrop-blur-md ${
                     isDarkMode
-                      ? "bg-[#151D2A]/90 hover:bg-[#1C2637] border-slate-700/80 text-cyan-300"
+                      ? "bg-[#18181b]/95 hover:bg-[#222226] border-zinc-700/80 text-zinc-200"
                       : "bg-white/95 hover:bg-slate-50 border-slate-200 text-slate-800 shadow-slate-900/10"
                   }`}
                   title="Открыть инспектор СППР"
@@ -183,7 +186,17 @@ export default function App() {
         intervalSec={selectedAlert?.metrics?.headway_collapse_sec || 96}
       />
 
-      {/* 4. Toast Notifications for Dispatcher Feedback */}
+      {/* 4. Jury Guide / Tour Modal */}
+      <JuryGuideModal
+        isOpen={isGuideOpen}
+        onClose={() => {
+          setIsGuideOpen(false);
+          savePreferences({ hasCompletedGuide: true });
+        }}
+        isDarkMode={isDarkMode}
+      />
+
+      {/* 5. Toast Notifications for Dispatcher Feedback */}
       <ToastContainer toasts={toasts} onClose={removeToast} />
     </div>
   );

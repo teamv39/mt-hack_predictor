@@ -13,6 +13,7 @@ import {
   Moon,
   Activity,
   Layers,
+  Compass,
 } from "lucide-react";
 
 export interface TopBarProps {
@@ -30,6 +31,7 @@ export interface TopBarProps {
   onControl?: (action: string, value?: any) => void;
   isDarkMode?: boolean;
   onToggleDarkMode?: () => void;
+  onOpenGuide?: () => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
@@ -41,6 +43,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   onControl,
   isDarkMode = false,
   onToggleDarkMode,
+  onOpenGuide,
 }) => {
   const [timeStr, setTimeStr] = useState<string>("07:14:00");
   const [isMuted, setIsMuted] = useState<boolean>(false);
@@ -242,7 +245,19 @@ export const TopBar: React.FC<TopBarProps> = ({
         <div className="h-6 w-px bg-white/25 hidden sm:block" />
 
         {/* Quick Utility Actions */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
+          {/* Jury Guide / Tour button */}
+          {onOpenGuide && (
+            <button
+              onClick={onOpenGuide}
+              className="h-8 px-2.5 rounded-xl border border-white/30 bg-white/20 hover:bg-white/30 text-white flex items-center gap-1.5 text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95"
+              title="Инструкция для экспертов и жюри (Демо-тур)"
+            >
+              <Compass size={13} className="text-amber-300" />
+              <span className="hidden md:inline font-mono text-[11px]">Гайд жюри</span>
+            </button>
+          )}
+
           {/* Dark / Light Toggle */}
           {onToggleDarkMode && (
             <button

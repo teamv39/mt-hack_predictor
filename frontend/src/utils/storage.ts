@@ -26,6 +26,7 @@ export interface DSSPreferences {
   holdingDeadline?: number;
   isTerminalAcked?: boolean;
   ackTimeStr?: string;
+  hasCompletedGuide?: boolean;
   savedAt: number;
 }
 
@@ -44,6 +45,7 @@ export const DEFAULT_PREFERENCES: DSSPreferences = {
   simSpeed: 1.0,
   appliedHoldingIds: [],
   appliedScenarios: {},
+  hasCompletedGuide: false,
   savedAt: Date.now(),
 };
 
@@ -99,6 +101,7 @@ export function loadPreferences(): DSSPreferences {
       holdingDeadline: typeof parsed.holdingDeadline === "number" ? parsed.holdingDeadline : undefined,
       isTerminalAcked: typeof parsed.isTerminalAcked === "boolean" ? parsed.isTerminalAcked : false,
       ackTimeStr: typeof parsed.ackTimeStr === "string" ? parsed.ackTimeStr : undefined,
+      hasCompletedGuide: typeof parsed.hasCompletedGuide === "boolean" ? parsed.hasCompletedGuide : false,
       savedAt: typeof parsed.savedAt === "number" ? parsed.savedAt : Date.now(),
     };
   } catch {

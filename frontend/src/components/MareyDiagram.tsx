@@ -74,7 +74,7 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
         isDarkMode ? "bg-[#18181b] border-zinc-800" : "bg-white border-slate-200"
       }`}>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-7 rounded-lg bg-[#2563eb] text-white font-black text-xs flex items-center justify-center tracking-tight shadow-sm">
+          <div className="w-10 h-7 rounded-lg bg-[#D32F2F] text-white font-black text-xs flex items-center justify-center tracking-tight shadow-sm">
             м3
           </div>
           <div className="flex flex-col">
@@ -104,7 +104,7 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
           }`}>
             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Плановый такт</span>
             <div className="flex items-baseline gap-1">
-              <span className="text-xs font-black text-[#38bdf8] font-mono">8.0</span>
+              <span className="text-xs font-black text-emerald-400 font-mono">8.0</span>
               <span className="text-[10px] text-slate-400 font-medium">мин</span>
             </div>
           </div>
@@ -164,14 +164,14 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
                 <span className={`text-xs font-black tracking-tight flex items-center gap-2 ${
                   isDarkMode ? "text-slate-200" : "text-slate-800"
                 }`}>
-                  <TrendingUp className="w-4 h-4 text-[#38bdf8]" />
+                  <TrendingUp className="w-4 h-4 text-emerald-400" />
                   ТРАЕКТОРИИ БОРТОВ (ДИАГРАММА МАРЕЯ)
                 </span>
                 <div className={`h-4 w-px ${isDarkMode ? "bg-slate-800" : "bg-slate-200"}`} />
                 {/* Legends */}
                 <div className="flex items-center gap-3 text-[10px] font-mono">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-3.5 h-[3px] bg-[#38bdf8] rounded-full inline-block" />
+                    <span className="w-3.5 h-[3px] bg-emerald-500 rounded-full inline-block" />
                     <span className={isDarkMode ? "text-slate-300" : "text-slate-600"}>Факт</span>
                   </div>
                   <div className="flex items-center gap-1.5">
@@ -196,8 +196,8 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
                   onClick={() => setShowPlan(!showPlan)}
                   className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${
                     showPlan
-                      ? isDarkMode ? "bg-blue-900/60 border-blue-700 text-cyan-300" : "bg-blue-50 border-blue-200 text-blue-700"
-                      : isDarkMode ? "bg-slate-800 border-slate-700 text-slate-300" : "bg-white border-slate-200 text-slate-600"
+                      ? isDarkMode ? "bg-zinc-800 border-zinc-700 text-zinc-200" : "bg-zinc-200 border-zinc-300 text-zinc-800"
+                      : isDarkMode ? "bg-[#18181b] border-zinc-800 text-zinc-400" : "bg-white border-slate-200 text-slate-600"
                   }`}
                 >
                   Сетка плана
@@ -209,7 +209,7 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
             <div className="flex-1 flex overflow-hidden relative">
               {/* Y-Axis: Stations Ruler on Left */}
               <div className={`w-48 border-r flex flex-col justify-between py-6 px-3 text-right select-none shrink-0 z-20 ${
-                isDarkMode ? "bg-[#090D17] border-slate-800" : "bg-slate-50 border-slate-200"
+                isDarkMode ? "bg-[#18181b] border-zinc-800" : "bg-slate-50 border-slate-200"
               }`}>
                 {STATIONS.map((st, i) => (
                   <div
@@ -247,8 +247,8 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
                           : st.isWarning
                           ? "w-2 h-2 bg-amber-500"
                           : st.isMajor
-                          ? "w-2.5 h-2.5 border-2 border-[#2563eb] bg-white"
-                          : isDarkMode ? "w-1.5 h-1.5 bg-slate-700" : "w-1.5 h-1.5 bg-slate-300"
+                          ? "w-2.5 h-2.5 border-2 border-emerald-500 bg-white"
+                          : isDarkMode ? "w-1.5 h-1.5 bg-zinc-700" : "w-1.5 h-1.5 bg-slate-300"
                       }`}
                     />
                   </div>
@@ -257,14 +257,14 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
 
               {/* Central SVG Canvas */}
               <div className={`flex-1 h-full w-full relative overflow-hidden ${
-                isDarkMode ? "bg-[#090D17]" : "bg-white"
+                isDarkMode ? "bg-[#121214]" : "bg-white"
               }`}>
                 {/* ML Forecast Background Shading (X >= 50%) */}
                 <div className={`absolute left-1/2 top-0 bottom-0 right-0 border-l pointer-events-none z-0 ${
-                  isDarkMode ? "bg-blue-950/20 border-blue-900/60" : "bg-blue-50/30 border-blue-200/80"
+                  isDarkMode ? "bg-zinc-800/25 border-zinc-700/60" : "bg-zinc-100/50 border-zinc-200"
                 }`}>
                   <div className={`p-2.5 flex items-center justify-between text-[10px] font-mono font-bold uppercase tracking-wider ${
-                    isDarkMode ? "text-cyan-400" : "text-blue-700/80"
+                    isDarkMode ? "text-amber-400" : "text-zinc-600"
                   }`}>
                     <span className="flex items-center gap-1.5">
                       <Cpu className="w-3.5 h-3.5" />
@@ -286,9 +286,9 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
                   <span className="text-rose-400 font-bold bg-rose-950/60 px-2 rounded border border-rose-800">
                     14:45 (T=0 СЕЙЧАС)
                   </span>
-                  <span className="text-cyan-400 font-bold">15:00 (+15м)</span>
-                  <span className="text-cyan-400 font-bold">15:15 (+30м)</span>
-                  <span className="text-cyan-400 font-bold">15:30 (+45м)</span>
+                  <span className="text-zinc-400 font-bold">15:00 (+15м)</span>
+                  <span className="text-zinc-400 font-bold">15:15 (+30м)</span>
+                  <span className="text-zinc-400 font-bold">15:30 (+45м)</span>
                 </div>
 
                 {/* SVG Vector Marey Canvas */}
@@ -314,17 +314,17 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
                       y1={st.y}
                       x2="1000"
                       y2={st.y}
-                      stroke={st.isCritical ? (isDarkMode ? "#7f1d1d" : "#fee2e2") : (isDarkMode ? "#1e293b" : "#e2e8f0")}
+                      stroke={st.isCritical ? (isDarkMode ? "#7f1d1d" : "#fee2e2") : (isDarkMode ? "#27272a" : "#e2e8f0")}
                       strokeWidth={st.isCritical ? 1.5 : 1}
                       strokeDasharray={st.isMajor ? "none" : "2,2"}
                     />
                   ))}
 
                   {/* Vertical Time Grid Lines */}
-                  <line x1="166.6" y1="0" x2="166.6" y2="600" stroke={isDarkMode ? "#1e293b" : "#e2e8f0"} strokeDasharray="3,3" />
-                  <line x1="333.3" y1="0" x2="333.3" y2="600" stroke={isDarkMode ? "#1e293b" : "#e2e8f0"} strokeDasharray="3,3" />
-                  <line x1="666.6" y1="0" x2="666.6" y2="600" stroke={isDarkMode ? "#1e293b" : "#e2e8f0"} strokeDasharray="3,3" />
-                  <line x1="833.3" y1="0" x2="833.3" y2="600" stroke={isDarkMode ? "#1e293b" : "#e2e8f0"} strokeDasharray="3,3" />
+                  <line x1="166.6" y1="0" x2="166.6" y2="600" stroke={isDarkMode ? "#27272a" : "#e2e8f0"} strokeDasharray="3,3" />
+                  <line x1="333.3" y1="0" x2="333.3" y2="600" stroke={isDarkMode ? "#27272a" : "#e2e8f0"} strokeDasharray="3,3" />
+                  <line x1="666.6" y1="0" x2="666.6" y2="600" stroke={isDarkMode ? "#27272a" : "#e2e8f0"} strokeDasharray="3,3" />
+                  <line x1="833.3" y1="0" x2="833.3" y2="600" stroke={isDarkMode ? "#27272a" : "#e2e8f0"} strokeDasharray="3,3" />
 
                   {/* Scheduled Nominal Trajectories */}
                   {showPlan && (
@@ -340,17 +340,17 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
                   )}
 
                   {/* Realized string trajectories */}
-                  <path d="M 0 150 L 80 270 L 170 390 L 240 450 L 320 570" fill="none" stroke="#2563eb" strokeWidth="2.5" />
-                  <circle cx="320" cy="570" r="3.5" fill="#2563eb" />
-                  <text x="325" y="565" fill={isDarkMode ? "#60a5fa" : "#1d4ed8"} fontFamily="monospace" fontSize="9" fontWeight="bold">#1040 (Финиш)</text>
+                  <path d="M 0 150 L 80 270 L 170 390 L 240 450 L 320 570" fill="none" stroke="#10b981" strokeWidth="2.5" />
+                  <circle cx="320" cy="570" r="3.5" fill="#10b981" />
+                  <text x="325" y="565" fill={isDarkMode ? "#e4e4e7" : "#047857"} fontFamily="monospace" fontSize="9" fontWeight="bold">#1040 (Финиш)</text>
 
-                  <path d="M 140 30 L 210 150 L 290 270 L 390 390 L 485 450" fill="none" stroke="#2563eb" strokeWidth="2.5" />
-                  <circle cx="485" cy="450" r="4" fill="#2563eb" stroke="#fff" strokeWidth="1.5" />
-                  <text x="415" y="445" fill={isDarkMode ? "#60a5fa" : "#1d4ed8"} fontFamily="monospace" fontSize="10" fontWeight="bold">#1041 (+0.4м)</text>
+                  <path d="M 140 30 L 210 150 L 290 270 L 390 390 L 485 450" fill="none" stroke="#10b981" strokeWidth="2.5" />
+                  <circle cx="485" cy="450" r="4" fill="#10b981" stroke="#fff" strokeWidth="1.5" />
+                  <text x="415" y="445" fill={isDarkMode ? "#e4e4e7" : "#047857"} fontFamily="monospace" fontSize="10" fontWeight="bold">#1041 (+0.4м)</text>
 
-                  <path d="M 290 30 L 350 90 L 420 150 L 500 210" fill="none" stroke="#2563eb" strokeWidth="2.8" />
-                  <circle cx="500" cy="210" r="4.5" fill="#2563eb" stroke="#fff" strokeWidth="1.5" />
-                  <text x="510" y="205" fill={isDarkMode ? "#60a5fa" : "#1d4ed8"} fontFamily="monospace" fontSize="10" fontWeight="bold">#1043 (м. Бауманская)</text>
+                  <path d="M 290 30 L 350 90 L 420 150 L 500 210" fill="none" stroke="#10b981" strokeWidth="2.8" />
+                  <circle cx="500" cy="210" r="4.5" fill="#10b981" stroke="#fff" strokeWidth="1.5" />
+                  <text x="510" y="205" fill={isDarkMode ? "#e4e4e7" : "#047857"} fontFamily="monospace" fontSize="10" fontWeight="bold">#1043 (м. Бауманская)</text>
 
                   <path d="M 370 30 L 420 90 L 460 150 L 488 185" fill="none" stroke="#ef4444" strokeWidth="3" />
                   <circle cx="488" cy="185" r="5" fill="#ef4444" stroke="#fff" strokeWidth="1.5" />
@@ -361,7 +361,7 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
                     <>
                       <line x1="500" y1="210" x2="530" y2="210" stroke="#10b981" strokeWidth="4.5" strokeLinecap="round" />
                       <path d="M 530 210 L 590 270 L 660 330 L 730 390 L 800 450 L 880 570" fill="none" stroke="#10b981" strokeWidth="2.5" strokeDasharray="5,3" />
-                      <path d="M 488 185 L 510 210 L 570 270 L 640 330 L 710 390 L 780 450 L 860 570" fill="none" stroke="#2563eb" strokeWidth="2" strokeDasharray="4,3" />
+                      <path d="M 488 185 L 510 210 L 570 270 L 640 330 L 710 390 L 780 450 L 860 570" fill="none" stroke="#10b981" strokeWidth="2" strokeDasharray="4,3" />
                     </>
                   ) : (
                     <>
@@ -383,7 +383,7 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
                 {/* Floating Warning Card if not yet applied */}
                 {!holdingApplied ? (
                   <div className={`absolute left-[360px] top-[130px] rounded-2xl p-4 shadow-2xl w-[320px] pointer-events-auto z-30 border ${
-                    isDarkMode ? "bg-[#141C2E] border-rose-500/80 text-white shadow-black/60" : "bg-white border-slate-300 text-slate-800"
+                    isDarkMode ? "bg-[#18181b] border-rose-500/80 text-white shadow-black/60" : "bg-white border-slate-300 text-slate-800"
                   }`}>
                     <div className="flex items-center justify-between gap-1 border-b border-rose-500/30 pb-2 mb-2">
                       <div className="flex items-center gap-1.5 text-rose-400 font-bold text-xs">
@@ -394,8 +394,8 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
                         РИСК 94%
                       </span>
                     </div>
-                    <div className={`text-xs leading-relaxed ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>
-                      Интервал между <strong className="text-cyan-400 font-bold">#1043</strong> и <strong className="text-rose-400 font-bold">#1042</strong> схлопнулся до{" "}
+                    <div className={`text-xs leading-relaxed ${isDarkMode ? "text-zinc-300" : "text-slate-700"}`}>
+                      Интервал между <strong className="text-emerald-400 font-bold">#1043</strong> и <strong className="text-rose-400 font-bold">#1042</strong> схлопнулся до{" "}
                       <span className="font-mono font-bold text-rose-400 bg-rose-950/60 px-1.5 py-0.5 rounded border border-rose-800">1.4 мин</span> (Норма 8.0 мин).
                     </div>
                     <div className={`mt-3 p-2.5 rounded-xl border flex items-center justify-between ${
@@ -423,10 +423,10 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
 
             {/* Bottom Footer Bar */}
             <div className={`h-9 px-4 border-t flex items-center justify-between shrink-0 text-[10px] font-mono ${
-              isDarkMode ? "bg-[#090D17] border-slate-800 text-slate-400" : "bg-white border-slate-200 text-slate-500"
+              isDarkMode ? "bg-[#121214] border-zinc-800 text-zinc-400" : "bg-white border-slate-200 text-slate-500"
             }`}>
               <div className="flex items-center gap-3">
-                <span className={`font-bold ${isDarkMode ? "text-slate-200" : "text-slate-800"}`}>
+                <span className={`font-bold ${isDarkMode ? "text-zinc-200" : "text-slate-800"}`}>
                   Телеметрический срез: 14:45:00
                 </span>
                 <span>•</span>
@@ -452,7 +452,7 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
           }`}>
             <div>
               <div className={`text-xs font-black flex items-center gap-1.5 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                <Bus className="w-3.5 h-3.5 text-[#2563eb]" />
+                <Bus className="w-3.5 h-3.5 text-[#D32F2F]" />
                 Мониторинг бортов м3 (12 ед.)
               </div>
               <div className="text-[10px] font-mono text-slate-400 mt-0.5">
@@ -460,7 +460,7 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
               </div>
             </div>
             <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border ${
-              isDarkMode ? "bg-blue-900/60 text-cyan-300 border-blue-700" : "bg-blue-50 text-blue-700 border-blue-200"
+              isDarkMode ? "bg-emerald-950/60 text-emerald-300 border-emerald-700" : "bg-emerald-50 text-emerald-700 border-emerald-200"
             }`}>
               LIVE
             </span>
@@ -498,7 +498,7 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
 
           {/* Fleet Table */}
           <div className={`flex-1 overflow-y-auto divide-y font-sans text-xs ${
-            isDarkMode ? "divide-slate-800" : "divide-slate-100"
+            isDarkMode ? "divide-zinc-800" : "divide-slate-100"
           }`}>
             {filteredFleet.map((b) => (
               <div
@@ -508,14 +508,14 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
                     ? isDarkMode ? "bg-rose-950/30 border-l-2 border-rose-500" : "bg-red-50/40 border-l-2 border-red-500"
                     : b.risk === "warning"
                     ? isDarkMode ? "bg-amber-950/30 border-l-2 border-amber-500" : "bg-amber-50/40 border-l-2 border-amber-500"
-                    : isDarkMode ? "hover:bg-slate-800/40" : "hover:bg-slate-50"
+                    : isDarkMode ? "hover:bg-zinc-800/40" : "hover:bg-slate-50"
                 }`}
               >
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
                     <span className={`font-mono font-black ${isDarkMode ? "text-white" : "text-slate-900"}`}>{b.id}</span>
                     <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded border ${
-                      isDarkMode ? "text-slate-400 bg-slate-800/80 border-slate-700" : "text-slate-500 bg-slate-100 border-slate-200"
+                      isDarkMode ? "text-zinc-400 bg-zinc-800/80 border-zinc-700" : "text-slate-500 bg-slate-100 border-slate-200"
                     }`}>
                       {b.model}
                     </span>
@@ -552,11 +552,11 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
 
           {/* Bottom DSS Box */}
           <div className={`p-3.5 border-t flex flex-col gap-2.5 shrink-0 ${
-            isDarkMode ? "bg-[#090D17] border-slate-800" : "bg-slate-50 border-slate-200"
+            isDarkMode ? "bg-[#121214] border-zinc-800" : "bg-slate-50 border-slate-200"
           }`}>
             <div className="flex items-center justify-between">
               <span className={`text-[10px] font-black uppercase tracking-wider ${
-                isDarkMode ? "text-slate-300" : "text-slate-800"
+                isDarkMode ? "text-zinc-300" : "text-slate-800"
               }`}>
                 СППР Регулирование интервала
               </span>
@@ -565,7 +565,7 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
               </span>
             </div>
 
-            <p className={`text-[11px] leading-relaxed ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+            <p className={`text-[11px] leading-relaxed ${isDarkMode ? "text-zinc-300" : "text-slate-600"}`}>
               Принудительный Holding лидера борта №1043 на остановочном пункте «м. Бауманская» на 2.5 мин.
             </p>
 
@@ -586,7 +586,7 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
               onClick={() => onOpenScenarios && onOpenScenarios()}
               className={`w-full h-8 px-2 rounded-lg border text-[11px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer ${
                 isDarkMode
-                  ? "border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-300"
+                  ? "border-zinc-700 bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300"
                   : "border-slate-300 bg-white hover:bg-slate-100 text-slate-700"
               }`}
             >
