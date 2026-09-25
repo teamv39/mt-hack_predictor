@@ -23,6 +23,9 @@ export interface DSSPreferences {
   simSpeed: number;
   appliedHoldingIds: string[];
   appliedScenarios: Record<string, string>;
+  holdingDeadline?: number;
+  isTerminalAcked?: boolean;
+  ackTimeStr?: string;
   savedAt: number;
 }
 
@@ -93,6 +96,9 @@ export function loadPreferences(): DSSPreferences {
       simSpeed: typeof parsed.simSpeed === "number" && parsed.simSpeed >= 0.1 && parsed.simSpeed <= 10 ? parsed.simSpeed : 1.0,
       appliedHoldingIds: Array.isArray(parsed.appliedHoldingIds) ? parsed.appliedHoldingIds : [],
       appliedScenarios: parsed.appliedScenarios && typeof parsed.appliedScenarios === "object" ? parsed.appliedScenarios : {},
+      holdingDeadline: typeof parsed.holdingDeadline === "number" ? parsed.holdingDeadline : undefined,
+      isTerminalAcked: typeof parsed.isTerminalAcked === "boolean" ? parsed.isTerminalAcked : false,
+      ackTimeStr: typeof parsed.ackTimeStr === "string" ? parsed.ackTimeStr : undefined,
       savedAt: typeof parsed.savedAt === "number" ? parsed.savedAt : Date.now(),
     };
   } catch {
