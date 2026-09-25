@@ -558,6 +558,7 @@
 | **Frontend** | 7.4.3 Actionable UI (Holding) | Кирилл | 🟡 P1 | `Inspector.tsx` | ✅ Реализован (кнопка Holding, Recharts график План vs Без мер vs С ИИ) |
 | **Frontend** | 7.4.5 QA-стабилизация (7 дефектов) | Кирилл | 🔴 P0 | 7.4.1–7.4.4 | ✅ Выполнен (устранены опечатки, масштаб Recharts, SHAP, z-index Toast, адаптивность) |
 | **Frontend** | 7.4.6 Stitch UI/UX Pipeline (СППР Матрица, Марей, Терминал) | Кирилл | 🔴 P0 | StitchMCP | ✅ Выполнен (Google Stitch экраны: матрица 4 сценариев, график Марея m3, планшет водителя Granit-Navigator) |
+| **Frontend** | 7.4.7 Светлая тема по умолчанию и сессионная персистентность | Кирилл | 🔴 P0 | `storage.ts`, `App.tsx` | ✅ Выполнен (Light theme default, safe isolated storage ~100B, 24h TTL, без кэширования сырой телеметрии) |
 
 | **Питч** | 7.5.1 Слайды презентации (8 шт) | Денис / Все | 🔴 P0 | Результаты сабмитов | ⏳ В плане |
 | **Питч** | 7.5.2 Защита от атак жюри | Денис | 🔴 P0 | `product_attacks_and_backlog.md` | ✅ Готов (`docs/product_attacks_and_backlog.md`) |

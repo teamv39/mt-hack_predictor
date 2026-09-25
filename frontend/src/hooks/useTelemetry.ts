@@ -9,6 +9,7 @@ import {
   AlertItem,
   RouteData,
 } from "../mock/telemetry";
+import { loadPreferences, savePreferences } from "../utils/storage";
 
 const API_BASE = "http://localhost:8080/api/v1";
 
@@ -98,22 +99,90 @@ function mapBackendAlert(ba: any): AlertItem {
 }
 
 export function useTelemetry() {
-  const [vehicles, setVehicles] = useState<Vehicle[]>(MOCK_VEHICLES);
-  const [alerts, setAlerts] = useState<AlertItem[]>(MOCK_ALERTS);
-  const [selectedAlertId, setSelectedAlertId] = useState<string>("alert_1042");
-  const [selectedVehicleId, setSelectedVehicleId] = useState<string>("P1042");
-  const [timeStep, setTimeStep] = useState<string>("Сейчас");
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [activeFilter, setActiveFilter] = useState<"all" | "critical" | "bunching">("all");
-  const [activeTab, setActiveTab] = useState<string>("hall");
+  const initialPrefs = useMemo(() => loadPreferences(), []);
+
+  const [appliedHoldingIds, setAppliedHoldingIds] = useState<string[]>(initialPrefs.appliedHoldingIds || []);
+  const [appliedScenarios, setAppliedScenarios] = useState<Record<string, string>>(initialPrefs.appliedScenarios || {});
+
+  const [vehicles, setVehicles] = useState<Vehicle[]>(() => {
+    if (initialPrefs.appliedHoldingIds && initialPrefs.appliedHoldingIds.length > 0) {
+      return MOCK_VEHICLES.map((v) => {
+        if (v.id === "P1042" || v.id === "P1043") {
+          return {
+            ...v,
+            status: "NORMAL",
+            delaySeconds: 150,
+            predictedTerminalDelayMinutes: 2.5,
+          };
+        }
+        return v;
+      });
+    }
+    return MOCK_VEHICLES;
+  });
+
+  const [alerts, setAlerts] = useState<AlertItem[]>(() => {
+    return MOCK_ALERTS.map((alt) => {
+      const isHolding = initialPrefs.appliedHoldingIds?.includes(alt.id);
+      const scenario = initialPrefs.appliedScenarios?.[alt.id];
+      if (isHolding || scenario) {
+        return {
+          ...alt,
+          recommendation: {
+            ...alt.recommendation,
+            applied: true,
+            action: scenario ? `${scenario.toUpperCase()}_APPLIED` : "HOLDING_APPLIED",
+          },
+        };
+      }
+      return alt;
+    });
+  });
+
+  const [selectedAlertId, setSelectedAlertId] = useState<string>(initialPrefs.selectedAlertId || "alert_1042");
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string>(initialPrefs.selectedVehicleId || "P1042");
+  const [timeStep, setTimeStepState] = useState<string>(initialPrefs.timeStep || "Сейчас");
+  const [searchQuery, setSearchQueryState] = useState<string>(initialPrefs.searchQuery || "");
+  const [activeFilter, setActiveFilterState] = useState<"all" | "critical" | "bunching">(initialPrefs.activeFilter || "all");
+  const [activeTab, setActiveTabState] = useState<string>(initialPrefs.activeTab || "hall");
   const [isSimPlaying, setIsSimPlaying] = useState<boolean>(true);
-  const [simSpeed, setSimSpeed] = useState<number>(1.0);
+  const [simSpeed, setSimSpeedState] = useState<number>(initialPrefs.simSpeed || 1.0);
   const [flyToTarget, setFlyToTarget] = useState<{ lat: number; lon: number; zoom?: number } | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
-  const [metrics, setMetrics] = useState(MOCK_SYSTEM_METRICS);
+  const [metrics, setMetrics] = useState(() => {
+    if (initialPrefs.appliedHoldingIds && initialPrefs.appliedHoldingIds.length > 0) {
+      return {
+        ...MOCK_SYSTEM_METRICS,
+        preventedIncidentsCount: MOCK_SYSTEM_METRICS.preventedIncidentsCount + initialPrefs.appliedHoldingIds.length,
+        activeIncidentsCount: Math.max(0, MOCK_SYSTEM_METRICS.activeIncidentsCount - initialPrefs.appliedHoldingIds.length),
+        punctualityRate: 96.2,
+      };
+    }
+    return MOCK_SYSTEM_METRICS;
+  });
 
   const prevVehiclesRef = useRef<Vehicle[]>(vehicles);
   prevVehiclesRef.current = vehicles;
+
+  const setActiveFilter = useCallback((filter: "all" | "critical" | "bunching") => {
+    setActiveFilterState(filter);
+    savePreferences({ activeFilter: filter });
+  }, []);
+
+  const setActiveTab = useCallback((tab: string) => {
+    setActiveTabState(tab);
+    savePreferences({ activeTab: tab as any });
+  }, []);
+
+  const setTimeStep = useCallback((step: string) => {
+    setTimeStepState(step);
+    savePreferences({ timeStep: step });
+  }, []);
+
+  const setSearchQuery = useCallback((query: string) => {
+    setSearchQueryState(query);
+    savePreferences({ searchQuery: query });
+  }, []);
 
   const addToast = useCallback((toast: Omit<ToastMessage, "id" | "timestamp">) => {
     const newToast: ToastMessage = {
@@ -141,27 +210,31 @@ export function useTelemetry() {
 
   const handleSelectAlert = useCallback((alertItem: AlertItem) => {
     setSelectedAlertId(alertItem.id);
+    const newVehId = alertItem.vehicleId || selectedVehicleId;
     if (alertItem.vehicleId) {
       setSelectedVehicleId(alertItem.vehicleId);
     }
+    savePreferences({ selectedAlertId: alertItem.id, selectedVehicleId: newVehId });
     setFlyToTarget({
       lat: alertItem.latitude,
       lon: alertItem.longitude,
       zoom: 14,
     });
-  }, []);
+  }, [selectedVehicleId]);
 
   const handleSelectVehicle = useCallback((vehId: string) => {
     setSelectedVehicleId(vehId);
     const linkedAlert = alerts.find((a) => a.vehicleId === vehId);
+    const newAlertId = linkedAlert ? linkedAlert.id : selectedAlertId;
     if (linkedAlert) {
       setSelectedAlertId(linkedAlert.id);
     }
+    savePreferences({ selectedVehicleId: vehId, selectedAlertId: newAlertId });
     const veh = vehicles.find((v) => v.id === vehId);
     if (veh) {
       setFlyToTarget({ lat: veh.latitude, lon: veh.longitude, zoom: 14 });
     }
-  }, [alerts, vehicles]);
+  }, [alerts, vehicles, selectedAlertId]);
 
   // Live Go Backend Synchronization (WebSocket + Polling fallback)
   useEffect(() => {
@@ -289,6 +362,12 @@ export function useTelemetry() {
       // Backend standalone fallback
     }
 
+    setAppliedHoldingIds((prev) => {
+      const next = prev.includes(alertId) ? prev : [...prev, alertId];
+      savePreferences({ appliedHoldingIds: next });
+      return next;
+    });
+
     setAlerts((prevAlerts) =>
       prevAlerts.map((alt) => {
         if (alt.id === alertId) {
@@ -334,6 +413,12 @@ export function useTelemetry() {
 
   const applyScenario = useCallback(
     (scenarioId: string, title: string) => {
+      setAppliedScenarios((prev) => {
+        const next = { ...prev, [selectedAlertId]: scenarioId };
+        savePreferences({ appliedScenarios: next });
+        return next;
+      });
+
       // 1. Mark alert as resolved / scenario applied
       setAlerts((prevAlerts) =>
         prevAlerts.map((alt) => {
@@ -386,15 +471,21 @@ export function useTelemetry() {
         });
       }
     },
-    [addToast]
+    [addToast, selectedAlertId]
   );
 
   const controlSimulation = useCallback(
     async (action: "play" | "pause" | "speed" | "step" | "reset", value?: number | string) => {
       if (action === "play") setIsSimPlaying(true);
       if (action === "pause") setIsSimPlaying(false);
-      if (action === "speed" && typeof value === "number") setSimSpeed(value);
-      if (action === "step" && typeof value === "string") setTimeStep(value);
+      if (action === "speed" && typeof value === "number") {
+        setSimSpeedState(value);
+        savePreferences({ simSpeed: value });
+      }
+      if (action === "step" && typeof value === "string") {
+        setTimeStepState(value);
+        savePreferences({ timeStep: value });
+      }
 
       try {
         await fetch(`${API_BASE}/simulation/control`, {
@@ -409,7 +500,7 @@ export function useTelemetry() {
         // Fallback
       }
     },
-    [addToast]
+    []
   );
 
   return {

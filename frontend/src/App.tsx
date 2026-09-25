@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useTelemetry } from "./hooks/useTelemetry";
 import { TopBar } from "./components/TopBar";
 import { AlertRadar } from "./components/AlertRadar";
@@ -9,11 +9,14 @@ import { ScenariosModal } from "./components/ScenariosModal";
 import { MareyDiagram } from "./components/MareyDiagram";
 import { DriverTerminal } from "./components/DriverTerminal";
 import { SlidersHorizontal } from "lucide-react";
+import { loadPreferences, savePreferences } from "./utils/storage";
 
 export default function App() {
+  const initialPrefs = useMemo(() => loadPreferences(), []);
   const [isScenariosOpen, setIsScenariosOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(true);
-  const [isInspectorOpen, setIsInspectorOpen] = useState(true);
+  // Светлая тема по умолчанию (theme: 'light' -> isDarkMode: false)
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(initialPrefs.theme === "dark");
+  const [isInspectorOpen, setIsInspectorOpen] = useState<boolean>(initialPrefs.isInspectorOpen);
 
   const {
     vehicles,
@@ -26,7 +29,6 @@ export default function App() {
     route,
     camera,
     timeStep,
-    setTimeStep,
     searchQuery,
     setSearchQuery,
     activeFilter,
@@ -45,14 +47,27 @@ export default function App() {
     controlSimulation,
   } = useTelemetry();
 
+  const handleToggleDarkMode = () => {
+    setIsDarkMode((prev) => {
+      const next = !prev;
+      savePreferences({ theme: next ? "dark" : "light" });
+      return next;
+    });
+  };
+
+  const handleSetInspectorOpen = (open: boolean) => {
+    setIsInspectorOpen(open);
+    savePreferences({ isInspectorOpen: open });
+  };
+
   const handleAlertClick = (alert: any) => {
     handleSelectAlert(alert);
-    setIsInspectorOpen(true);
+    handleSetInspectorOpen(true);
   };
 
   const handleVehicleClick = (id: string) => {
     handleSelectVehicle(id);
-    setIsInspectorOpen(true);
+    handleSetInspectorOpen(true);
   };
 
   return (
@@ -70,7 +85,7 @@ export default function App() {
         simSpeed={simSpeed}
         onControl={controlSimulation}
         isDarkMode={isDarkMode}
-        onToggleDarkMode={() => setIsDarkMode((prev) => !prev)}
+        onToggleDarkMode={handleToggleDarkMode}
       />
 
       {/* 2. Main Dashboard Workspace */}
@@ -131,7 +146,7 @@ export default function App() {
                   alert={selectedAlert}
                   onApplyHolding={applyHolding}
                   onOpenScenarios={() => setIsScenariosOpen(true)}
-                  onClose={() => setIsInspectorOpen(false)}
+                  onClose={() => handleSetInspectorOpen(false)}
                   isDarkMode={isDarkMode}
                 />
               </div>
@@ -139,7 +154,7 @@ export default function App() {
               /* Collapsed Inspector Button */
               <div className="absolute top-5 right-5 z-10 pointer-events-auto">
                 <button
-                  onClick={() => setIsInspectorOpen(true)}
+                  onClick={() => handleSetInspectorOpen(true)}
                   className={`px-3.5 py-2 rounded-xl border shadow-lg flex items-center gap-2 text-xs font-bold transition-all cursor-pointer backdrop-blur-md ${
                     isDarkMode
                       ? "bg-[#151D2A]/90 hover:bg-[#1C2637] border-slate-700/80 text-cyan-300"

@@ -34,7 +34,7 @@ export const Inspector: React.FC<InspectorProps> = ({
   onApplyHolding,
   onOpenScenarios,
   onClose,
-  isDarkMode = true,
+  isDarkMode = false,
 }) => {
   // Chart data
   const chartData = alert?.delayChartData?.length

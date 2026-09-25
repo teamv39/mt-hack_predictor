@@ -39,7 +39,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   isSimPlaying = true,
   simSpeed = 1,
   onControl,
-  isDarkMode = true,
+  isDarkMode = false,
   onToggleDarkMode,
 }) => {
   const [timeStr, setTimeStr] = useState<string>("07:14:00");
