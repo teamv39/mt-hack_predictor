@@ -3,14 +3,16 @@ FROM golang:alpine AS builder
 
 WORKDIR /build
 
-RUN apk add --no-cache git ca-certificates tzdata
-
+RUN apk add --no-cache ca-certificates tzdata
 COPY go.mod go.sum ./
-RUN go mod download
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /build/server ./cmd/server
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /build/server ./cmd/server
 
 # Final minimal runner image (< 20MB)
 FROM alpine:3.20
