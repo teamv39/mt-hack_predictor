@@ -1,7 +1,7 @@
 [project]
 name = "mt-hack-ml"
-version = "0.1.0"
-description = "Machine Learning & Feature Engineering pipeline for MT-Hackathon Track 3 (Bus Bunching Predictor)"
+version = "0.3.0"
+description = "ML inference & feature pipeline for MT-Hackathon Track 3 (delay MAE target_delay_s, optional DSS)"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

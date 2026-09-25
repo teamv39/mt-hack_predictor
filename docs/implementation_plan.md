@@ -1,8 +1,8 @@
 # 📋 Implementation Plan — МТ Предиктор
 
-> **Статус:** Предварительная готовность перед публикацией кейсов  
-> **Дата:** 2025-09-25  
-> **Автор:** Денис (Team Lead)
+> **Статус:** Кейс и датасет подключены; ML-схемы актуализированы под `target_delay_s` (MAE)  
+> **Дата:** 2026-09-25  
+> **Автор:** Денис (Team Lead) / Миша (ML)
 
 ---
 
@@ -49,19 +49,20 @@
 
 ---
 
-## ✅ Фаза 3 — ML Inference Service (DONE — Production-Ready)
+## ✅ Фаза 3 — ML Inference Service (DONE — схемы под официальный датасет)
 
 | # | Задача | Статус | Файл |
 |---|--------|--------|------|
-| 3.1 | Модульная архитектура сервиса и `pydantic-settings` конфиги | ✅ Done | `ml/src/core/config.py`, `logging.py` |
-| 3.2 | Pydantic v2 схемы валидации телеметрии, XAI SHAP, Holding | ✅ Done | `ml/src/schemas/` |
-| 3.3 | Инференс CatBoost (.cbm) с нативным расчетом TreeSHAP (<1мс) | ✅ Done | `ml/src/models/catboost_model.py` |
-| 3.4 | Heuristic Fallback предиктор на базе формул Велдинга/Ньюэлла | ✅ Done | `ml/src/models/fallback.py` |
-| 3.5 | ModelManager с поддержкой Hot-Reloading (`/models/reload`) | ✅ Done | `ml/src/models/manager.py` |
-| 3.6 | REST API: `/health`, `/predict`, `/predict/batch`, `/models/info` | ✅ Done | `ml/src/api/server.py`, `routes.py` |
-| 3.7 | Модульные и интеграционные тесты (pytest, 10/10 тестов) | ✅ Done | `ml/tests/` |
-| 3.8 | Скрипт обучения с TimeSeriesSplit и Huber Loss | ✅ Done | `ml/src/models/train.py` |
-| 3.9 | Готовые baseline-веса моделей CatBoost в `data/models/` | ✅ Done | `data/models/*.cbm` |
+| 3.1 | Модульная архитектура и `pydantic-settings` (v0.3.0, MAE target) | ✅ Done | `ml/src/core/config.py` |
+| 3.2 | Pydantic v2: inference + **dataset CSV** (`TrafficPoint`/`LabelPoint`/…) | ✅ Done | `ml/src/schemas/{features,dataset,prediction}.py` |
+| 3.3 | CatBoost delay regressor + TreeSHAP; classifier опционален (DSS) | ✅ Done | `ml/src/models/catboost_model.py` |
+| 3.4 | Heuristic Fallback: signed delay (персистентность `cur_dev_s`) | ✅ Done | `ml/src/models/fallback.py` |
+| 3.5 | ModelManager: достаточно regressor; hot-reload | ✅ Done | `ml/src/models/manager.py` |
+| 3.6 | REST API `/health`, `/predict`, `/predict/batch`, `/models/*` | ✅ Done | `ml/src/api/` |
+| 3.7 | Тесты под `tr_id` / `cur_dev_s` / signed delay (21 passed) | ✅ Done | `ml/tests/` |
+| 3.8 | Train pipeline: Huber + MAE, signed `target_delay_s` | ✅ Done | `ml/src/models/train.py` |
+| 3.9 | Baseline `.cbm` (синтетика; прод-обучение на `dataset/` — 7.1.x) | ✅ Done | `data/models/` |
+| 3.10 | API-контракты: MAE, submission `;`, official/legacy payload | ✅ Done | `docs/api_contracts.md` |
 
 ---
 
@@ -376,7 +377,7 @@
 | **ML** | 7.1.3 CatBoost Regressor (.cbm) | Миша | 🔴 P0 | 7.1.2 | ⏳ В плане |
 | **ML** | 7.1.4 CatBoost Submit (score $\ge 0.55$) | Миша | 🔴 P0 | 7.1.3, `validate/` | ⏳ В плане |
 | **ML** | 7.1.5 PyTorch Sequence Module | Миша | 🟡 P1 | 7.1.2 | ⏳ В плане |
-| **ML** | 7.1.6 TreeSHAP + FastAPI `/predict` | Миша | 🟡 P1 | 7.1.3 | ⏳ В плане |
+| **ML** | 7.1.6 TreeSHAP + FastAPI `/predict` | Миша | 🟡 P1 | 7.1.3 | ✅ Схемы/API готовы; ждать веса с 7.1.3 |
 | **Data** | 7.2.1 Экстрактор фичей телеметрии | Артём | 🔴 P0 | `traffic.csv` | ⏳ В плане |
 | **Data** | 7.2.2 Map-matching к остановкам | Артём | 🟡 P1 | `schedule.csv` | ⏳ В плане |
 | **Data** | 7.2.3 Расчет Headway и рисков | Артём | 🟡 P1 | 7.2.1 | ⏳ В плане |
@@ -397,7 +398,9 @@
 ## 🏗 Ключевые архитектурные инварианты
 
 1. **Строгий горизонт 10–15 минут:** Прогноз строится строго в момент $T$ для остановки, плановое время которой попадает в интервал $(T+10 \text{ мин}, T+15 \text{ мин}]$. Заглядывание в телеметрию после $T$ запрещено.
-2. **Отказоустойчивость (Graceful Degradation):** При отказе или задержке ML-сервиса (> 100 мс) Go-бэкенд возвращает прогноз по последнему известному отклонению (`cur_dev_s`) без падения системы и обрыва WebSocket.
-3. **Объяснимость обязательна (XAI):** Ни одна рекомендация не выдается диспетчеру без расшифровки весов факторов (TreeSHAP).
-4. **Легковесность контейнеров:** Финальный образ бэкенда на Alpine < 20 МБ, фронтенд на Nginx < 25 МБ, ML на Python 3.12-slim с предсказуемым временем холодного старта.
+2. **Официальный target:** signed `target_delay_s` / `predicted_delay_sec` (сек; `+` опоздание, `−` опережение). Offline-метрика — **MAE**. DSS bunching/Holding — надстройка, не score.
+3. **Отказоустойчивость (Graceful Degradation):** При отказе или задержке ML-сервиса (> 100 мс) Go-бэкенд возвращает прогноз по последнему известному отклонению (`cur_dev_s`) без падения системы и обрыва WebSocket.
+4. **Объяснимость обязательна (XAI):** Ни одна рекомендация не выдается диспетчеру без расшифровки весов факторов (TreeSHAP).
+5. **Легковесность контейнеров:** Финальный образ бэкенда на Alpine < 20 МБ, фронтенд на Nginx < 25 МБ, ML на Python 3.12-slim с предсказуемым временем холодного старта.
+6. **Совместимость payload:** `/predict` принимает official (`tr_id`, `cur_dev_s`, `sample_id`) и legacy Go (`vehicle_id`, `current_delay_sec`) через алиасы в `FeatureVector`.
 
