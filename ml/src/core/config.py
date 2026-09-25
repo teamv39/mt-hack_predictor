@@ -2,20 +2,11 @@
 
 from __future__ import annotations
 
-import os
 from functools import lru_cache
 from pathlib import Path
 from typing import List
 
-try:
-    from pydantic_settings import BaseSettings, SettingsConfigDict
-
-    _USE_PYDANTIC_SETTINGS = True
-except ImportError:
-    from pydantic import BaseModel as BaseSettings  # type: ignore
-
-    SettingsConfigDict = dict  # type: ignore
-    _USE_PYDANTIC_SETTINGS = False
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 def _repo_root() -> Path:
@@ -52,6 +43,7 @@ class Settings(BaseSettings):
     repo_root: Path = _repo_root()
     models_dir: Path = _default_models_dir()
     dataset_dir: Path = _repo_root() / "dataset"
+    competition_model_filename: str = "competition/catboost_competition.cbm"
     regressor_model_filename: str = "catboost_delay_regressor.cbm"
     classifier_model_filename: str = "catboost_bunching_classifier.cbm"
 
@@ -77,25 +69,12 @@ class Settings(BaseSettings):
     holding_risk_threshold: float = 0.50
     max_holding_duration_sec: int = 180  # hard cap from product constraints
 
-    if _USE_PYDANTIC_SETTINGS:
-        model_config = SettingsConfigDict(
-            env_file=".env",
-            env_file_encoding="utf-8",
-            env_prefix="ML_",
-            extra="ignore",
-        )
-    else:
-        def __init__(self, **kwargs):  # type: ignore[no-untyped-def]
-            super().__init__(**kwargs)
-            for key, val in os.environ.items():
-                if key.startswith("ML_"):
-                    attr = key[3:].lower()
-                    if hasattr(self, attr):
-                        field_type = type(getattr(self, attr))
-                        try:
-                            setattr(self, attr, field_type(val))
-                        except (ValueError, TypeError):
-                            pass
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_prefix="ML_",
+        extra="ignore",
+    )
 
 
 @lru_cache(maxsize=1)

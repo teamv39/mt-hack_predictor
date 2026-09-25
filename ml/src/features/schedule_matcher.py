@@ -9,10 +9,11 @@ from __future__ import annotations
 import math
 import re
 from pathlib import Path
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
+from pydantic import BaseModel, ConfigDict, Field
 
 from .time_utils import to_epoch_s
 
@@ -58,13 +59,21 @@ def angle_diff_deg(angle1: float, angle2: float) -> float:
     return 360.0 - diff if diff > 180.0 else diff
 
 
-class PlanProgress(NamedTuple):
+class PlanProgress(BaseModel):
     """Route-progress features derived from planned schedule times."""
 
-    stops_remaining: int
-    plan_time_to_target_s: Optional[float]
-    time_since_last_stop_s: Optional[float]
-    plan_sec_per_stop: Optional[float]
+    model_config = ConfigDict(frozen=True)
+
+    stops_remaining: int = Field(description="Planned stops remaining to target (T, target]")
+    plan_time_to_target_s: Optional[float] = Field(
+        default=None, description="Plan time from last passed stop to target, seconds"
+    )
+    time_since_last_stop_s: Optional[float] = Field(
+        default=None, description="Seconds since last passed stop"
+    )
+    plan_sec_per_stop: Optional[float] = Field(
+        default=None, description="plan_time_to_target_s / stops_remaining"
+    )
 
 
 class ScheduleIndex:

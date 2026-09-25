@@ -14,6 +14,7 @@ import numpy as np
 from ..core.config import get_settings
 from ..core.logging import setup_logger
 from ..features.extractor import (
+    COMPAT_FEATURE_NAMES,
     FEATURE_HUMAN_TITLES,
     MODEL_FEATURE_NAMES,
     delay_to_class,
@@ -58,6 +59,21 @@ class CatBoostPredictor(BasePredictor):
         logger.info(f"Loading CatBoost Regressor from {self.regressor_path}")
         self._regressor = CatBoostRegressor()
         self._regressor.load_model(str(self.regressor_path))
+
+        model_feats = list(getattr(self._regressor, "feature_names_", None) or [])
+        # The online pipeline can produce the 24 competition features plus the
+        # legacy/DSS compatibility columns (feature_vector_to_dict still emits
+        # them), so both model generations must load without the guard firing.
+        online_feats = set(MODEL_FEATURE_NAMES) | set(COMPAT_FEATURE_NAMES)
+        missing_in_online = [f for f in model_feats if f not in online_feats]
+        if missing_in_online:
+            raise ValueError(
+                f"Model requires features not in online pipeline: {missing_in_online}. "
+                f"Extend MODEL_FEATURE_NAMES in src/features/extractor.py or retrain with matching FEATURE_COLS."
+            )
+        extra_online = [f for f in MODEL_FEATURE_NAMES if f not in model_feats]
+        if extra_online:
+            logger.warning(f"Online pipeline has extra features not in model (ignored): {extra_online}")
 
         if self.classifier_path is not None and self.classifier_path.exists():
             try:

@@ -1,4 +1,5 @@
-"""
+"""DEMO-ONLY: uses synthetic data/sample/m3_scenario.json. Production pipeline is src/features/build_features.py. Kept for demo/test pipelines.
+
 Baseline Feature Engineering & Model Training Pipeline for MT-Hackathon Track 3.
 Designed for Artyom (Data Eng) & Misha (Lead ML) to run immediately on incoming data.
 """
