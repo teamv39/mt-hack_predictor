@@ -126,172 +126,7 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
       }`}
       data-purpose="cockpit-root"
     >
-      {/* 1. TOP HARDWARE & TELEMETRY STATUS BAR */}
-      <header
-        className={`border rounded-lg p-2.5 flex flex-wrap items-center justify-between gap-3 shadow-sm transition-colors shrink-0 ${
-          isDark
-            ? "bg-[#171f33] border-slate-700/80 text-white"
-            : "bg-white border-[#dbe2ea] text-slate-900"
-        }`}
-        data-purpose="top-navigation-telemetry"
-      >
-        {/* Left: Transport Brand & Route Ident */}
-        <div className="flex items-center gap-3">
-          {/* Moscow Transport Brand Badge */}
-          <div className="flex items-center gap-2 bg-[#d62828] text-white font-bold px-2.5 py-1 rounded text-xs tracking-wider shadow-sm">
-            <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" fill="none" r="10" stroke="currentColor" strokeWidth="2.5" />
-              <path d="M12 2a10 10 0 0 1 10 10" fill="none" stroke="#fff" strokeWidth="3" />
-            </svg>
-            <span>МОСКОВСКИЙ ТРАНСПОРТ</span>
-            <span className="text-[10px] bg-red-950/40 px-1.5 py-0.5 rounded text-red-100 font-bold">ЦОДД</span>
-          </div>
 
-          {/* Terminal & Hardware Identity */}
-          <div className={`flex items-center gap-2 border-l pl-3 ${isDark ? "border-slate-700" : "border-[#dbe2ea]"}`}>
-            <span
-              className={`font-mono text-[11px] font-bold px-2 py-0.5 rounded border ${
-                isDark
-                  ? "bg-emerald-950/80 text-emerald-300 border-emerald-700"
-                  : "bg-emerald-100 text-emerald-800 border-emerald-300"
-              }`}
-            >
-              {routeNumber}
-            </span>
-            <div className="flex flex-col">
-              <div className="text-xs font-bold flex items-center gap-2">
-                <span className={isDark ? "text-white" : "text-slate-900"}>ГРАНИТ-НАВИГАТОР v4.2</span>
-                <span className={`font-mono text-[11px] ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-                  • БОРТ {vehicleId} [КАМАЗ-6282]
-                </span>
-              </div>
-              <div className={`text-[10px] font-mono tracking-tight font-medium ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-                ЕГПТС МОСГОРТРАНС • ФИЛИАЛ СЕВЕРО-ВОСТОЧНЫЙ • ПАРК 6 • Е 143 СК 777
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Center: System Telemetry Status Badges */}
-        <div className="hidden xl:flex items-center gap-2.5 font-mono text-xs">
-          {/* Clock & Sync Status */}
-          <div
-            className={`flex items-center gap-2 px-3 py-1.5 rounded shadow-sm border ${
-              isDark
-                ? "bg-[#0b1326] border-amber-600/40 text-amber-300"
-                : "bg-[#f8fafc] border-amber-300/80 text-amber-900"
-            }`}
-          >
-            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-            <span className="font-bold tracking-wider">{liveClockStr}</span>
-            <span className="text-[10px] opacity-75 font-medium">МСК (UTC+3)</span>
-          </div>
-
-          {/* GLONASS */}
-          <div
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded shadow-sm border ${
-              isDark
-                ? "bg-[#0b1326] border-slate-700 text-slate-300"
-                : "bg-[#f8fafc] border-[#dbe2ea] text-slate-700"
-            }`}
-          >
-            <Radio className="w-3.5 h-3.5 text-sky-600" />
-            <span>
-              ГЛОНАСС: <strong className={isDark ? "text-white" : "text-slate-900"}>18 СПУТН.</strong>
-            </span>
-          </div>
-
-          {/* Protocol & Network Latency */}
-          <div
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded shadow-sm border ${
-              isDark
-                ? "bg-[#0b1326] border-slate-700 text-slate-300"
-                : "bg-[#f8fafc] border-[#dbe2ea] text-slate-700"
-            }`}
-          >
-            <span className="text-sky-700 font-bold">NDTP :9201</span>
-            <span
-              className={`text-[10px] border px-1 rounded font-bold ${
-                isDark
-                  ? "bg-sky-950 text-sky-300 border-sky-700"
-                  : "bg-sky-100 text-sky-800 border-sky-300"
-              }`}
-            >
-              12 мс
-            </span>
-          </div>
-
-          {/* Regularity Takt Quality Factor */}
-          <div
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded shadow-sm border ${
-              isDark
-                ? "bg-emerald-950/60 border-emerald-800 text-emerald-300"
-                : "bg-emerald-50 border-emerald-300 text-emerald-800"
-            }`}
-          >
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-            <span className="font-bold">96.2% ТАКТ</span>
-          </div>
-
-          {/* Failures / Incidents */}
-          <div
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded shadow-sm border ${
-              isDark
-                ? "bg-[#0b1326] border-slate-700 text-slate-300"
-                : "bg-[#f8fafc] border-[#dbe2ea] text-slate-700"
-            }`}
-          >
-            <span className={isDark ? "text-slate-400" : "text-slate-500"}>Сбои:</span>
-            <span className="text-emerald-600 font-bold">0</span>
-          </div>
-        </div>
-
-        {/* Right: Driver Info & Cockpit Mode Controls */}
-        <div className="flex items-center gap-2">
-          {/* Driver Identity */}
-          <div
-            className={`flex items-center gap-2 px-2.5 py-1 rounded text-xs shadow-sm border ${
-              isDark
-                ? "bg-[#0b1326] border-slate-700 text-slate-300"
-                : "bg-[#f8fafc] border-[#dbe2ea] text-slate-700"
-            }`}
-          >
-            <User className="w-3.5 h-3.5 text-slate-400" />
-            <div className="text-left leading-tight">
-              <div className="text-[10px] text-slate-400 font-mono font-medium">ТАБ. №08412</div>
-              <div className={`font-bold ${isDark ? "text-white" : "text-slate-900"}`}>Иванов А.В.</div>
-            </div>
-          </div>
-
-          {/* Reset Demo & Day/Night Toggle */}
-          <div className={`flex items-center rounded p-0.5 border ${isDark ? "bg-slate-800 border-slate-700" : "bg-slate-100 border-slate-300"}`}>
-            <button
-              onClick={handleResetDemo}
-              className={`px-2.5 py-1 text-xs rounded font-medium border flex items-center gap-1 transition-colors cursor-pointer shadow-sm ${
-                isDark
-                  ? "bg-slate-800 hover:bg-slate-700 border-slate-600 text-slate-300"
-                  : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700"
-              }`}
-              title="Сбросить таймер стоянки на 150 сек для повторной демонстрации"
-            >
-              <RotateCcw size={10} />
-              <span className="text-[11px] font-mono">150с</span>
-            </button>
-            <button
-              onClick={() => setInternalDarkMode(!internalDarkMode)}
-              className={`px-2.5 py-1 text-xs rounded font-bold border flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm ml-1 ${
-                !isDark
-                  ? "bg-white text-slate-900 border-slate-200"
-                  : "bg-slate-800 text-amber-300 border-slate-600"
-              }`}
-              title="Переключить День/Ночь"
-            >
-              {isDark ? <Moon size={12} className="text-amber-400" /> : <Sun size={12} className="text-amber-500" />}
-              <span className="text-[11px]">{isDark ? "Ночь" : "День"}</span>
-            </button>
-          </div>
-        </div>
-      </header>
 
       {/* 2. MAIN COCKPIT BODY (Split Grid: Left Route & Cab Telemetry, Right Directive & Holding Execution) */}
       <main className="grid grid-cols-1 lg:grid-cols-12 gap-2.5 flex-1" data-purpose="primary-cockpit-layout">
@@ -308,8 +143,15 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
                 <span className="w-2 h-2 rounded-full bg-amber-500" />
                 Текущий путевой ориентир
               </div>
-              <div className="text-[10px] bg-red-100 border border-red-300 text-red-800 px-2 py-0.5 rounded font-mono font-bold">
-                ОСТАНОВОЧНЫЙ КАРМАН
+              <div className="flex items-center gap-1.5">
+                <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${
+                  isDark ? "bg-emerald-950/80 text-emerald-300 border-emerald-800" : "bg-emerald-50 text-emerald-800 border-emerald-300"
+                }`}>
+                  {routeNumber} • БОРТ {vehicleId}
+                </span>
+                <div className="text-[10px] bg-red-100 border border-red-300 text-red-800 px-2 py-0.5 rounded font-mono font-bold">
+                  ОСТАНОВОЧНЫЙ КАРМАН
+                </div>
               </div>
             </div>
             <h1 className={`text-xl font-extrabold tracking-tight mb-1 uppercase font-sans ${isDark ? "text-white" : "text-slate-900"}`}>
@@ -538,20 +380,39 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
                     ПРИОРИТЕТ 1 (ОПЕРАТИВНЫЙ)
                   </span>
                 </div>
-                <div className="text-xs text-amber-900 font-mono mt-0.5 font-medium">
-                  Идентификатор директивы:{" "}
-                  <strong className={isDark ? "text-amber-100" : "text-amber-950"}>ЦОДД-АРД-2026-03-9941</strong> • Основание:
-                  ML-предикт пачкования T+15 мин
+                <div className="text-xs text-amber-900 font-mono mt-0.5 font-medium flex items-center gap-2 flex-wrap">
+                  <span>
+                    Идентификатор директивы:{" "}
+                    <strong className={isDark ? "text-amber-100" : "text-amber-950"}>ЦОДД-АРД-2026-03-9941</strong>
+                  </span>
+                  <span>•</span>
+                  <span>Основание: ML-предикт T+15 мин</span>
+                  <span>•</span>
+                  <span className="text-[11px] font-semibold text-slate-600">Гранит-Навигатор v4.2 (Таб. №08412 Иванов А.В.)</span>
                 </div>
               </div>
             </div>
-            <div className="text-right">
-              <span className={`text-[10px] font-mono uppercase block font-bold ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-                АСУ-РДС Автоматика
-              </span>
-              <span className="text-xs font-mono text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded font-bold inline-block">
-                ВЕРИФИЦИРОВАНО
-              </span>
+            <div className="text-right flex items-center gap-2">
+              <button
+                onClick={handleResetDemo}
+                className={`px-2 py-1 text-xs rounded font-medium border flex items-center gap-1 transition-colors cursor-pointer shadow-sm ${
+                  isDark
+                    ? "bg-slate-800 hover:bg-slate-700 border-slate-600 text-slate-300"
+                    : "bg-white hover:bg-slate-50 border-slate-300 text-slate-700"
+                }`}
+                title="Сбросить таймер стоянки на 150 сек для повторной демонстрации"
+              >
+                <RotateCcw size={10} />
+                <span className="text-[11px] font-mono">150с</span>
+              </button>
+              <div>
+                <span className={`text-[10px] font-mono uppercase block font-bold ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+                  АСУ-РДС Автоматика
+                </span>
+                <span className="text-xs font-mono text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded font-bold inline-block">
+                  ВЕРИФИЦИРОВАНО
+                </span>
+              </div>
             </div>
           </div>
 
