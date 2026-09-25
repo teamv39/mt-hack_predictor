@@ -372,14 +372,14 @@
 
 | Модуль | Задача | Ответственный | Приоритет | Зависимости | Статус |
 |---|---|---|:---:|---|:---:|
-| **ML** | 7.1.1 Baseline Submit (~0.40 score) | Миша | 🔴 P0 | `validate/points.csv` | ⏳ В плане |
-| **ML** | 7.1.2 Feature Pipeline (train/labels) | Миша / Артём | 🔴 P0 | `train/traffic.csv` | ⏳ В плане |
+| **ML** | 7.1.1 Baseline Submit (~0.40 score) | Миша | 🔴 P0 | `validate/points.csv` | ✅ Готов (`submission_baseline.csv`) |
+| **ML** | 7.1.2 Feature Pipeline (train/labels) | Миша / Артём | 🔴 P0 | `train/traffic.csv` | ✅ Скрипт готов (`build_features.py`) |
 | **ML** | 7.1.3 CatBoost Regressor (.cbm) | Миша | 🔴 P0 | 7.1.2 | ⏳ В плане |
 | **ML** | 7.1.4 CatBoost Submit (score $\ge 0.55$) | Миша | 🔴 P0 | 7.1.3, `validate/` | ⏳ В плане |
 | **ML** | 7.1.5 PyTorch Sequence Module | Миша | 🟡 P1 | 7.1.2 | ⏳ В плане |
 | **ML** | 7.1.6 TreeSHAP + FastAPI `/predict` | Миша | 🟡 P1 | 7.1.3 | ✅ Схемы/API готовы; ждать веса с 7.1.3 |
-| **Data** | 7.2.1 Экстрактор фичей телеметрии | Артём | 🔴 P0 | `traffic.csv` | ⏳ В плане |
-| **Data** | 7.2.2 Map-matching к остановкам | Артём | 🟡 P1 | `schedule.csv` | ⏳ В плане |
+| **Data** | 7.2.1 Экстрактор фичей телеметрии | Артём | 🔴 P0 | `traffic.csv` | ✅ Готов (`telemetry_cleaner.py`) |
+| **Data** | 7.2.2 Map-matching к остановкам | Артём | 🟡 P1 | `schedule.csv` | ✅ Готов (`schedule_matcher.py`) |
 | **Data** | 7.2.3 Расчет Headway и рисков | Артём | 🟡 P1 | 7.2.1 | ⏳ В плане |
 | **Backend** | 7.3.1 NDTP TCP Listener (:9201) | Денис | 🔴 P0 | `ndtp_emulator_spec.md` | ✅ Реализован (пакеты, CRC, G6CellNav00, unitId) |
 | **Backend** | 7.3.2 Интеграция с ML + Fallback | Денис | 🔴 P0 | 7.1.6 | ✅ Реализован (debounced клиент, graceful fallback) |
