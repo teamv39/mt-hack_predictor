@@ -181,3 +181,43 @@ def test_submission_file_semicolon_format():
     assert text.startswith("sample_id;prediction\n")
     assert "131672_1767670500;120.0" in text
     assert "131672_1767670800;-30.5" in text
+
+
+def test_feature_vector_tracker_and_matcher_aliases():
+    """Verifies that Go backend tracker and matcher features map seamlessly into FeatureVector."""
+    from src.features.extractor import feature_vector_to_dict
+
+    fv = FeatureVector(
+        vehicle_id="bus_99",
+        hour_of_day=14,
+        day_of_week=2,
+        cur_dev_s=85.0,
+        avg_speed_5m=22.5,
+        avg_speed_10m=19.8,
+        stop_ratio_5m=0.12,
+        distance_meters=1400.0,
+        horizon_seconds=680.0,
+        idle_time_5m=36.0,
+        speed_trend=2.7,
+        telemetry_age_s=3.5,
+        points_count_5m=40,
+    )
+
+    assert fv.tr_id == "bus_99"
+    assert fv.speed_mean_5m == 22.5
+    assert fv.speed_mean_10m == 19.8
+    assert fv.stop_ratio_window == 0.12
+    assert fv.dist_to_target_m == 1400.0
+    assert fv.horizon_sec == 680.0
+
+    d = feature_vector_to_dict(fv)
+    assert d["speed_mean_5m"] == 22.5
+    assert d["speed_mean_10m"] == 19.8
+    assert d["stop_ratio_window"] == 0.12
+    assert d["dist_to_target_m"] == 1400.0
+    assert d["horizon_sec"] == 680.0
+    assert d["idle_time_5m"] == 36.0
+    assert d["speed_trend"] == 2.7
+    assert d["telemetry_age_s"] == 3.5
+    assert d["points_count_5m"] == 40
+

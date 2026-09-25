@@ -262,34 +262,58 @@
 }
 ```
 
-**Тело запроса (legacy / Go backend, по-прежнему валидно):**
+**Тело запроса (обогащенный Go backend / `PredictEnriched` payload):**
 ```json
 {
-  "vehicle_id": "1042",
+  "vehicle_id": "1166336",
+  "tr_id": "1166336",
   "route_id": "m3",
-  "current_delay_sec": 720.0,
-  "current_headway_sec": 120.0,
-  "historical_avg_speed": 18.4,
-  "cumulative_delay_prev_stops": 420.0,
-  "weather_factor": 1.2,
-  "hour_of_day": 17,
-  "day_of_week": 4
+  "current_delay_sec": 60.0,
+  "cur_dev_s": 60.0,
+  "current_headway_sec": 480.0,
+  "historical_avg_speed": 20.0,
+  "avg_speed_window_kmh": 20.0,
+  "speed_kmh": 22.0,
+  "heading": 180.0,
+  "latitude": 55.755,
+  "longitude": 37.615,
+  "location_valid": true,
+  "weather_factor": 1.0,
+  "hour_of_day": 14,
+  "day_of_week": 1,
+  "speed_mean_5m": 18.5,
+  "avg_speed_5m": 18.5,
+  "speed_mean_10m": 17.2,
+  "avg_speed_10m": 17.2,
+  "idle_time_5m": 45.0,
+  "stop_ratio_5m": 0.15,
+  "stop_ratio_window": 0.15,
+  "speed_trend": 1.3,
+  "telemetry_age_s": 4.0,
+  "points_count_5m": 35,
+  "distance_meters": 1250.0,
+  "dist_to_target_m": 1250.0,
+  "horizon_seconds": 720.0,
+  "horizon_sec": 720.0,
+  "target_stop_id": "stop_target_1",
+  "next_stop_id": "stop_target_1",
+  "next_stop_name": "ул. Тверская, д.1",
+  "speed_needed_kmh": 6.25
 }
 ```
 
-> Алиасы: `tr_id` ↔ `vehicle_id`, `cur_dev_s` ↔ `current_delay_sec`, `heading` ↔ `bearing`.
-
-**Опциональные competition-поля (24-фичная модель, все `Optional`, default `null`):**
-
-`speed_mean_5m`, `speed_mean_10m`, `speed_std_3m`, `speed_min_3m`, `speed_max_3m`,
-`speed_trend`, `idle_time_5m`, `telemetry_age_s`, `points_count_5m`, `heading_std_3m`,
-`dist_to_target_m`, `speed_needed_kmh`, `stops_remaining`, `plan_time_to_target_s`,
-`time_since_last_stop_s`, `plan_sec_per_stop`.
-
-> Если поля не переданы, онлайн-пайплайн (`src/features/extractor.py`) достраивает их
-> из доступной телеметрии/плана с train-консистентными дефолтами (например,
-> `telemetry_age_s=999.0`, `speed_*` fallback на `speed_kmh`). Go backend может
-> продолжать слать только 13 legacy-полей — контракт обратно совместим.
+> **Алиасы и обратная совместимость:**
+> * `tr_id` ↔ `vehicle_id`
+> * `cur_dev_s` ↔ `current_delay_sec`
+> * `heading` ↔ `bearing`
+> * `speed_mean_5m` ↔ `avg_speed_5m` (из `tracker.go`)
+> * `speed_mean_10m` ↔ `avg_speed_10m` (из `tracker.go`)
+> * `stop_ratio_window` ↔ `stop_ratio_5m` (из `tracker.go`)
+> * `dist_to_target_m` ↔ `distance_meters` (из `matcher.go`)
+> * `horizon_sec` ↔ `horizon_seconds` (из `matcher.go`)
+> * `target_stop_id` ↔ `next_stop_id` (из `matcher.go`)
+>
+> Go бэкенд вычисляет и передает все 24 признака на лету через `PredictEnriched`, а Python Pydantic-схема (`FeatureVector`) прозрачно выравнивает алиасы перед подачей в CatBoost/fallback. Старые клиенты со спартанским набором из 13 полей продолжают поддерживаться без ошибок.
 
 **Ответ (200 OK):**
 ```json

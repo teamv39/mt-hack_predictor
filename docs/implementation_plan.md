@@ -342,6 +342,19 @@
 
 ---
 
+#### **Задача 7.3.7 (P0): Обогащение признаков Go бэкенда в ML API (`PredictEnriched` + 24 Features) [ВЫПОЛНЕНО]**
+* **Цель:** Устранить интеграционный разрыв между вычислением динамики телеметрии/расписания в Go и инференсом ML: передача скользящих скоростей (`AvgSpeed5m`, `AvgSpeed10m`), простоя (`IdleTime5m`, `StopRatio5m`), тренда скорости (`SpeedTrend`) и геометрии с горизонтом (`DistanceMeters`, `HorizonSeconds`) в единый JSON payload `/predict`.
+* **Файлы:**
+  * `backend/internal/mlclient/client.go` — расширение структуры `PredictRequest` (поля `avg_speed_5m`, `speed_mean_5m`, `avg_speed_10m`, `speed_mean_10m`, `idle_time_5m`, `stop_ratio_5m`, `speed_trend`, `telemetry_age_s`, `points_count_5m`, `distance_meters`, `dist_to_target_m`, `horizon_seconds`, `horizon_sec`, `target_stop_id`, `next_stop_name`, `speed_needed_kmh`), введение структуры `EnrichedFeatures` и обогащение метода `PredictEnriched`.
+  * `backend/cmd/server/main.go` — вызов `mlCli.PredictEnriched` с заполнением `EnrichedFeatures` из реальных результатов `tracker.ComputeFeatures` и `schedMatcher.MatchVehicle`.
+  * `backend/internal/mlclient/client_test.go` — юнит-тест `TestMLClient_PredictEnrichedExtendedFeatures` со сквозной проверкой получения всех 24 признаков HTTP-сервером инференса.
+  * `ml/src/schemas/features.py` — поддержка алиасов (`avg_speed_5m` ↔ `speed_mean_5m`, `distance_meters` ↔ `dist_to_target_m`, `horizon_seconds` ↔ `horizon_sec`, `stop_ratio_5m` ↔ `stop_ratio_window`) в Pydantic `_align_aliases`.
+  * `ml/tests/test_schemas.py` — проверка корректности маппинга алиасов `test_feature_vector_tracker_and_matcher_aliases`.
+  * `docs/api_contracts.md` — фиксация обогащенного контракта и таблицы алиасов.
+* **DoD:** `go test ./...` и `uv run pytest` проходят без ошибок; `make check` успешен; все вычисленные признаки корректно доставляются в ML API.
+
+---
+
 ### 🎨 7.4 — Диспетчерский BI-Дашборд (Кирилл) · Критерий 4 (0–6 баллов)
 
 #### **Задача 7.4.1 (P0): Карточка инцидента по стандарту ЦОДД**
@@ -539,6 +552,7 @@
 | **Backend** | 7.3.5 Schedule, Headway & Alerts | Денис | 🔴 P0 | 7.3.1, 7.3.2 | ✅ Реализован (привязка к расписанию, интервалы, алерты, Holding) |
 | **Backend** | 7.3.6 What-If & Business KPIs | Денис | 🟡 P1 | 7.3.5 | ✅ Реализован (Welding formula, KPIs, NDTP 1-click, /stops) |
 | **Backend** | 7.3.7 Паспорт бэкенда и микробенчмарки | Денис | 🔴 P0 | `backend/internal/...` | ✅ Реализован (`docs/backend_and_telemetry_guide.md`, бенчмарки ns/op, 0 allocs) |
+| **Backend** | 7.3.8 Обогащение признаков Go $\to$ ML (`PredictEnriched`) | Денис | 🔴 P0 | 7.3.2, 7.3.5 | ✅ Реализован (`PredictRequest` + 24 features, `tracker`/`matcher` интеграция) |
 | **Frontend** | 7.4.1 Карточка инцидента по ТЗ | Кирилл | 🔴 P0 | `Inspector.tsx` | ✅ Реализован (таймер горизонта, SHAP-факторы, декомпозиция) |
 | **Frontend** | 7.4.2 Светофорная шкала рисков | Кирилл | 🔴 P0 | `MapView.tsx` | ✅ Реализован (светлая карта CartoDB Positron, цвета бортов, связка пачкования) |
 | **Frontend** | 7.4.3 Actionable UI (Holding) | Кирилл | 🟡 P1 | `Inspector.tsx` | ✅ Реализован (кнопка Holding, Recharts график План vs Без мер vs С ИИ) |
