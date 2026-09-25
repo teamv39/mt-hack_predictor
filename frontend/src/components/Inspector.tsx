@@ -39,11 +39,11 @@ export const Inspector: React.FC<InspectorProps> = ({
   const shapFactors = alert.shapFactors;
 
   return (
-    <aside className="w-[400px] h-full max-h-[calc(100vh-100px)] flex flex-col bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200 shadow-2xl overflow-hidden pointer-events-auto shrink-0">
+    <aside className="w-[400px] h-full flex flex-col bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200 shadow-2xl overflow-hidden pointer-events-auto shrink-0">
       {/* Scrollable Container with 4 Distinct Card Blocks */}
-      <div className="flex-1 flex flex-col p-3 overflow-y-auto scrollbar-thin pb-6">
+      <div className="p-3 flex flex-col gap-2.5 overflow-y-auto max-h-[calc(100vh-120px)] scrollbar-thin">
         {/* 1. Блок борта (Header card) */}
-        <div className="bg-slate-50/80 rounded-xl p-3 border border-slate-200 mb-2.5">
+        <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 shadow-xs">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h2 className="text-base font-extrabold text-slate-900">
@@ -58,13 +58,13 @@ export const Inspector: React.FC<InspectorProps> = ({
             </button>
           </div>
 
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-slate-500 mt-0.5">
             Рейс: {vehicle.routeId} ({vehicle.routeName})
           </p>
 
           {/* Status banner */}
           <div
-            className={`mt-2 p-2 rounded-lg text-xs font-medium flex items-center gap-1.5 ${
+            className={`mt-1.5 p-2 rounded-lg text-xs font-medium flex items-center gap-1.5 ${
               isApplied
                 ? "bg-emerald-50/80 border border-emerald-200 text-emerald-800"
                 : "bg-amber-50/80 border border-amber-200 text-amber-800"
@@ -85,8 +85,8 @@ export const Inspector: React.FC<InspectorProps> = ({
         </div>
 
         {/* 2. Блок «План vs Прогноз» (Chart card) */}
-        <div className="bg-slate-50/80 rounded-xl p-3 border border-slate-200 mb-2.5">
-          <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center justify-between">
+        <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 shadow-xs">
+          <div className="mb-2 text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <TrendingUp size={14} className="text-blue-600" />
               <span>ПЛАН VS ПРОГНОЗ ЗАДЕРЖКИ</span>
@@ -96,8 +96,8 @@ export const Inspector: React.FC<InspectorProps> = ({
             </span>
           </div>
 
-          <div className="w-full h-[160px] -ml-2">
-            <ResponsiveContainer width="100%" height={160}>
+          <div className="w-full h-[155px] -ml-2">
+            <ResponsiveContainer width="100%" height={155}>
               <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                 <XAxis
@@ -167,7 +167,7 @@ export const Inspector: React.FC<InspectorProps> = ({
           </div>
 
           {/* Compact Legend at bottom */}
-          <div className="flex items-center justify-between text-[10px] text-slate-500 border-t border-slate-200/80 pt-2 px-1 mt-1">
+          <div className="flex items-center justify-between text-[10px] text-slate-500 border-t border-slate-200/80 pt-2 px-1 mt-2">
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 bg-slate-400 rounded-full"></span>
               <span>План</span>
@@ -184,8 +184,8 @@ export const Inspector: React.FC<InspectorProps> = ({
         </div>
 
         {/* 3. Блок «Факторный анализ (SHAP)» (XAI card) */}
-        <div className="bg-slate-50/80 rounded-xl p-3 border border-slate-200 mb-2.5">
-          <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center justify-between">
+        <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 shadow-xs">
+          <div className="mb-2 text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <Cpu size={14} className="text-blue-600" />
               <span>ФАКТОРНЫЙ АНАЛИЗ (SHAP)</span>
@@ -195,7 +195,7 @@ export const Inspector: React.FC<InspectorProps> = ({
             </span>
           </div>
 
-          <div className="space-y-2.5 mt-2">
+          <div className="space-y-2 mt-2">
             {shapFactors.map((factor, idx) => {
               let barColor = "bg-rose-500";
               const titleLower = factor.title.toLowerCase();
@@ -213,9 +213,9 @@ export const Inspector: React.FC<InspectorProps> = ({
                       {factor.delayMinutes > 0 ? `+${factor.delayMinutes.toFixed(1)}` : factor.delayMinutes.toFixed(1)} мин ({factor.percent}%)
                     </span>
                   </div>
-                  <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
+                  <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
                     <div
-                      className={`h-full ${barColor} rounded-full transition-all duration-700`}
+                      className={`h-full ${barColor} rounded-full transition-all duration-500`}
                       style={{ width: `${factor.percent}%` }}
                     />
                   </div>
@@ -226,11 +226,11 @@ export const Inspector: React.FC<InspectorProps> = ({
         </div>
 
         {/* 4. Блок «Рекомендация алгоритма» (Action card) */}
-        <div className="bg-slate-50/80 rounded-xl p-3 border border-slate-200 mb-2.5">
+        <div className="bg-emerald-50/60 border border-emerald-200 rounded-xl p-3 shadow-xs">
           <div className="flex justify-between items-center text-xs font-bold text-slate-900">
             <div className="flex items-center gap-1.5">
               <Bot size={15} className="text-emerald-700" />
-              <span>Рекомендация алгоритма</span>
+              <span className="text-emerald-950 font-bold">Рекомендация алгоритма</span>
             </div>
             <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
               ЭФФЕКТ: {recommendation.effectPercent}%
@@ -241,13 +241,13 @@ export const Inspector: React.FC<InspectorProps> = ({
             {recommendation.text}
           </p>
 
-          <div className="mt-2 p-2 rounded-lg bg-emerald-50/80 border border-emerald-100 flex items-start gap-1.5 text-[11px] text-emerald-900 leading-snug">
+          <div className="mt-2 p-2 rounded-lg bg-emerald-100/60 border border-emerald-200/80 flex items-start gap-1.5 text-[11px] text-emerald-950 leading-snug">
             <Info size={13} className="text-emerald-700 shrink-0 mt-0.5" />
             <span>{recommendation.infoText}</span>
           </div>
 
           {/* Infrastructure Safeguard Badges */}
-          <div className="mt-2.5 pt-2 border-t border-slate-200 flex flex-wrap gap-1.5 text-[10px]">
+          <div className="my-2 pt-2 border-t border-emerald-100 flex flex-wrap gap-1.5 text-[10px]">
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white font-medium text-slate-700 border border-slate-200 shadow-2xs">
               <span className="text-emerald-500 font-bold">✓</span> Заездной карман: Есть
             </span>
@@ -263,7 +263,7 @@ export const Inspector: React.FC<InspectorProps> = ({
           <button
             onClick={() => !isApplied && onApplyHolding(alert.id)}
             disabled={isApplied}
-            className={`w-full mt-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 rounded-lg shadow-sm flex items-center justify-center gap-2 transition-all active:scale-95 ${
+            className={`mt-2.5 w-full py-2.5 shadow-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white text-xs rounded-lg flex items-center justify-center gap-2 transition-all active:scale-95 ${
               isApplied ? "bg-emerald-700 text-white cursor-default shadow-none" : "cursor-pointer"
             }`}
           >

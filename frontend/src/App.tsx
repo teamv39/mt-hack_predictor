@@ -66,7 +66,7 @@ export default function App() {
         </div>
 
         {/* Floating Left Panel (Alert Radar) */}
-        <div className="absolute top-4 bottom-6 left-4 z-10 pointer-events-none flex flex-col">
+        <div className="absolute top-4 bottom-[260px] left-4 z-10 pointer-events-none flex flex-col">
           <AlertRadar
             alerts={alerts}
             selectedAlertId={selectedAlertId}

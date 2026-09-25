@@ -334,11 +334,11 @@ export const MapView: React.FC<MapViewProps> = ({
         </button>
       </div>
 
-      {/* Floating Bottom-Left CCTV Widget (Positioned clear of left panel) */}
-      <div className="absolute bottom-5 left-[390px] z-20 pointer-events-auto">
-        <div className="w-64 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-lg overflow-hidden">
+      {/* Floating Bottom-Left CCTV Widget */}
+      <div className="absolute bottom-20 left-4 z-20 pointer-events-auto">
+        <div className="w-64 bg-white/95 backdrop-blur-md border border-slate-200 rounded-xl shadow-lg p-2">
           {/* Header */}
-          <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+          <div className="px-2 py-1.5 bg-slate-50 rounded-lg border border-slate-200/80 flex items-center justify-between mb-1.5">
             <span className="text-[11px] font-bold text-slate-800">
               {camera.id}: {camera.location}
             </span>
@@ -348,8 +348,8 @@ export const MapView: React.FC<MapViewProps> = ({
           </div>
 
           {/* Perspective 3D traffic illustration matching screenshot */}
-          <div className="p-2.5">
-            <div className="relative w-full h-24 bg-gradient-to-b from-slate-100 to-slate-200 rounded-xl overflow-hidden border border-slate-300 flex items-center justify-center">
+          <div>
+            <div className="relative w-full h-20 bg-gradient-to-b from-slate-100 to-slate-200 rounded-lg overflow-hidden border border-slate-300 flex items-center justify-center">
               {/* Isometric roads and vehicles graphic */}
               <svg className="w-full h-full" viewBox="0 0 240 100">
                 {/* Road perspective planes */}
@@ -374,7 +374,7 @@ export const MapView: React.FC<MapViewProps> = ({
               </div>
             </div>
 
-            <div className="mt-1.5 text-[10px] text-slate-500 font-medium truncate">
+            <div className="mt-1 px-0.5 text-[10px] text-slate-500 font-medium truncate">
               {camera.footerText}
             </div>
           </div>
