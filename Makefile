@@ -1,4 +1,4 @@
-.PHONY: help backend-run backend-build frontend-dev frontend-build ml-sync ml-run check
+.PHONY: help backend-run backend-build frontend-dev frontend-build ml-sync ml-run check docker-build docker-up docker-down docker-logs
 
 help: ## Показать список доступных команд
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -27,3 +27,15 @@ check: ## Проверить компиляцию Go и сборку фронт�
 	@echo "==> Проверка Frontend..."
 	cd frontend && npm run build
 	@echo "==> Все проверки пройдены успешно!"
+
+docker-build: ## Собрать все Docker-образы проекта
+	docker compose build
+
+docker-up: ## Запустить все сервисы в Docker-контейнерах
+	docker compose up -d
+
+docker-down: ## Остановить все Docker-контейнеры
+	docker compose down
+
+docker-logs: ## Смотреть логи всех Docker-сервисов в реальном времени
+	docker compose logs -f

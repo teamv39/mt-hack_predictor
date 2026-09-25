@@ -1,0 +1,55 @@
+services:
+  # Python ML Inference Microservice (CatBoost / SHAP / FastAPI)
+  ml:
+    build:
+      context: ./ml
+      dockerfile: Dockerfile
+    container_name: mt-predictor-ml
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data:ro
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PORT=8000
+    restart: unless-stopped
+    networks:
+      - mt-network
+
+  # High-Performance Go Backend Core (Feeder / Chi / WebSocket Hub)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mt-predictor-backend
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data:ro
+    environment:
+      - PORT=8080
+      - ML_SERVICE_URL=http://ml:8000
+    depends_on:
+      - ml
+    restart: unless-stopped
+    networks:
+      - mt-network
+
+  # Situation Center Dashboard (React + Leaflet + Nginx Reverse Proxy)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mt-predictor-frontend
+    ports:
+      - "80:80"
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - mt-network
+
+networks:
+  mt-network:
+    driver: bridge
