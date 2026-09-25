@@ -86,6 +86,7 @@ data/models/**
 *.pkl
 *.joblib
 *.onnx
+data/submissions/*_debug.csv
 
 # Environment variables
 .env

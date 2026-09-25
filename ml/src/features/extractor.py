@@ -43,6 +43,23 @@ MODEL_FEATURE_NAMES = [
     "hour_cos",
 ]
 
+# Legacy/DSS 13-feature set used by the bunching classifier and fallback regressor
+LEGACY_FEATURE_NAMES = [
+    "cur_dev_s",
+    "horizon_sec",
+    "speed_kmh",
+    "avg_speed_window_kmh",
+    "stop_ratio_window",
+    "cumulative_delay_prev_stops",
+    "hour_sin",
+    "hour_cos",
+    "day_of_week",
+    "is_weekend",
+    "current_headway_sec",
+    "weather_factor",
+    "delay_to_headway_ratio",
+]
+
 # Legacy/DSS compatibility columns still emitted by feature_vector_to_dict so
 # the previous 13-feature model (and the bunching classifier) keep loading.
 COMPAT_FEATURE_NAMES = [

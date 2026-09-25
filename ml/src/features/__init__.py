@@ -1,7 +1,9 @@
 """Feature extraction and engineering tools for Moscow Transport Delay Predictor."""
 
 from .extractor import (
+    COMPAT_FEATURE_NAMES,
     FEATURE_HUMAN_TITLES,
+    LEGACY_FEATURE_NAMES,
     MODEL_FEATURE_NAMES,
     feature_vector_to_dict,
     feature_vectors_to_dataframe,
@@ -22,6 +24,8 @@ from .time_utils import to_epoch_s
 
 __all__ = [
     "MODEL_FEATURE_NAMES",
+    "LEGACY_FEATURE_NAMES",
+    "COMPAT_FEATURE_NAMES",
     "FEATURE_HUMAN_TITLES",
     "feature_vector_to_dict",
     "feature_vectors_to_dataframe",

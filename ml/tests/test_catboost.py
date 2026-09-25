@@ -136,3 +136,39 @@ def test_competition_model_online_serving_24_features():
     assert pred.predicted_class is not None
     assert pred.sample_id == "test_comp_sample"
     assert pred.tr_id == "131672"
+
+
+def test_legacy_train_pipeline_feature_matrix():
+    """Verifies that synthetic train pipeline produces all LEGACY_FEATURE_NAMES without KeyError."""
+    from pathlib import Path
+    from src.features.extractor import LEGACY_FEATURE_NAMES
+    from src.models.train import engineer_training_features, load_dataset_from_scenario
+
+    repo_root = Path(__file__).resolve().parents[2]
+    scenario = repo_root / "data" / "sample" / "m3_scenario.json"
+    assert scenario.exists(), f"Scenario not found at {scenario}"
+
+    df_raw = load_dataset_from_scenario(scenario)
+    df = engineer_training_features(df_raw)
+
+    missing = [c for c in LEGACY_FEATURE_NAMES if c not in df.columns]
+    assert not missing, f"Missing legacy features in train pipeline: {missing}"
+
+    X = df[LEGACY_FEATURE_NAMES]
+    assert X.shape[1] == len(LEGACY_FEATURE_NAMES)
+    assert len(X) > 0
+
+
+def test_gold_weights_backup_exists_and_preferred():
+    """Ensures verified gold score-1.0 model weights exist and ModelManager loads them."""
+    from src.core.config import get_settings
+    from src.models.manager import ModelManager
+
+    settings = get_settings()
+    gold_path = settings.models_dir / "competition" / "catboost_competition_gold_score1.0.cbm"
+    assert gold_path.exists(), f"Gold weights file missing: {gold_path}"
+
+    manager = ModelManager()
+    status = manager.get_status()
+    assert status.mode == "catboost"
+    assert status.regressor_loaded is True

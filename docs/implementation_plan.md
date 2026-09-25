@@ -184,8 +184,10 @@
   * **Training hygiene** (`train_competition.py`): TimeSeriesSplit-отчёт в `metrics.json` (`timeseries_cv_mae/std`, compliance AGENTS.md п.5.4, НЕ для селекции), early stopping (`early_stopping_rounds=30`, eval_set = последние 10% time-sorted строк) при финальном экспорте обеих моделей.
   * **Онлайн 24 фичи** (`extractor.py`, `schemas/features.py`): `MODEL_FEATURE_NAMES` = `FEATURE_COLS`, 16 optional-полей в `FeatureVector`, train-консистентные дефолты, русские SHAP-заголовки.
   * **Pydantic v2 compliance**: `PlanProgress` → frozen `BaseModel`, `Field(description=...)`, `Any`-аннотации, DEMO-ONLY маркеры синтетических пайплайнов.
-  * **Тесты**: новый `test_submission.py` (формат, NaN/Inf-отказ, roundtrip) + `test_competition_model_online_serving_24_features`; `uv run pytest` → 37 passed.
-* **DoD:** сабмит byte-identical (скор 1.0 не тронут), `mode=catboost` + 24 active features, fallback-каскад проверен smoke-тестами.
+  * **Защита золотых весов 1.00 (`catboost_competition_gold_score1.0.cbm`)**: верифицированные соревновательные веса зарезервированы и защищены от случайной перезаписи; `make_submission.py` и `manager.py` загружают золотую модель в первую очередь.
+  * **Починка синтетического обучения (`train.py`)**: `train.py` переведен на `LEGACY_FEATURE_NAMES` (13 фичей), предотвращая `KeyError` после расширения `MODEL_FEATURE_NAMES` до 24.
+  * **Тесты**: новый `test_submission.py` (формат, NaN/Inf-отказ, roundtrip) + `test_competition_model_online_serving_24_features` + смоук-тесты матрицы признаков `train.py` и золотых весов; `uv run pytest` → 39 passed.
+* **DoD:** сабмит byte-identical (скор 1.0 не тронут), `mode=catboost` + 24 active features, fallback-каскад проверен smoke-тестами, синтетический пайплайн `train.py` полностью работоспособен.
 
 ---
 
