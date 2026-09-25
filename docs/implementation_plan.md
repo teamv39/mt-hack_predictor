@@ -314,6 +314,18 @@
 
 ---
 
+#### **Задача 7.3.6 (P1): What-If Simulation Engine, Business KPIs & NDTP 1-Click Controller [ВЫПОЛНЕНО]**
+* **Цель:** Выполнить требования блока «Дополнительные фичи» официального описания кейса: What-If сценарный анализ, расчет формулы Велдинга, интеграция с эмулятором в 1 клик и экономический эффект.
+* **Файлы:**
+  * `backend/internal/engine/whatif.go` — сценарный движок: математика формулы Велдинга $E[W] = \frac{\bar{H}}{2}(1 + \frac{\text{Var}(H)}{\bar{H}^2})$, симуляция Holding и выпуска резервного автобуса (`POST /api/v1/what-if`).
+  * `backend/internal/engine/metrics.go` — расчет исполнительских KPI (коэффициент равномерности интервалов, пунктуальность, сэкономленные часы, экономия в рублях по ставке 450 ₽/пасс-ч `GET /api/v1/metrics/business`).
+  * `backend/internal/ndtp/client.go` — автоматический HTTP-клиент к эмулятору NDTP на `:18080` для старта/остановки потока в 1 клик (`POST /api/v1/simulation/ndtp/start`, `stop`).
+  * `backend/internal/schedule/matcher.go` — эндпоинт реальных остановок Москвы (`GET /api/v1/stops`).
+  * `backend/internal/api/openapi.json` — документация Swagger UI для всех новых эндпоинтов.
+* **DoD:** Юнит-тесты `whatif_test.go`, `metrics_test.go`, `client_test.go` проходят успешно. Все 5 эндпоинтов возвращают валидный JSON.
+
+---
+
 ### 🎨 7.4 — Диспетчерский BI-Дашборд (Кирилл) · Критерий 4 (0–6 баллов)
 
 #### **Задача 7.4.1 (P0): Карточка инцидента по стандарту ЦОДД**
@@ -402,6 +414,7 @@
 | **Backend** | 7.3.3 Swagger UI (`/swagger`) | Денис | 🔴 P0 | `backend/main.go` | ✅ Реализован (Swagger UI, /swagger/doc.json) |
 | **Backend** | 7.3.4 Docker Compose со стеком | Денис | 🟡 P1 | 7.3.1, 7.3.3 | ✅ Реализован (порты :8080, :9201, :8000, :5173, :18080) |
 | **Backend** | 7.3.5 Schedule, Headway & Alerts | Денис | 🔴 P0 | 7.3.1, 7.3.2 | ✅ Реализован (привязка к расписанию, интервалы, алерты, Holding) |
+| **Backend** | 7.3.6 What-If & Business KPIs | Денис | 🟡 P1 | 7.3.5 | ✅ Реализован (Welding formula, KPIs, NDTP 1-click, /stops) |
 | **Frontend** | 7.4.1 Карточка инцидента по ТЗ | Кирилл | 🔴 P0 | `Inspector.jsx` | ⏳ В плане (финализация таймера горизонта) |
 | **Frontend** | 7.4.2 Светофорная шкала рисков | Кирилл | 🔴 P0 | `MapView.jsx` | ✅ Реализован (цвета бортов, линия пачкования) |
 | **Frontend** | 7.4.3 Actionable UI (Holding) | Кирилл | 🟡 P1 | `Inspector.jsx` | ✅ Реализован (кнопка Holding, график траекторий) |

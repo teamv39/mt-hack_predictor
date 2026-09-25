@@ -197,6 +197,78 @@
         }
       }
     },
+    "/api/v1/what-if": {
+      "post": {
+        "tags": ["dss"],
+        "summary": "What-If intervention simulation",
+        "description": "Simulates holding strategy or reserve vehicle insertion using Welding passenger wait time formula.",
+        "operationId": "simulateWhatIf",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["action"],
+                "properties": {
+                  "action": { "type": "string", "enum": ["HOLDING", "DISPATCH_RESERVE"] },
+                  "route_id": { "type": "string", "example": "m3" },
+                  "target_vehicle_id": { "type": "string", "example": "1166336" },
+                  "hold_seconds": { "type": "integer", "example": 150 },
+                  "daily_passengers": { "type": "integer", "example": 25000 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Simulation results with passenger-hours and economic impact in rubles" }
+        }
+      }
+    },
+    "/api/v1/stops": {
+      "get": {
+        "tags": ["fleet"],
+        "summary": "List timetable stops",
+        "description": "Returns indexed bus stops from Moscow transport schedule.",
+        "operationId": "getStops",
+        "responses": {
+          "200": { "description": "Array of stops" }
+        }
+      }
+    },
+    "/api/v1/metrics/business": {
+      "get": {
+        "tags": ["system"],
+        "summary": "Executive business KPIs and economic effect",
+        "description": "Returns punctuality rate, headway uniformity, Welding passenger wait time, and daily economic savings in rubles.",
+        "operationId": "getBusinessMetrics",
+        "responses": {
+          "200": { "description": "Executive KPIs" }
+        }
+      }
+    },
+    "/api/v1/simulation/ndtp/start": {
+      "post": {
+        "tags": ["simulation"],
+        "summary": "Start official NDTP emulator stream",
+        "description": "One-click trigger configuring the NDTP emulator container on :18080 to stream live packets into :9201.",
+        "operationId": "startNdtpSimulation",
+        "responses": {
+          "200": { "description": "Streaming started" }
+        }
+      }
+    },
+    "/api/v1/simulation/ndtp/stop": {
+      "post": {
+        "tags": ["simulation"],
+        "summary": "Stop official NDTP emulator stream",
+        "operationId": "stopNdtpSimulation",
+        "responses": {
+          "200": { "description": "Streaming stopped" }
+        }
+      }
+    },
     "/ws": {
       "get": {
         "tags": ["fleet"],

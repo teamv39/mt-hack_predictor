@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -90,7 +91,14 @@ func main() {
 	mlCli := mlclient.New(mlURL)
 	log.Printf("🤖 Connected to ML service at %s", mlURL)
 
-	// 6. Initialize NDTP Ingestion Server (:9201)
+	// 6. Initialize NDTP Emulator Controller (:18080)
+	ndtpEmuURL := os.Getenv("NDTP_EMULATOR_URL")
+	if ndtpEmuURL == "" {
+		ndtpEmuURL = "http://ndtp-emu:18080"
+	}
+	ndtpCli := ndtp.NewEmulatorClient(ndtpEmuURL)
+
+	// 7. Initialize NDTP Ingestion Server (:9201)
 	ndtpPort := os.Getenv("NDTP_PORT")
 	if ndtpPort == "" {
 		ndtpPort = ":9201"
@@ -437,6 +445,109 @@ func main() {
 				"status": "ok",
 				"action": req.Action,
 			})
+		})
+
+		// Start official NDTP emulator stream (:18080 -> :9201)
+		r.Post("/simulation/ndtp/start", func(w http.ResponseWriter, r *http.Request) {
+			ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+			defer cancel()
+
+			targetHost := os.Getenv("NDTP_HOST_FOR_EMULATOR")
+			if targetHost == "" {
+				targetHost = "backend"
+			}
+
+			err := ndtpCli.StartEmulation(ctx, targetHost, 9201, []int64{1166336, 122658, 131672}, 3000)
+			if err != nil {
+				// Retry with localhost if running locally
+				err = ndtpCli.StartEmulation(ctx, "localhost", 9201, []int64{1166336, 122658, 131672}, 3000)
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			if err != nil {
+				w.WriteHeader(http.StatusServiceUnavailable)
+				json.NewEncoder(w).Encode(map[string]any{
+					"status": "error",
+					"error":  err.Error(),
+					"hint":   "Ensure ndtp-emu container is running on port 18080",
+				})
+				return
+			}
+			json.NewEncoder(w).Encode(map[string]any{
+				"status":       "started",
+				"emulator_url": ndtpEmuURL,
+				"target_host":  targetHost,
+				"target_port":  9201,
+				"units":        []int64{1166336, 122658, 131672},
+				"stream_rate":  "3s",
+			})
+		})
+
+		// Stop official NDTP emulator stream
+		r.Post("/simulation/ndtp/stop", func(w http.ResponseWriter, r *http.Request) {
+			ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+			defer cancel()
+
+			err := ndtpCli.StopEmulation(ctx, "backend", 9201)
+			w.Header().Set("Content-Type", "application/json")
+			if err != nil {
+				w.WriteHeader(http.StatusServiceUnavailable)
+				json.NewEncoder(w).Encode(map[string]any{"status": "error", "error": err.Error()})
+				return
+			}
+			json.NewEncoder(w).Encode(map[string]any{"status": "stopped"})
+		})
+
+		// What-if scenario analysis using Welding passenger waiting formula
+		r.Post("/what-if", func(w http.ResponseWriter, r *http.Request) {
+			var req engine.WhatIfRequest
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			var demoVehicles []models.Vehicle
+			if f != nil {
+				demoVehicles, _, _ = f.GetState()
+			}
+			allVehicles := fleetMgr.MergeDemo(demoVehicles)
+
+			res := engine.SimulateWhatIf(req, allVehicles)
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(res)
+		})
+
+		// Real stops from timetable index
+		r.Get("/stops", func(w http.ResponseWriter, r *http.Request) {
+			limit := 200
+			if l := r.URL.Query().Get("limit"); l != "" {
+				if n, err := strconv.Atoi(l); err == nil && n > 0 {
+					limit = n
+				}
+			}
+			stops := schedMatcher.GetAllStops(limit)
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(stops)
+		})
+
+		// Executive business KPIs and passenger economic impact
+		r.Get("/metrics/business", func(w http.ResponseWriter, r *http.Request) {
+			var demoVehicles []models.Vehicle
+			if f != nil {
+				demoVehicles, _, _ = f.GetState()
+			}
+			allVehicles := fleetMgr.MergeDemo(demoVehicles)
+			alerts := alertMgr.GetAll()
+			if f != nil {
+				_, scAlert, _ := f.GetState()
+				if scAlert != nil {
+					alerts = append(alerts, *scAlert)
+				}
+			}
+
+			kpis := engine.ComputeBusinessKPIs(allVehicles, alerts, alertMgr.PreventedCount())
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(kpis)
 		})
 	})
 
