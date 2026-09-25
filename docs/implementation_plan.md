@@ -298,6 +298,19 @@
 
 ---
 
+#### **Задача 7.3.5 (P0): In-Memory Schedule Matcher, Dynamic Headway & DSS Alerts [ВЫПОЛНЕНО]**
+* **Цель:** Выполнить прямое требование Критериев 3 и 5: сопоставление потоковой телеметрии NDTP с эталонным расписанием, расчет производных признаков (отклонение `cur_dev_s`, скользящие скорости, простой), расчет динамического Headway и генерация предиктивных алертов с рекомендациями Holding.
+* **Файлы:**
+  * `backend/internal/schedule/` (`matcher.go`, `matcher_test.go`) — WKT POINT парсер, геодезический расчет Haversine, привязка к расписанию остановок (`schedule.csv` / `schedule_plan.csv`), расчет `cur_dev_s` и оставшегося расстояния.
+  * `backend/internal/telemetry/` (`tracker.go`, `tracker_test.go`) — скользящее 15-минутное окно телеметрии, расчет средних скоростей (3м, 5м, 10м), тренда замедления и доли простоя (`speed < 2 км/ч`).
+  * `backend/internal/engine/` (`headway.go`, `headway_test.go`) — динамический расчет интервалов движения ($Headway_{curr}$, $Headway\_Ratio$) и риска схлопывания ($Headway\_Ratio < 0.35$).
+  * `backend/internal/engine/` (`alerts.go`, `alerts_test.go`) — менеджер активных алертов, XAI SHAP-факторы и применение упреждающей Holding-стратегии (`POST /api/v1/recommendations/{id}/apply`).
+  * `backend/internal/engine/integration_test.go` — сквозной тест: прием телеметрии $\to$ привязка к расписанию $\to$ оценка интервалов $\to$ предикт $\to$ алерт $\to$ применение Holding.
+  * `backend/cmd/server/main.go` — интеграция всех модулей в единый цикл обработки.
+* **DoD:** Тесты `go test ./...` проходят успешно, сквозной тест `TestEndToEndTelemetryToHoldingFlow` подтверждает работу полного пайплайна.
+
+---
+
 ### 🎨 7.4 — Диспетчерский BI-Дашборд (Кирилл) · Критерий 4 (0–6 баллов)
 
 #### **Задача 7.4.1 (P0): Карточка инцидента по стандарту ЦОДД**
@@ -384,7 +397,8 @@
 | **Backend** | 7.3.1 NDTP TCP Listener (:9201) | Денис | 🔴 P0 | `ndtp_emulator_spec.md` | ✅ Реализован (пакеты, CRC, G6CellNav00, unitId) |
 | **Backend** | 7.3.2 Интеграция с ML + Fallback | Денис | 🔴 P0 | 7.1.6 | ✅ Реализован (debounced клиент, graceful fallback) |
 | **Backend** | 7.3.3 Swagger UI (`/swagger`) | Денис | 🔴 P0 | `backend/main.go` | ✅ Реализован (Swagger UI, /swagger/doc.json) |
-| **Backend** | 7.3.4 Docker Compose со стеком | Денис | 🟡 P1 | 7.3.1, 7.3.3 | ✅ Реализован (порты :8080, :9201, :8000, :5173) |
+| **Backend** | 7.3.4 Docker Compose со стеком | Денис | 🟡 P1 | 7.3.1, 7.3.3 | ✅ Реализован (порты :8080, :9201, :8000, :5173, :18080) |
+| **Backend** | 7.3.5 Schedule, Headway & Alerts | Денис | 🔴 P0 | 7.3.1, 7.3.2 | ✅ Реализован (привязка к расписанию, интервалы, алерты, Holding) |
 | **Frontend** | 7.4.1 Карточка инцидента по ТЗ | Кирилл | 🔴 P0 | `Inspector.jsx` | ⏳ В плане |
 | **Frontend** | 7.4.2 Светофорная шкала рисков | Кирилл | 🔴 P0 | `MapView.jsx` | ⏳ В плане |
 | **Frontend** | 7.4.3 Actionable UI (Holding) | Кирилл | 🟡 P1 | `Inspector.jsx` | ⏳ В плане |

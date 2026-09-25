@@ -131,6 +131,48 @@ func (c *Client) PredictForVehicle(ctx context.Context, v models.Vehicle) Predic
 	return c.Predict(ctx, req)
 }
 
+// PredictEnriched builds a prediction request with externally computed schedule deviation, rolling speed, and headway.
+func (c *Client) PredictEnriched(
+	ctx context.Context,
+	v models.Vehicle,
+	curDevSec float64,
+	avgSpeed float64,
+	headwaySec float64,
+) PredictResponse {
+	now := v.Timestamp
+	if now.IsZero() {
+		now = time.Now()
+	}
+	dow := int(now.Weekday()) - 1
+	if dow < 0 {
+		dow = 6
+	}
+	if headwaySec <= 0 {
+		headwaySec = 480.0
+	}
+	if avgSpeed <= 0 {
+		avgSpeed = v.SpeedKmH
+	}
+	req := PredictRequest{
+		VehicleID:          v.ID,
+		TrID:               v.ID,
+		RouteID:            v.RouteID,
+		CurrentDelaySec:    curDevSec,
+		CurDevS:            curDevSec,
+		CurrentHeadwaySec:  headwaySec,
+		HistoricalAvgSpeed: avgSpeed,
+		SpeedKmh:           v.SpeedKmH,
+		Heading:            v.Bearing,
+		Latitude:           v.Latitude,
+		Longitude:          v.Longitude,
+		LocationValid:      true,
+		WeatherFactor:      1.0,
+		HourOfDay:          now.Hour(),
+		DayOfWeek:          dow,
+	}
+	return c.Predict(ctx, req)
+}
+
 // Predict posts to /predict. On timeout/error returns persistence fallback (cur_dev_s).
 // Debounces to at most one live ML call per vehicle per debounce window;
 // within the window returns the cached prediction (or fallback if none yet).
