@@ -299,8 +299,8 @@ export const MapView: React.FC<MapViewProps> = ({
       {/* 100% Leaflet Map Container */}
       <div ref={mapContainerRef} className="absolute inset-0 w-full h-full z-0" />
 
-      {/* Floating Toolbar (Top Right of Map) */}
-      <div className="absolute top-4 right-[410px] z-20 flex flex-col gap-1.5 bg-white/95 backdrop-blur-md p-1.5 rounded-xl border border-slate-200 shadow-md">
+      {/* Floating Toolbar (Positioned clear of left panel) */}
+      <div className="absolute top-4 left-[390px] xl:left-[410px] z-20 flex flex-col gap-1.5 bg-white/95 backdrop-blur-md p-1.5 rounded-xl border border-slate-200/90 shadow-lg pointer-events-auto">
         <button
           onClick={() => mapInstanceRef.current?.zoomIn()}
           className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-700 hover:bg-slate-100 transition-colors"
