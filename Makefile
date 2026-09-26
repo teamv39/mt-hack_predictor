@@ -1,4 +1,4 @@
-.PHONY: help backend-run backend-build frontend-dev frontend-build ml-sync ml-run check docker-build docker-up docker-down docker-logs
+.PHONY: help backend-run backend-build frontend-dev frontend-build ml-sync ml-run ml-test ml-docs ml-benchmark check docker-build docker-up docker-down docker-logs
 
 help: ## Показать список доступных команд
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -26,6 +26,12 @@ ml-run: ## Запустить FastAPI сервис инференса на :8000
 
 ml-test: ## Запустить тесты ML сервиса
 	cd ml && uv run pytest
+
+ml-docs: ## Сгенерировать документацию PyDoc по всем модулям ML
+	cd ml && uv run python scripts/generate_pydoc.py
+
+ml-benchmark: ## Запустить замеры производительности ML-сервиса
+	cd ml && uv run python scripts/benchmark_service.py
 
 check: ## Проверить компиляцию Go, сборку фронтенда и тесты ML
 	@echo "==> Проверка Go..."

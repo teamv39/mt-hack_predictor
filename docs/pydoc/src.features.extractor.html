@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Python: module src.features.extractor</title>
+</head><body>
+
+<table class="heading">
+<tr class="heading-text decor">
+<td class="title">&nbsp;<br><strong class="title"><a href="src.html" class="white">src</a>.<a href="src.features.html" class="white">features</a>.extractor</strong></td>
+<td class="extra"><a href=".">index</a><br><a href="file:/Users/tamara/Documents/tpu/xakaton%20transport/mt-hack_predictor/ml/src/features/extractor.py">/Users/tamara/Documents/tpu/xakaton transport/mt-hack_predictor/ml/src/features/extractor.py</a></td></tr></table>
+    <p><span class="code">Feature&nbsp;extraction&nbsp;utilities&nbsp;for&nbsp;tabular&nbsp;delay&nbsp;models.<br>
+&nbsp;<br>
+Feature&nbsp;set&nbsp;is&nbsp;centred&nbsp;on&nbsp;the&nbsp;official&nbsp;MAE&nbsp;target&nbsp;``target_delay_s``.<br>
+DSS-only&nbsp;fields&nbsp;(headway&nbsp;ratio,&nbsp;weather)&nbsp;stay&nbsp;available&nbsp;when&nbsp;the&nbsp;caller<br>
+provides&nbsp;them,&nbsp;but&nbsp;are&nbsp;no&nbsp;longer&nbsp;required&nbsp;for&nbsp;offline&nbsp;scoring.</span></p>
+<p>
+<table class="section">
+<tr class="decor pkg-content-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Modules</strong></td></tr>
+    
+<tr><td class="decor pkg-content-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><table><tr><td class="multicolumn"><a href="math.html">math</a><br>
+</td><td class="multicolumn"><a href="pandas.html">pandas</a><br>
+</td><td class="multicolumn"></td><td class="multicolumn"></td></tr></table></td></tr></table><p>
+<table class="section">
+<tr class="decor functions-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Functions</strong></td></tr>
+    
+<tr><td class="decor functions-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><dl><dt><a name="-delay_to_class"><strong>delay_to_class</strong></a>(delay_sec: 'float') -&gt; 'str'</dt><dd><span class="code">Maps&nbsp;signed&nbsp;delay&nbsp;seconds&nbsp;to&nbsp;official&nbsp;early/ontime/late&nbsp;labels.</span></dd></dl>
+ <dl><dt><a name="-feature_vector_to_dict"><strong>feature_vector_to_dict</strong></a>(fv: 'FeatureVector') -&gt; 'Dict[str, Any]'</dt><dd><span class="code">Converts&nbsp;a&nbsp;FeatureVector&nbsp;into&nbsp;an&nbsp;enriched&nbsp;flat&nbsp;dict&nbsp;for&nbsp;model&nbsp;input.</span></dd></dl>
+ <dl><dt><a name="-feature_vectors_to_dataframe"><strong>feature_vectors_to_dataframe</strong></a>(vectors: 'List[FeatureVector]') -&gt; 'pd.DataFrame'</dt><dd><span class="code">Converts&nbsp;FeatureVector&nbsp;list&nbsp;into&nbsp;a&nbsp;DataFrame&nbsp;with&nbsp;all&nbsp;model-servable&nbsp;columns.</span></dd></dl>
+</td></tr></table><p>
+<table class="section">
+<tr class="decor data-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Data</strong></td></tr>
+    
+<tr><td class="decor data-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><strong>COMPAT_FEATURE_NAMES</strong> = ['day_of_week', 'is_weekend', 'cumulative_delay_prev_stops', 'current_headway_sec', 'weather_factor', 'delay_to_headway_ratio']<br>
+<strong>Dict</strong> = typing.Dict<br>
+<strong>FEATURE_HUMAN_TITLES</strong> = {'avg_speed_window_kmh': 'Средняя скорость на окне до момента T', 'cumulative_delay_prev_stops': 'Накопленная задержка на предыдущих остановках', 'cur_dev_s': 'Текущее отклонение от графика (последняя пройденная остановка)', 'current_delay_sec': 'Текущее отставание от графика', 'current_headway_sec': 'Интервал до переднего борта (DSS)', 'day_of_week': 'День недели / пассажиропоток', 'delay_to_headway_ratio': 'Коэффициент Delay/Headway (DSS)', 'dist_to_target_m': 'Расстояние до целевой остановки', 'heading_std_3m': 'Разброс курса за 3-мин окно', 'historical_avg_speed': 'Средняя скорость на перегоне', ...}<br>
+<strong>LEGACY_FEATURE_NAMES</strong> = ['cur_dev_s', 'horizon_sec', 'speed_kmh', 'avg_speed_window_kmh', 'stop_ratio_window', 'cumulative_delay_prev_stops', 'hour_sin', 'hour_cos', 'day_of_week', 'is_weekend', 'current_headway_sec', 'weather_factor', 'delay_to_headway_ratio']<br>
+<strong>List</strong> = typing.List<br>
+<strong>MODEL_FEATURE_NAMES</strong> = ['cur_dev_s', 'horizon_sec', 'speed_kmh', 'avg_speed_window_kmh', 'speed_mean_5m', 'speed_mean_10m', 'speed_std_3m', 'speed_min_3m', 'speed_max_3m', 'speed_trend', 'stop_ratio_window', 'idle_time_5m', 'telemetry_age_s', 'points_count_5m', 'heading_std_3m', 'dist_to_target_m', 'speed_needed_kmh', 'stops_remaining', 'plan_time_to_target_s', 'time_since_last_stop_s', ...]<br>
+<strong>__annotations__</strong> = {'FEATURE_HUMAN_TITLES': 'Dict[str, str]', '_DEFAULTS': 'Dict[str, float]'}</td></tr></table>
+</body></html>

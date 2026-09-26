@@ -1,4 +1,4 @@
-# 🔌 Спецификация API Контрактов (API Contracts)
+# Спецификация API Контрактов (API Contracts)
 
 ## 1. REST API (Go Backend Core :8080)
 

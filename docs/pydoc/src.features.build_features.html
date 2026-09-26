@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Python: module src.features.build_features</title>
+</head><body>
+
+<table class="heading">
+<tr class="heading-text decor">
+<td class="title">&nbsp;<br><strong class="title"><a href="src.html" class="white">src</a>.<a href="src.features.html" class="white">features</a>.build_features</strong></td>
+<td class="extra"><a href=".">index</a><br><a href="file:/Users/tamara/Documents/tpu/xakaton%20transport/mt-hack_predictor/ml/src/features/build_features.py">/Users/tamara/Documents/tpu/xakaton transport/mt-hack_predictor/ml/src/features/build_features.py</a></td></tr></table>
+    <p><span class="code">Feature&nbsp;Pipeline&nbsp;for&nbsp;Moscow&nbsp;Transport&nbsp;Delay&nbsp;Predictor.<br>
+&nbsp;<br>
+Extracts&nbsp;tabular&nbsp;feature&nbsp;matrices&nbsp;from&nbsp;raw&nbsp;telemetry&nbsp;(traffic.csv),<br>
+schedules&nbsp;(schedule.csv),&nbsp;and&nbsp;target&nbsp;labels&nbsp;(labels_train/test&nbsp;or&nbsp;validate/points)<br>
+with&nbsp;STRICT&nbsp;ZERO&nbsp;DATA&nbsp;LEAKAGE&nbsp;(event_time&nbsp;&lt;=&nbsp;T).</span></p>
+<p>
+<table class="section">
+<tr class="decor pkg-content-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Modules</strong></td></tr>
+    
+<tr><td class="decor pkg-content-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><table><tr><td class="multicolumn"><a href="argparse.html">argparse</a><br>
+<a href="logging.html">logging</a><br>
+</td><td class="multicolumn"><a href="math.html">math</a><br>
+<a href="numpy.html">numpy</a><br>
+</td><td class="multicolumn"><a href="pandas.html">pandas</a><br>
+<a href="sys.html">sys</a><br>
+</td><td class="multicolumn"></td></tr></table></td></tr></table><p>
+<table class="section">
+<tr class="decor index-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Classes</strong></td></tr>
+    
+<tr><td class="decor index-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><dl>
+<dt class="heading-text"><a href="builtins.html#object">builtins.object</a>
+</dt><dd>
+<dl>
+<dt class="heading-text"><a href="src.features.build_features.html#TelemetryVehicleIndex">TelemetryVehicleIndex</a>
+</dt></dl>
+</dd>
+</dl>
+ <p>
+<table class="section">
+<tr class="decor title-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><a name="TelemetryVehicleIndex">class <strong>TelemetryVehicleIndex</strong></a>(<a href="builtins.html#object">builtins.object</a>)</td></tr>
+    
+<tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
+<td class="decor title-decor" colspan=2><span class="code"><a href="#TelemetryVehicleIndex">TelemetryVehicleIndex</a>(traffic_df:&nbsp;'pd.DataFrame')&nbsp;-&amp;gt;&nbsp;'None'<br>
+&nbsp;<br>
+Pre-indexed,&nbsp;sorted&nbsp;telemetry&nbsp;arrays&nbsp;for&nbsp;ultra-fast&nbsp;slicing&nbsp;per&nbsp;vehicle.<br>&nbsp;</span></td></tr>
+<tr><td>&nbsp;</td>
+<td class="singlecolumn">Methods defined here:<br>
+<dl><dt><a name="TelemetryVehicleIndex-__init__"><strong>__init__</strong></a>(self, traffic_df: 'pd.DataFrame') -&gt; 'None'</dt><dd><span class="code">Groups&nbsp;traffic&nbsp;DataFrame&nbsp;by&nbsp;vehicle&nbsp;ID&nbsp;into&nbsp;sorted&nbsp;numeric&nbsp;numpy&nbsp;arrays.</span></dd></dl>
+
+<dl><dt><a name="TelemetryVehicleIndex-has_vehicle"><strong>has_vehicle</strong></a>(self, tr_id: 'int') -&gt; 'bool'</dt></dl>
+
+<dl><dt><a name="TelemetryVehicleIndex-slice_before_T"><strong>slice_before_T</strong></a>(self, tr_id: 'int', t_epoch_sec: 'int') -&gt; 'Optional[Dict[str, np.ndarray]]'</dt><dd><span class="code">Returns&nbsp;all&nbsp;telemetry&nbsp;records&nbsp;strictly&nbsp;on&nbsp;or&nbsp;before&nbsp;T&nbsp;(event_time&nbsp;&lt;=&nbsp;T).</span></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
+</dl>
+</td></tr></table></td></tr></table><p>
+<table class="section">
+<tr class="decor functions-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Functions</strong></td></tr>
+    
+<tr><td class="decor functions-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><dl><dt><a name="-extract_features_for_sample"><strong>extract_features_for_sample</strong></a>(sample_row: 'pd.Series', telemetry_index: 'TelemetryVehicleIndex', schedule_index: 'Optional[ScheduleIndex]') -&gt; 'Dict[str, Any]'</dt><dd><span class="code">Generates&nbsp;an&nbsp;enriched&nbsp;feature&nbsp;dict&nbsp;for&nbsp;a&nbsp;single&nbsp;(tr_id,&nbsp;T)&nbsp;prediction&nbsp;point.</span></dd></dl>
+ <dl><dt><a name="-main"><strong>main</strong></a>() -&gt; 'None'</dt></dl>
+ <dl><dt><a name="-process_dataset_split"><strong>process_dataset_split</strong></a>(split: 'str', dataset_root: 'Union[str, Path]' = 'dataset', output_dir: 'Union[str, Path]' = 'data/processed') -&gt; 'Path'</dt><dd><span class="code">Builds&nbsp;features&nbsp;for&nbsp;a&nbsp;given&nbsp;split&nbsp;('train',&nbsp;'test',&nbsp;or&nbsp;'validate').</span></dd></dl>
+</td></tr></table><p>
+<table class="section">
+<tr class="decor data-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Data</strong></td></tr>
+    
+<tr><td class="decor data-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><strong>Dict</strong> = typing.Dict<br>
+<strong>List</strong> = typing.List<br>
+<strong>Optional</strong> = typing.Optional<br>
+<strong>Tuple</strong> = typing.Tuple<br>
+<strong>Union</strong> = typing.Union<br>
+<strong>logger</strong> = &lt;Logger build_features (INFO)&gt;</td></tr></table>
+</body></html>

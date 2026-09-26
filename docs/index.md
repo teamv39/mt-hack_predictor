@@ -20,6 +20,8 @@
 | 📊 **[dataset_spec.md](dataset_spec.md)** | **Миша / Артём** | Полное описание структуры датасета (train/test/validate, labels, submission.csv, метрика MAE / score). |
 | 📡 **[ndtp_emulator_spec.md](ndtp_emulator_spec.md)** | **Денис / Артём** | Спецификация бинарного протокола NDTP и REST-API эмулятора телеметрии (G6CellNav00, TCP handshake, порты). |
 | ⚡ **[backend_and_telemetry_guide.md](backend_and_telemetry_guide.md)** | **Денис / Эксперты Go** | Технический паспорт Go-бэкенда: парсер NDTP TCP (:9201), In-Memory матчер 5 558 остановок (88 нс), формула Велдинга (5.5 нс) и микробенчмарки. |
+| ⚡ **[ml_performance.md](ml_performance.md)** | **Миша / Жюри** | Паспорт производительности ML-сервиса: бенчмарки CatBoost и TreeSHAP, пакетное масштабирование, сетевые замеры FastAPI и расчет под 8 000 ТС Москвы (Критерий 5). |
+| 📖 **[pydoc.md](pydoc.md)** | **Миша / Разработчики** | Справочник модулей ML-сервиса (PyDoc): сгенерированная HTML-документация по 28 модулям, архитектура пакета и команды запуска интерактивного сервера. |
 | 📋 **[implementation_plan.md](implementation_plan.md)** | **Вся команда** | План реализации: аудит выполненных фаз, сводка готовности по компонентам, TODO для Фазы 7. |
 
 ---

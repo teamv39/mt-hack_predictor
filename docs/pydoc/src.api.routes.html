@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Python: module src.api.routes</title>
+</head><body>
+
+<table class="heading">
+<tr class="heading-text decor">
+<td class="title">&nbsp;<br><strong class="title"><a href="src.html" class="white">src</a>.<a href="src.api.html" class="white">api</a>.routes</strong></td>
+<td class="extra"><a href=".">index</a><br><a href="file:/Users/tamara/Documents/tpu/xakaton%20transport/mt-hack_predictor/ml/src/api/routes.py">/Users/tamara/Documents/tpu/xakaton transport/mt-hack_predictor/ml/src/api/routes.py</a></td></tr></table>
+    <p><span class="code">API&nbsp;route&nbsp;definitions&nbsp;for&nbsp;prediction&nbsp;and&nbsp;diagnostics.</span></p>
+<p>
+<table class="section">
+<tr class="decor pkg-content-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Modules</strong></td></tr>
+    
+<tr><td class="decor pkg-content-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><table><tr><td class="multicolumn"><a href="starlette.status.html">starlette.status</a><br>
+</td><td class="multicolumn"><a href="time.html">time</a><br>
+</td><td class="multicolumn"></td><td class="multicolumn"></td></tr></table></td></tr></table><p>
+<table class="section">
+<tr class="decor functions-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Functions</strong></td></tr>
+    
+<tr><td class="decor functions-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><dl><dt><a name="-get_model_info"><strong>get_model_info</strong></a>() -&gt; src.schemas.health.ModelStatus</dt><dd><span class="code">Provides&nbsp;active&nbsp;model&nbsp;mode,&nbsp;feature&nbsp;names,&nbsp;and&nbsp;weight&nbsp;paths.</span></dd></dl>
+ <dl><dt><a name="-health_check"><strong>health_check</strong></a>() -&gt; src.schemas.health.HealthResponse</dt><dd><span class="code">Returns&nbsp;microservice&nbsp;health,&nbsp;uptime,&nbsp;and&nbsp;model&nbsp;loading&nbsp;status.</span></dd></dl>
+ <dl><dt><a name="-predict_batch"><strong>predict_batch</strong></a>(request: src.schemas.features.BatchFeatureRequest) -&gt; src.schemas.prediction.BatchPredictionResponse</dt><dd><span class="code">Batched&nbsp;inference&nbsp;endpoint&nbsp;for&nbsp;processing&nbsp;multiple&nbsp;route&nbsp;vehicles&nbsp;simultaneously.<br>
+Significantly&nbsp;minimizes&nbsp;HTTP&nbsp;overhead&nbsp;in&nbsp;high-frequency&nbsp;telemetry&nbsp;loops.</span></dd></dl>
+ <dl><dt><a name="-predict_single"><strong>predict_single</strong></a>(features: src.schemas.features.FeatureVector) -&gt; src.schemas.prediction.PredictionResponse</dt><dd><span class="code">Predicts&nbsp;signed&nbsp;delay&nbsp;(sec)&nbsp;at&nbsp;the&nbsp;target&nbsp;stop&nbsp;in&nbsp;the&nbsp;T+10…15&nbsp;min&nbsp;window<br>
+(official&nbsp;MAE&nbsp;target).&nbsp;Optionally&nbsp;returns&nbsp;DSS&nbsp;bunching/Holding&nbsp;fields&nbsp;and&nbsp;SHAP&nbsp;factors.<br>
+Accepts&nbsp;official&nbsp;dataset&nbsp;fields&nbsp;(tr_id,&nbsp;cur_dev_s)&nbsp;and&nbsp;legacy&nbsp;Go&nbsp;aliases&nbsp;(vehicle_id).</span></dd></dl>
+ <dl><dt><a name="-reload_models"><strong>reload_models</strong></a>() -&gt; src.schemas.health.ModelStatus</dt><dd><span class="code">Hot-reloads&nbsp;CatBoost&nbsp;model&nbsp;weights&nbsp;from&nbsp;disk&nbsp;without&nbsp;downtime.<br>
+Useful&nbsp;immediately&nbsp;after&nbsp;training&nbsp;completion.</span></dd></dl>
+</td></tr></table><p>
+<table class="section">
+<tr class="decor data-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Data</strong></td></tr>
+    
+<tr><td class="decor data-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><strong>logger</strong> = &lt;Logger api_routes (INFO)&gt;<br>
+<strong>router</strong> = &lt;fastapi.routing.APIRouter object&gt;</td></tr></table>
+</body></html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Python: module src.features.baseline_pipeline</title>
+</head><body>
+
+<table class="heading">
+<tr class="heading-text decor">
+<td class="title">&nbsp;<br><strong class="title"><a href="src.html" class="white">src</a>.<a href="src.features.html" class="white">features</a>.baseline_pipeline</strong></td>
+<td class="extra"><a href=".">index</a><br><a href="file:/Users/tamara/Documents/tpu/xakaton%20transport/mt-hack_predictor/ml/src/features/baseline_pipeline.py">/Users/tamara/Documents/tpu/xakaton transport/mt-hack_predictor/ml/src/features/baseline_pipeline.py</a></td></tr></table>
+    <p><span class="code">DEMO-ONLY:&nbsp;uses&nbsp;synthetic&nbsp;data/sample/m3_scenario.json.&nbsp;Production&nbsp;pipeline&nbsp;is&nbsp;src/features/build_features.py.&nbsp;Kept&nbsp;for&nbsp;demo/test&nbsp;pipelines.<br>
+&nbsp;<br>
+Baseline&nbsp;Feature&nbsp;Engineering&nbsp;&amp;&nbsp;Model&nbsp;Training&nbsp;Pipeline&nbsp;for&nbsp;MT-Hackathon&nbsp;Track&nbsp;3.<br>
+Designed&nbsp;for&nbsp;Artyom&nbsp;(Data&nbsp;Eng)&nbsp;&amp;&nbsp;Misha&nbsp;(Lead&nbsp;ML)&nbsp;to&nbsp;run&nbsp;immediately&nbsp;on&nbsp;incoming&nbsp;data.</span></p>
+<p>
+<table class="section">
+<tr class="decor pkg-content-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Modules</strong></td></tr>
+    
+<tr><td class="decor pkg-content-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><table><tr><td class="multicolumn"><a href="json.html">json</a><br>
+</td><td class="multicolumn"><a href="numpy.html">numpy</a><br>
+</td><td class="multicolumn"><a href="pandas.html">pandas</a><br>
+</td><td class="multicolumn"></td></tr></table></td></tr></table><p>
+<table class="section">
+<tr class="decor functions-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Functions</strong></td></tr>
+    
+<tr><td class="decor functions-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><dl><dt><a name="-build_features"><strong>build_features</strong></a>(df: pandas.DataFrame) -&gt; pandas.DataFrame</dt><dd><span class="code">Generates&nbsp;lag&nbsp;features,&nbsp;speed&nbsp;moving&nbsp;averages,&nbsp;and&nbsp;cyclical&nbsp;time&nbsp;features.</span></dd></dl>
+ <dl><dt><a name="-load_scenario_as_df"><strong>load_scenario_as_df</strong></a>(scenario_path: str) -&gt; pandas.DataFrame</dt><dd><span class="code">Flattens&nbsp;scenario&nbsp;JSON&nbsp;into&nbsp;a&nbsp;tabular&nbsp;DataFrame&nbsp;for&nbsp;ML&nbsp;training.</span></dd></dl>
+ <dl><dt><a name="-run_baseline_training"><strong>run_baseline_training</strong></a>(df: pandas.DataFrame)</dt><dd><span class="code">Demonstrates&nbsp;chronological&nbsp;TimeSeriesSplit&nbsp;training&nbsp;and&nbsp;SHAP&nbsp;extraction.</span></dd></dl>
+</td></tr></table>
+</body></html>

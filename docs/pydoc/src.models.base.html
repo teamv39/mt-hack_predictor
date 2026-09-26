@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Python: module src.models.base</title>
+</head><body>
+
+<table class="heading">
+<tr class="heading-text decor">
+<td class="title">&nbsp;<br><strong class="title"><a href="src.html" class="white">src</a>.<a href="src.models.html" class="white">models</a>.base</strong></td>
+<td class="extra"><a href=".">index</a><br><a href="file:/Users/tamara/Documents/tpu/xakaton%20transport/mt-hack_predictor/ml/src/models/base.py">/Users/tamara/Documents/tpu/xakaton transport/mt-hack_predictor/ml/src/models/base.py</a></td></tr></table>
+    <p><span class="code">Abstract&nbsp;base&nbsp;class&nbsp;for&nbsp;ML&nbsp;predictors.</span></p>
+<p>
+<table class="section">
+<tr class="decor index-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Classes</strong></td></tr>
+    
+<tr><td class="decor index-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><dl>
+<dt class="heading-text"><a href="abc.html#ABC">abc.ABC</a>(<a href="builtins.html#object">builtins.object</a>)
+</dt><dd>
+<dl>
+<dt class="heading-text"><a href="src.models.base.html#BasePredictor">BasePredictor</a>
+</dt></dl>
+</dd>
+</dl>
+ <p>
+<table class="section">
+<tr class="decor title-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><a name="BasePredictor">class <strong>BasePredictor</strong></a>(<a href="abc.html#ABC">abc.ABC</a>)</td></tr>
+    
+<tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
+<td class="decor title-decor" colspan=2><span class="code">Abstract&nbsp;interface&nbsp;defining&nbsp;the&nbsp;prediction&nbsp;contract.<br>&nbsp;</span></td></tr>
+<tr><td>&nbsp;</td>
+<td class="singlecolumn"><dl><dt>Method resolution order:</dt>
+<dd><a href="src.models.base.html#BasePredictor">BasePredictor</a></dd>
+<dd><a href="abc.html#ABC">abc.ABC</a></dd>
+<dd><a href="builtins.html#object">builtins.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="BasePredictor-get_status"><strong>get_status</strong></a>(self) -&gt; src.schemas.health.ModelStatus</dt><dd><span class="code">Returns&nbsp;the&nbsp;operational&nbsp;status&nbsp;of&nbsp;the&nbsp;model.</span></dd></dl>
+
+<dl><dt><a name="BasePredictor-predict_batch"><strong>predict_batch</strong></a>(self, features: List[src.schemas.features.FeatureVector]) -&gt; List[src.schemas.prediction.PredictionResponse]</dt><dd><span class="code">Runs&nbsp;batch&nbsp;inference&nbsp;for&nbsp;multiple&nbsp;vehicle&nbsp;feature&nbsp;vectors.</span></dd></dl>
+
+<dl><dt><a name="BasePredictor-predict_single"><strong>predict_single</strong></a>(self, feature: src.schemas.features.FeatureVector) -&gt; src.schemas.prediction.PredictionResponse</dt><dd><span class="code">Runs&nbsp;inference&nbsp;for&nbsp;a&nbsp;single&nbsp;vehicle&nbsp;feature&nbsp;vector.</span></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
+</dl>
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>__abstractmethods__</strong> = frozenset({'get_status', 'predict_batch', 'predict_single'})</dl>
+
+<dl><dt><strong>__annotations__</strong> = {}</dl>
+
+</td></tr></table></td></tr></table><p>
+<table class="section">
+<tr class="decor data-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Data</strong></td></tr>
+    
+<tr><td class="decor data-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><strong>List</strong> = typing.List</td></tr></table>
+</body></html>

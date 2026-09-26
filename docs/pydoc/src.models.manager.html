@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Python: module src.models.manager</title>
+</head><body>
+
+<table class="heading">
+<tr class="heading-text decor">
+<td class="title">&nbsp;<br><strong class="title"><a href="src.html" class="white">src</a>.<a href="src.models.html" class="white">models</a>.manager</strong></td>
+<td class="extra"><a href=".">index</a><br><a href="file:/Users/tamara/Documents/tpu/xakaton%20transport/mt-hack_predictor/ml/src/models/manager.py">/Users/tamara/Documents/tpu/xakaton transport/mt-hack_predictor/ml/src/models/manager.py</a></td></tr></table>
+    <p><span class="code">Model&nbsp;manager&nbsp;responsible&nbsp;for&nbsp;loading,&nbsp;hot-reloading,&nbsp;and&nbsp;serving&nbsp;predictors.</span></p>
+<p>
+<table class="section">
+<tr class="decor pkg-content-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Modules</strong></td></tr>
+    
+<tr><td class="decor pkg-content-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><table><tr><td class="multicolumn"><a href="time.html">time</a><br>
+</td><td class="multicolumn"></td><td class="multicolumn"></td><td class="multicolumn"></td></tr></table></td></tr></table><p>
+<table class="section">
+<tr class="decor index-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Classes</strong></td></tr>
+    
+<tr><td class="decor index-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><dl>
+<dt class="heading-text"><a href="builtins.html#object">builtins.object</a>
+</dt><dd>
+<dl>
+<dt class="heading-text"><a href="src.models.manager.html#ModelManager">ModelManager</a>
+</dt></dl>
+</dd>
+</dl>
+ <p>
+<table class="section">
+<tr class="decor title-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><a name="ModelManager">class <strong>ModelManager</strong></a>(<a href="builtins.html#object">builtins.object</a>)</td></tr>
+    
+<tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
+<td class="decor title-decor" colspan=2><span class="code"><a href="#ModelManager">ModelManager</a>()&nbsp;-&amp;gt;&nbsp;'None'<br>
+&nbsp;<br>
+Singleton&nbsp;model&nbsp;lifecycle&nbsp;coordinator.<br>&nbsp;</span></td></tr>
+<tr><td>&nbsp;</td>
+<td class="singlecolumn">Methods defined here:<br>
+<dl><dt><a name="ModelManager-__init__"><strong>__init__</strong></a>(self) -&gt; 'None'</dt><dd><span class="code">Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</span></dd></dl>
+
+<dl><dt><a name="ModelManager-get_status"><strong>get_status</strong></a>(self) -&gt; 'ModelStatus'</dt></dl>
+
+<dl><dt><a name="ModelManager-load_models"><strong>load_models</strong></a>(self) -&gt; 'None'</dt><dd><span class="code">Loads&nbsp;delay&nbsp;regressor&nbsp;if&nbsp;available;&nbsp;classifier&nbsp;is&nbsp;optional&nbsp;(DSS).<br>
+&nbsp;<br>
+Candidate&nbsp;chain:&nbsp;competition&nbsp;24-feature&nbsp;model&nbsp;→&nbsp;legacy&nbsp;13-feature&nbsp;model<br>
+→&nbsp;heuristic&nbsp;fallback.&nbsp;Each&nbsp;candidate&nbsp;that&nbsp;exists&nbsp;but&nbsp;fails&nbsp;to&nbsp;load<br>
+(e.g.&nbsp;feature-parity&nbsp;guard)&nbsp;is&nbsp;skipped&nbsp;with&nbsp;a&nbsp;logged&nbsp;reason,&nbsp;so&nbsp;the<br>
+service&nbsp;never&nbsp;degrades&nbsp;past&nbsp;a&nbsp;usable&nbsp;model.</span></dd></dl>
+
+<dl><dt><a name="ModelManager-predict_batch"><strong>predict_batch</strong></a>(self, features: 'List[FeatureVector]') -&gt; 'List[PredictionResponse]'</dt></dl>
+
+<dl><dt><a name="ModelManager-predict_single"><strong>predict_single</strong></a>(self, feature: 'FeatureVector') -&gt; 'PredictionResponse'</dt></dl>
+
+<dl><dt><a name="ModelManager-reload"><strong>reload</strong></a>(self) -&gt; 'ModelStatus'</dt><dd><span class="code">Hot-reloads&nbsp;models&nbsp;from&nbsp;disk&nbsp;without&nbsp;restarting&nbsp;the&nbsp;service.</span></dd></dl>
+
+<hr>
+Readonly properties defined here:<br>
+<dl><dt><strong>uptime_seconds</strong></dt>
+</dl>
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
+</dl>
+</td></tr></table></td></tr></table><p>
+<table class="section">
+<tr class="decor functions-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Functions</strong></td></tr>
+    
+<tr><td class="decor functions-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><dl><dt><a name="-get_model_manager"><strong>get_model_manager</strong></a>() -&gt; 'ModelManager'</dt><dd><span class="code">Returns&nbsp;singleton&nbsp;<a href="#ModelManager">ModelManager</a>.</span></dd></dl>
+</td></tr></table><p>
+<table class="section">
+<tr class="decor data-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Data</strong></td></tr>
+    
+<tr><td class="decor data-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><strong>List</strong> = typing.List<br>
+<strong>Optional</strong> = typing.Optional<br>
+<strong>__annotations__</strong> = {'_global_model_manager': 'Optional[ModelManager]'}<br>
+<strong>logger</strong> = &lt;Logger model_manager (INFO)&gt;</td></tr></table>
+</body></html>

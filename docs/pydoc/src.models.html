@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Python: package src.models</title>
+</head><body>
+
+<table class="heading">
+<tr class="heading-text decor">
+<td class="title">&nbsp;<br><strong class="title"><a href="src.html" class="white">src</a>.models</strong></td>
+<td class="extra"><a href=".">index</a><br><a href="file:/Users/tamara/Documents/tpu/xakaton%20transport/mt-hack_predictor/ml/src/models/__init__.py">/Users/tamara/Documents/tpu/xakaton transport/mt-hack_predictor/ml/src/models/__init__.py</a></td></tr></table>
+    <p><span class="code">Model&nbsp;predictors&nbsp;and&nbsp;management&nbsp;interfaces.</span></p>
+<p>
+<table class="section">
+<tr class="decor pkg-content-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Package Contents</strong></td></tr>
+    
+<tr><td class="decor pkg-content-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><table><tr><td class="multicolumn"><a href="src.models.base.html">base</a><br>
+<a href="src.models.catboost_model.html">catboost_model</a><br>
+</td><td class="multicolumn"><a href="src.models.fallback.html">fallback</a><br>
+<a href="src.models.make_submission.html">make_submission</a><br>
+</td><td class="multicolumn"><a href="src.models.manager.html">manager</a><br>
+<a href="src.models.train.html">train</a><br>
+</td><td class="multicolumn"><a href="src.models.train_competition.html">train_competition</a><br>
+</td></tr></table></td></tr></table><p>
+<table class="section">
+<tr class="decor index-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Classes</strong></td></tr>
+    
+<tr><td class="decor index-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><dl>
+<dt class="heading-text"><a href="abc.html#ABC">abc.ABC</a>(<a href="builtins.html#object">builtins.object</a>)
+</dt><dd>
+<dl>
+<dt class="heading-text"><a href="src.models.base.html#BasePredictor">src.models.base.BasePredictor</a>
+</dt><dd>
+<dl>
+<dt class="heading-text"><a href="src.models.catboost_model.html#CatBoostPredictor">src.models.catboost_model.CatBoostPredictor</a>
+</dt><dt class="heading-text"><a href="src.models.fallback.html#HeuristicFallbackPredictor">src.models.fallback.HeuristicFallbackPredictor</a>
+</dt></dl>
+</dd>
+</dl>
+</dd>
+<dt class="heading-text"><a href="builtins.html#object">builtins.object</a>
+</dt><dd>
+<dl>
+<dt class="heading-text"><a href="src.models.manager.html#ModelManager">src.models.manager.ModelManager</a>
+</dt></dl>
+</dd>
+</dl>
+ <p>
+<table class="section">
+<tr class="decor title-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><a name="BasePredictor">class <strong>BasePredictor</strong></a>(<a href="abc.html#ABC">abc.ABC</a>)</td></tr>
+    
+<tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
+<td class="decor title-decor" colspan=2><span class="code">Abstract&nbsp;interface&nbsp;defining&nbsp;the&nbsp;prediction&nbsp;contract.<br>&nbsp;</span></td></tr>
+<tr><td>&nbsp;</td>
+<td class="singlecolumn"><dl><dt>Method resolution order:</dt>
+<dd><a href="src.models.base.html#BasePredictor">BasePredictor</a></dd>
+<dd><a href="abc.html#ABC">abc.ABC</a></dd>
+<dd><a href="builtins.html#object">builtins.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="BasePredictor-get_status"><strong>get_status</strong></a>(self) -&gt; src.schemas.health.ModelStatus</dt><dd><span class="code">Returns&nbsp;the&nbsp;operational&nbsp;status&nbsp;of&nbsp;the&nbsp;model.</span></dd></dl>
+
+<dl><dt><a name="BasePredictor-predict_batch"><strong>predict_batch</strong></a>(self, features: List[src.schemas.features.FeatureVector]) -&gt; List[src.schemas.prediction.PredictionResponse]</dt><dd><span class="code">Runs&nbsp;batch&nbsp;inference&nbsp;for&nbsp;multiple&nbsp;vehicle&nbsp;feature&nbsp;vectors.</span></dd></dl>
+
+<dl><dt><a name="BasePredictor-predict_single"><strong>predict_single</strong></a>(self, feature: src.schemas.features.FeatureVector) -&gt; src.schemas.prediction.PredictionResponse</dt><dd><span class="code">Runs&nbsp;inference&nbsp;for&nbsp;a&nbsp;single&nbsp;vehicle&nbsp;feature&nbsp;vector.</span></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
+</dl>
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>__abstractmethods__</strong> = frozenset({'get_status', 'predict_batch', 'predict_single'})</dl>
+
+<dl><dt><strong>__annotations__</strong> = {}</dl>
+
+</td></tr></table> <p>
+<table class="section">
+<tr class="decor title-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><a name="CatBoostPredictor">class <strong>CatBoostPredictor</strong></a>(<a href="src.models.base.html#BasePredictor">src.models.base.BasePredictor</a>)</td></tr>
+    
+<tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
+<td class="decor title-decor" colspan=2><span class="code"><a href="#CatBoostPredictor">CatBoostPredictor</a>(regressor_path:&nbsp;'Path',&nbsp;classifier_path:&nbsp;'Optional[Path]'&nbsp;=&nbsp;None)<br>
+&nbsp;<br>
+Predictor&nbsp;backed&nbsp;by&nbsp;CatBoostRegressor&nbsp;(+&nbsp;optional&nbsp;Classifier).<br>&nbsp;</span></td></tr>
+<tr><td>&nbsp;</td>
+<td class="singlecolumn"><dl><dt>Method resolution order:</dt>
+<dd><a href="src.models.catboost_model.html#CatBoostPredictor">CatBoostPredictor</a></dd>
+<dd><a href="src.models.base.html#BasePredictor">src.models.base.BasePredictor</a></dd>
+<dd><a href="abc.html#ABC">abc.ABC</a></dd>
+<dd><a href="builtins.html#object">builtins.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="CatBoostPredictor-__init__"><strong>__init__</strong></a>(self, regressor_path: 'Path', classifier_path: 'Optional[Path]' = None)</dt><dd><span class="code">Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</span></dd></dl>
+
+<dl><dt><a name="CatBoostPredictor-get_status"><strong>get_status</strong></a>(self) -&gt; 'ModelStatus'</dt><dd><span class="code">Returns&nbsp;the&nbsp;operational&nbsp;status&nbsp;of&nbsp;the&nbsp;model.</span></dd></dl>
+
+<dl><dt><a name="CatBoostPredictor-predict_batch"><strong>predict_batch</strong></a>(self, features: 'List[FeatureVector]') -&gt; 'List[PredictionResponse]'</dt><dd><span class="code">Runs&nbsp;batch&nbsp;inference&nbsp;for&nbsp;multiple&nbsp;vehicle&nbsp;feature&nbsp;vectors.</span></dd></dl>
+
+<dl><dt><a name="CatBoostPredictor-predict_single"><strong>predict_single</strong></a>(self, feature: 'FeatureVector') -&gt; 'PredictionResponse'</dt><dd><span class="code">Runs&nbsp;inference&nbsp;for&nbsp;a&nbsp;single&nbsp;vehicle&nbsp;feature&nbsp;vector.</span></dd></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>__abstractmethods__</strong> = frozenset()</dl>
+
+<dl><dt><strong>__annotations__</strong> = {}</dl>
+
+<hr>
+Data descriptors inherited from <a href="src.models.base.html#BasePredictor">src.models.base.BasePredictor</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
+</dl>
+</td></tr></table> <p>
+<table class="section">
+<tr class="decor title-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><a name="HeuristicFallbackPredictor">class <strong>HeuristicFallbackPredictor</strong></a>(<a href="src.models.base.html#BasePredictor">src.models.base.BasePredictor</a>)</td></tr>
+    
+<tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
+<td class="decor title-decor" colspan=2><span class="code"><a href="#HeuristicFallbackPredictor">HeuristicFallbackPredictor</a>()&nbsp;-&amp;gt;&nbsp;'None'<br>
+&nbsp;<br>
+Fallback&nbsp;predictor&nbsp;using&nbsp;schedule&nbsp;deviation&nbsp;persistence&nbsp;+&nbsp;speed&nbsp;dampening.<br>&nbsp;</span></td></tr>
+<tr><td>&nbsp;</td>
+<td class="singlecolumn"><dl><dt>Method resolution order:</dt>
+<dd><a href="src.models.fallback.html#HeuristicFallbackPredictor">HeuristicFallbackPredictor</a></dd>
+<dd><a href="src.models.base.html#BasePredictor">src.models.base.BasePredictor</a></dd>
+<dd><a href="abc.html#ABC">abc.ABC</a></dd>
+<dd><a href="builtins.html#object">builtins.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="HeuristicFallbackPredictor-__init__"><strong>__init__</strong></a>(self) -&gt; 'None'</dt><dd><span class="code">Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</span></dd></dl>
+
+<dl><dt><a name="HeuristicFallbackPredictor-get_status"><strong>get_status</strong></a>(self) -&gt; 'ModelStatus'</dt><dd><span class="code">Returns&nbsp;the&nbsp;operational&nbsp;status&nbsp;of&nbsp;the&nbsp;model.</span></dd></dl>
+
+<dl><dt><a name="HeuristicFallbackPredictor-predict_batch"><strong>predict_batch</strong></a>(self, features: 'List[FeatureVector]') -&gt; 'List[PredictionResponse]'</dt><dd><span class="code">Runs&nbsp;batch&nbsp;inference&nbsp;for&nbsp;multiple&nbsp;vehicle&nbsp;feature&nbsp;vectors.</span></dd></dl>
+
+<dl><dt><a name="HeuristicFallbackPredictor-predict_single"><strong>predict_single</strong></a>(self, feature: 'FeatureVector') -&gt; 'PredictionResponse'</dt><dd><span class="code">Runs&nbsp;inference&nbsp;for&nbsp;a&nbsp;single&nbsp;vehicle&nbsp;feature&nbsp;vector.</span></dd></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>__abstractmethods__</strong> = frozenset()</dl>
+
+<dl><dt><strong>__annotations__</strong> = {}</dl>
+
+<hr>
+Data descriptors inherited from <a href="src.models.base.html#BasePredictor">src.models.base.BasePredictor</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
+</dl>
+</td></tr></table> <p>
+<table class="section">
+<tr class="decor title-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><a name="ModelManager">class <strong>ModelManager</strong></a>(<a href="builtins.html#object">builtins.object</a>)</td></tr>
+    
+<tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
+<td class="decor title-decor" colspan=2><span class="code"><a href="#ModelManager">ModelManager</a>()&nbsp;-&amp;gt;&nbsp;'None'<br>
+&nbsp;<br>
+Singleton&nbsp;model&nbsp;lifecycle&nbsp;coordinator.<br>&nbsp;</span></td></tr>
+<tr><td>&nbsp;</td>
+<td class="singlecolumn">Methods defined here:<br>
+<dl><dt><a name="ModelManager-__init__"><strong>__init__</strong></a>(self) -&gt; 'None'</dt><dd><span class="code">Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</span></dd></dl>
+
+<dl><dt><a name="ModelManager-get_status"><strong>get_status</strong></a>(self) -&gt; 'ModelStatus'</dt></dl>
+
+<dl><dt><a name="ModelManager-load_models"><strong>load_models</strong></a>(self) -&gt; 'None'</dt><dd><span class="code">Loads&nbsp;delay&nbsp;regressor&nbsp;if&nbsp;available;&nbsp;classifier&nbsp;is&nbsp;optional&nbsp;(DSS).<br>
+&nbsp;<br>
+Candidate&nbsp;chain:&nbsp;competition&nbsp;24-feature&nbsp;model&nbsp;→&nbsp;legacy&nbsp;13-feature&nbsp;model<br>
+→&nbsp;heuristic&nbsp;fallback.&nbsp;Each&nbsp;candidate&nbsp;that&nbsp;exists&nbsp;but&nbsp;fails&nbsp;to&nbsp;load<br>
+(e.g.&nbsp;feature-parity&nbsp;guard)&nbsp;is&nbsp;skipped&nbsp;with&nbsp;a&nbsp;logged&nbsp;reason,&nbsp;so&nbsp;the<br>
+service&nbsp;never&nbsp;degrades&nbsp;past&nbsp;a&nbsp;usable&nbsp;model.</span></dd></dl>
+
+<dl><dt><a name="ModelManager-predict_batch"><strong>predict_batch</strong></a>(self, features: 'List[FeatureVector]') -&gt; 'List[PredictionResponse]'</dt></dl>
+
+<dl><dt><a name="ModelManager-predict_single"><strong>predict_single</strong></a>(self, feature: 'FeatureVector') -&gt; 'PredictionResponse'</dt></dl>
+
+<dl><dt><a name="ModelManager-reload"><strong>reload</strong></a>(self) -&gt; 'ModelStatus'</dt><dd><span class="code">Hot-reloads&nbsp;models&nbsp;from&nbsp;disk&nbsp;without&nbsp;restarting&nbsp;the&nbsp;service.</span></dd></dl>
+
+<hr>
+Readonly properties defined here:<br>
+<dl><dt><strong>uptime_seconds</strong></dt>
+</dl>
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
+</dl>
+</td></tr></table></td></tr></table><p>
+<table class="section">
+<tr class="decor functions-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Functions</strong></td></tr>
+    
+<tr><td class="decor functions-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><dl><dt><a name="-get_model_manager"><strong>get_model_manager</strong></a>() -&gt; 'ModelManager'</dt><dd><span class="code">Returns&nbsp;singleton&nbsp;<a href="#ModelManager">ModelManager</a>.</span></dd></dl>
+</td></tr></table><p>
+<table class="section">
+<tr class="decor data-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Data</strong></td></tr>
+    
+<tr><td class="decor data-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><strong>__all__</strong> = ['BasePredictor', 'HeuristicFallbackPredictor', 'CatBoostPredictor', 'ModelManager', 'get_model_manager']</td></tr></table>
+</body></html>
