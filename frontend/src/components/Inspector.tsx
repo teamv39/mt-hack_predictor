@@ -70,13 +70,17 @@ export const Inspector: React.FC<InspectorProps> = ({
         { code: "SRP", percent: 10, delayMinutes: 0.5, title: "Интервальный сдвиг" },
       ];
 
-  const vehicleCleanId = vehicle ? vehicle.id.replace(/^P/, "") : "1042";
+  const vehicleCleanId = vehicle
+    ? vehicle.id.replace(/^P/, "")
+    : alert?.vehicleId
+    ? alert.vehicleId.replace(/^P/, "")
+    : "1042";
   const vehicleTitle = `Электробус №${vehicleCleanId}`;
   const routeBadge = vehicle
-    ? `${vehicle.routeId} • ${vehicle.routeName.split("—")[0].trim()} → ${vehicle.routeName.split("—")[1]?.trim() || "Лужники"}`
-    : `${alert?.routeNumberBadge || "м3"} • Семёновская → Лужники`;
+    ? `${vehicle.routeId} • ${vehicle.routeName.includes("—") ? vehicle.routeName.replace("—", "→") : vehicle.routeName}`
+    : `${alert?.routeNumberBadge || "м3"} • ${alert?.locationName || "Семёновская → Лужники"}`;
 
-  const targetVehId = recommendation?.targetVehicleId || "№1043";
+  const targetVehId = recommendation?.targetVehicleId || (alert?.followingVehicleId ? `№${alert.followingVehicleId.replace(/^P/, "")}` : "№1043");
   const effectPercent = recommendation?.effectPercent || 96;
   const recText =
     recommendation?.text ||
@@ -149,7 +153,7 @@ export const Inspector: React.FC<InspectorProps> = ({
               isDarkMode ? "bg-[#222226] text-zinc-400 border-white/5" : "bg-zinc-100 text-zinc-600 border-zinc-200"
             }`}
           >
-            {vehicle?.plateNumber || "В 042 АХ 777"}
+            {vehicle?.plateNumber || `А ${vehicleCleanId.slice(-3)} ТР 799`}
           </span>
         </div>
 
@@ -165,7 +169,7 @@ export const Inspector: React.FC<InspectorProps> = ({
               <span>Скорость</span>
             </div>
             <span className={`text-xs font-bold font-mono ${isDarkMode ? "text-zinc-100" : "text-zinc-900"}`}>
-              {vehicle?.speedKmh ?? 14} км/ч
+              {vehicle?.speedKmh ?? (alert?.category === "critical" ? 11 : 19)} км/ч
             </span>
           </div>
 
@@ -179,7 +183,7 @@ export const Inspector: React.FC<InspectorProps> = ({
               <span>Задержка</span>
             </div>
             <span className="text-xs font-bold font-mono text-rose-400">
-              +{Math.round((vehicle?.delaySeconds ?? 180) / 60)} мин
+              +{vehicle ? Math.round(vehicle.delaySeconds / 60) : (alert?.urgencyMinutes ?? 6)} мин
             </span>
           </div>
 
@@ -193,7 +197,7 @@ export const Inspector: React.FC<InspectorProps> = ({
               <span>Остановка</span>
             </div>
             <span className={`text-[11px] font-semibold truncate max-w-full ${isDarkMode ? "text-zinc-200" : "text-zinc-700"}`}>
-              {vehicle?.nextStop || "м. Бауманская"}
+              {vehicle?.nextStop || alert?.recommendation?.stopName?.replace(/[«»]/g, "") || alert?.locationName || "м. Бауманская"}
             </span>
           </div>
         </div>

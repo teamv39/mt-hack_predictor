@@ -110,12 +110,19 @@ export function useTelemetry() {
   const [vehicles, setVehicles] = useState<Vehicle[]>(() => {
     if (initialPrefs.appliedHoldingIds && initialPrefs.appliedHoldingIds.length > 0) {
       return MOCK_VEHICLES.map((v) => {
-        if (v.id === "P1042" || v.id === "P1043") {
+        const isMatched = MOCK_ALERTS.some(
+          (a) =>
+            initialPrefs.appliedHoldingIds?.includes(a.id) &&
+            (a.vehicleId === v.id ||
+              a.followingVehicleId === v.id ||
+              a.recommendation?.targetVehicleId?.includes(v.id.replace(/^P/, "")))
+        );
+        if (isMatched) {
           return {
             ...v,
             status: "NORMAL",
-            delaySeconds: 150,
-            predictedTerminalDelayMinutes: 2.5,
+            delaySeconds: 120,
+            predictedTerminalDelayMinutes: 2,
           };
         }
         return v;
@@ -208,8 +215,45 @@ export function useTelemetry() {
   }, [alerts, selectedAlertId]);
 
   const selectedVehicle = useMemo(() => {
-    return vehicles.find((v) => v.id === selectedVehicleId) || vehicles[0] || null;
-  }, [vehicles, selectedVehicleId]);
+    const normalize = (id?: string) => (id ? id.replace(/^P/, "").trim() : "");
+    const targetVehId = selectedVehicleId || selectedAlert?.vehicleId;
+    const cleanTargetId = normalize(targetVehId);
+
+    // 1. Direct or normalized match in vehicles list
+    const found = vehicles.find(
+      (v) => v.id === targetVehId || normalize(v.id) === cleanTargetId
+    );
+    if (found) return found;
+
+    // 2. If an alert is selected, try matching by alert's vehicleId
+    if (selectedAlert?.vehicleId) {
+      const alertVehClean = normalize(selectedAlert.vehicleId);
+      const byAlert = vehicles.find((v) => normalize(v.id) === alertVehClean);
+      if (byAlert) return byAlert;
+
+      // Synthesize vehicle representation from selectedAlert if not in list
+      const cleanNum = selectedAlert.vehicleId.replace(/\D/g, "") || "0814";
+      return {
+        id: selectedAlert.vehicleId.startsWith("P") ? selectedAlert.vehicleId : `P${selectedAlert.vehicleId}`,
+        badgeLabel: `${selectedAlert.vehicleId.replace(/^P/, "")} · ${selectedAlert.routeNumberBadge}`,
+        plateNumber: `А ${cleanNum.slice(-3)} ТР 799`,
+        model: "ЛиАЗ-6274 (Электробус)",
+        routeId: selectedAlert.routeId || "т88",
+        routeName: `Маршрут ${selectedAlert.routeNumberBadge}`,
+        status: (selectedAlert.category === "critical" ? "DELAYED" : "BUNCHING_RISK") as const,
+        delaySeconds: (selectedAlert.urgencyMinutes || 6) * 60,
+        predictedTerminalDelayMinutes: selectedAlert.urgencyMinutes || 6,
+        speedKmh: 19,
+        latitude: selectedAlert.latitude,
+        longitude: selectedAlert.longitude,
+        heading: 90,
+        currentStop: selectedAlert.locationName.split("→")[0]?.trim() || selectedAlert.locationName,
+        nextStop: selectedAlert.recommendation?.stopName?.replace(/[«»]/g, "") || selectedAlert.locationName,
+      };
+    }
+
+    return vehicles[0] || null;
+  }, [vehicles, selectedVehicleId, selectedAlert]);
 
   const handleSelectAlert = useCallback((alertItem: AlertItem) => {
     setSelectedAlertId(alertItem.id);
@@ -227,13 +271,16 @@ export function useTelemetry() {
 
   const handleSelectVehicle = useCallback((vehId: string) => {
     setSelectedVehicleId(vehId);
-    const linkedAlert = alerts.find((a) => a.vehicleId === vehId);
+    const cleanId = vehId.replace(/^P/, "");
+    const linkedAlert = alerts.find(
+      (a) => a.vehicleId === vehId || a.vehicleId.replace(/^P/, "") === cleanId
+    );
     const newAlertId = linkedAlert ? linkedAlert.id : selectedAlertId;
     if (linkedAlert) {
       setSelectedAlertId(linkedAlert.id);
     }
     savePreferences({ selectedVehicleId: vehId, selectedAlertId: newAlertId });
-    const veh = vehicles.find((v) => v.id === vehId);
+    const veh = vehicles.find((v) => v.id === vehId || v.id.replace(/^P/, "") === cleanId);
     if (veh) {
       setFlyToTarget({ lat: veh.latitude, lon: veh.longitude, zoom: 14 });
     }
@@ -386,14 +433,37 @@ export function useTelemetry() {
       })
     );
 
+    const currentAlert = alerts.find((a) => a.id === alertId);
+    const affectedVehIds = new Set<string>();
+    if (currentAlert) {
+      if (currentAlert.vehicleId) {
+        affectedVehIds.add(currentAlert.vehicleId);
+        affectedVehIds.add(currentAlert.vehicleId.replace(/^P/, ""));
+      }
+      if (currentAlert.followingVehicleId) {
+        affectedVehIds.add(currentAlert.followingVehicleId);
+        affectedVehIds.add(currentAlert.followingVehicleId.replace(/^P/, ""));
+      }
+      if (currentAlert.recommendation?.targetVehicleId) {
+        const tid = currentAlert.recommendation.targetVehicleId.replace(/^[№P]/, "");
+        affectedVehIds.add(tid);
+        affectedVehIds.add(`P${tid}`);
+      }
+    }
+    if (alertId.includes("1042")) {
+      affectedVehIds.add("P1042");
+      affectedVehIds.add("P1043");
+    }
+
     setVehicles((prevVehs) =>
       prevVehs.map((veh) => {
-        if (veh.id === "P1042" || veh.id === "P1043") {
+        const cleanId = veh.id.replace(/^P/, "");
+        if (affectedVehIds.has(veh.id) || affectedVehIds.has(cleanId)) {
           return {
             ...veh,
             status: "NORMAL",
-            delaySeconds: 150,
-            predictedTerminalDelayMinutes: 2.5,
+            delaySeconds: 120,
+            predictedTerminalDelayMinutes: 2,
           };
         }
         return veh;
@@ -407,12 +477,16 @@ export function useTelemetry() {
       punctualityRate: 96.2,
     }));
 
+    const targetVehName = currentAlert?.recommendation?.targetVehicleId || "№1043";
+    const stopName = currentAlert?.recommendation?.stopName || "«Метро Бауманская»";
+    const duration = currentAlert?.recommendation?.durationMinutes || 2.5;
+
     addToast({
       type: "success",
       title: "Команда Holding успешно передана в АСУ-РДС",
-      description: "Борт №1043 придержан на 2.5 мин на остановке «Метро Бауманская». Интервал восстановится до 7.5 мин.",
+      description: `Борт ${targetVehName} придержан на ${duration} мин на остановке ${stopName}. Интервал восстанавливается до планового.`,
     });
-  }, [addToast]);
+  }, [addToast, alerts]);
 
   const applyScenario = useCallback(
     (scenarioId: string, title: string) => {
@@ -425,7 +499,11 @@ export function useTelemetry() {
       // 1. Mark alert as resolved / scenario applied
       setAlerts((prevAlerts) =>
         prevAlerts.map((alt) => {
-          if (alt.id === "alert_1042" || alt.vehicleId === "1042" || alt.vehicleId === "P1042") {
+          const isTarget =
+            alt.id === selectedAlertId ||
+            alt.vehicleId === selectedVehicleId ||
+            alt.vehicleId.replace(/^P/, "") === selectedVehicleId.replace(/^P/, "");
+          if (isTarget) {
             return {
               ...alt,
               recommendation: {
@@ -448,33 +526,34 @@ export function useTelemetry() {
       }));
 
       // 3. Provide scenario-specific dispatch toast
+      const cleanVehId = selectedVehicleId.replace(/^P/, "");
       if (scenarioId === "holding") {
         addToast({
           type: "success",
           title: "Команда Holding отправлена (Сценарий 1)",
-          description: "Борт №1043 придержан на 2.5 мин на м. Бауманская. Такт восстановлен до 7.5 мин.",
+          description: `Борт №${cleanVehId} скорректирован по такту. Расписание стабилизировано.`,
         });
       } else if (scenarioId === "skip_stop") {
         addToast({
           type: "warning",
           title: "Включен режим Skip-Stop (Сценарий 2)",
-          description: "Борт №1042 следует в экспресс-режиме без остановок до м. Бауманская. Опоздание -4.5 мин.",
+          description: `Борт №${cleanVehId} следует в экспресс-режиме без остановок. Нагоняет отставание.`,
         });
       } else if (scenarioId === "short_turning") {
         addToast({
           type: "info",
           title: "Оперативный разворот (Сценарий 3)",
-          description: "Борт №1042 направлен на разворотную петлю «пл. Разгуляй» для ликвидации встречной дыры.",
+          description: `Борт №${cleanVehId} направлен на разворотную петлю для ликвидации встречной дыры.`,
         });
       } else {
         addToast({
           type: "success",
           title: "Ввод резерва из парка (Сценарий 4)",
-          description: "Электробус №3105 вышел из парка Сокольники на ост. Электрозаводская. Выпуск +1 борт.",
+          description: `Резервный электробус вышел на маршрут для компенсации борта №${cleanVehId}.`,
         });
       }
     },
-    [addToast, selectedAlertId]
+    [addToast, selectedAlertId, selectedVehicleId]
   );
 
   const controlSimulation = useCallback(
