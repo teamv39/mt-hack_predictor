@@ -15,10 +15,12 @@ export default defineConfig({
     proxy: {
       '/tiles': {
         target: 'http://localhost:8085',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/tiles/, '')
+        changeOrigin: false,
+        rewrite: (path) => path.replace(/^\/tiles/, ''),
+        headers: {
+          'X-Forwarded-Path': '/tiles'
+        }
       }
     }
   }
 })
-

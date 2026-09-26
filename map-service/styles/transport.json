@@ -7,10 +7,10 @@
   "sources": {
     "openmaptiles": {
       "type": "vector",
-      "url": "http://localhost:8085/data/moscow-transport.json"
+      "url": "/tiles/data/moscow-transport.json"
     }
   },
-  "glyphs": "{fontstack}/{range}.pbf",
+  "glyphs": "/tiles/fonts/{fontstack}/{range}.pbf",
   "layers": [
     {
       "id": "background",

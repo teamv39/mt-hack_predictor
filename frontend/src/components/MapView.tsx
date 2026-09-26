@@ -15,7 +15,8 @@ import {
   CheckCircle2,
   Radio,
 } from "lucide-react";
-import { Vehicle, AlertItem, RouteData } from "../mock/telemetry";
+import { Vehicle, AlertItem, RouteData, StopPoint } from "../mock/telemetry";
+import * as turf from "@turf/turf";
 
 // Explicitly register MapLibre WebWorker URL for Vite
 if (typeof window !== "undefined") {
@@ -25,30 +26,6 @@ if (typeof window !== "undefined") {
 // Self-hosted autonomous vector tile server endpoints
 const TILESERVER_LIGHT = "/tiles/styles/transport/style.json";
 const TILESERVER_DARK = "/tiles/styles/transport-dark/style.json";
-
-// Fallback style if TileServer GL is not yet launched (e.g. standalone vite dev without docker)
-const FALLBACK_STYLE: maplibregl.StyleSpecification = {
-  version: 8,
-  sources: {
-    osm: {
-      type: "raster",
-      tiles: [
-        "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-      ],
-      tileSize: 256,
-      attribution: "© OpenStreetMap contributors",
-    },
-  },
-  layers: [
-    {
-      id: "osm-tiles",
-      type: "raster",
-      source: "osm",
-      minzoom: 0,
-      maxzoom: 19,
-    },
-  ],
-};
 
 const HORIZONS = ["Сейчас", "+15 мин", "+30 мин", "+45 мин"];
 
@@ -66,6 +43,7 @@ interface MapViewProps {
 }
 
 export const MapView: React.FC<MapViewProps> = ({
+  route,
   vehicles,
   alert,
   selectedVehicleId,
@@ -90,98 +68,59 @@ export const MapView: React.FC<MapViewProps> = ({
 
   const isHoldingApplied = alert?.recommendation?.applied ?? false;
 
-  // 1. Calculate projected vehicle positions across timeline horizons
+  // 1. Vehicle positions — interpolate along route.routeGeometry
   const displayedVehicles = useMemo(() => {
-    if (timeStep === "Сейчас") {
-      return vehicles;
-    }
+    if (timeStep === "Сейчас") return vehicles;
+
+    const routeLine: GeoJSON.Feature<GeoJSON.LineString> = {
+      type: "Feature",
+      properties: {},
+      geometry: { type: "LineString", coordinates: route.routeGeometry },
+    };
+    const stopDists = route.stops.map((s: StopPoint) =>
+      turf.nearestPointOnLine(routeLine, turf.point([s.lon, s.lat])).properties.location as number
+    );
+    const findNearestStop = (lon: number, lat: number) => {
+      const pt = turf.nearestPointOnLine(routeLine, turf.point([lon, lat]));
+      const loc = pt.properties.location as number;
+      let best = 0;
+      let bestD = Infinity;
+      for (let i = 0; i < stopDists.length; i++) {
+        const d = Math.abs(stopDists[i] - loc);
+        if (d < bestD) { bestD = d; best = i; }
+      }
+      return route.stops[best]?.name || "";
+    };
+
+    const horizonFrac: Record<string, { frac1042: number; frac1043: number; holdingFrac1043: number }> = {
+      "+15 мин": { frac1042: 0.72, frac1043: 0.38, holdingFrac1043: 0.22 },
+      "+30 мин": { frac1042: 0.92, frac1043: 0.62, holdingFrac1043: 0.45 },
+      "+45 мин": { frac1042: 1.0, frac1043: 0.82, holdingFrac1043: 0.68 },
+    };
+    const h = horizonFrac[timeStep];
+    if (!h) return vehicles;
+
+    const totalLen = turf.length(routeLine, { units: "kilometers" });
+    const ptAlong = (frac: number) => turf.along(routeLine, frac * totalLen, { units: "kilometers" }).geometry.coordinates as [number, number];
 
     return vehicles.map((veh) => {
       const is1042 = veh.id.includes("1042");
       const is1043 = veh.id.includes("1043");
-
-      if (timeStep === "+15 мин") {
-        if (is1042) {
-          return {
-            ...veh,
-            latitude: 55.7808,
-            longitude: 37.7085,
-            speedKmh: 16,
-            currentStop: "Бакунинская ул., 84",
-            nextStop: "м. Электрозаводская",
-          };
-        }
-        if (is1043) {
-          if (isHoldingApplied) {
-            return {
-              ...veh,
-              latitude: 55.7750,
-              longitude: 37.6860,
-              speedKmh: 26,
-              status: "NORMAL" as const,
-              currentStop: "м. Бауманская (Holding отработан)",
-              nextStop: "Бакунинская ул.",
-            };
-          } else {
-            return {
-              ...veh,
-              latitude: 55.7801,
-              longitude: 37.7055, // caught up! bunching
-              speedKmh: 12,
-              status: "BUNCHING_RISK" as const,
-              currentStop: "Бакунинская ул.",
-              nextStop: "м. Электрозаводская",
-            };
-          }
-        }
-      } else if (timeStep === "+30 мин") {
-        if (is1042) {
-          return {
-            ...veh,
-            latitude: 55.7845,
-            longitude: 37.7225,
-            speedKmh: 28,
-            currentStop: "м. Электрозаводская",
-            nextStop: "м. Семёновская",
-          };
-        }
-        if (is1043) {
-          return {
-            ...veh,
-            latitude: isHoldingApplied ? 55.7798 : 55.7838,
-            longitude: isHoldingApplied ? 37.7040 : 37.7205,
-            speedKmh: isHoldingApplied ? 29 : 14,
-            status: isHoldingApplied ? ("NORMAL" as const) : ("BUNCHING_RISK" as const),
-            currentStop: isHoldingApplied ? "Бакунинская ул." : "м. Электрозаводская",
-            nextStop: isHoldingApplied ? "м. Электрозаводская" : "м. Семёновская",
-          };
-        }
-      } else if (timeStep === "+45 мин") {
-        if (is1042) {
-          return {
-            ...veh,
-            latitude: 55.7890,
-            longitude: 37.7340,
-            speedKmh: 22,
-            currentStop: "м. Семёновская (Конечная)",
-            nextStop: "Разворотное кольцо",
-          };
-        }
-        if (is1043) {
-          return {
-            ...veh,
-            latitude: isHoldingApplied ? 55.7848 : 55.7882,
-            longitude: isHoldingApplied ? 37.7230 : 37.7315,
-            speedKmh: 25,
-            status: isHoldingApplied ? ("NORMAL" as const) : ("BUNCHING_RISK" as const),
-            currentStop: isHoldingApplied ? "м. Электрозаводская" : "м. Семёновская",
-            nextStop: "м. Семёновская",
-          };
-        }
+      if (is1042) {
+        const [lon, lat] = ptAlong(h.frac1042);
+        const speedKmh = timeStep === "+15 мин" ? 16 : timeStep === "+30 мин" ? 28 : 22;
+        return { ...veh, latitude: lat, longitude: lon, speedKmh, currentStop: findNearestStop(lon, lat), nextStop: route.stops[route.stops.length - 1]?.name || "" };
+      }
+      if (is1043) {
+        const frac = isHoldingApplied ? h.holdingFrac1043 : h.frac1043;
+        const [lon, lat] = ptAlong(frac);
+        const speedKmh = isHoldingApplied ? (timeStep === "+15 мин" ? 26 : timeStep === "+30 мин" ? 29 : 25) : (timeStep === "+15 мин" ? 12 : timeStep === "+30 мин" ? 14 : 25);
+        const status: Vehicle["status"] = isHoldingApplied ? "NORMAL" : "BUNCHING_RISK";
+        return { ...veh, latitude: lat, longitude: lon, speedKmh, status, currentStop: findNearestStop(lon, lat), nextStop: route.stops[route.stops.length - 1]?.name || "" };
       }
       return veh;
     });
-  }, [vehicles, timeStep, isHoldingApplied]);
+  }, [vehicles, timeStep, isHoldingApplied, route]);
 
   // 2. Timeline auto-play timer
   useEffect(() => {
@@ -197,237 +136,109 @@ export const MapView: React.FC<MapViewProps> = ({
   // Function to initialize situational vector overlay layers on MapLibre
   const setupSituationalLayers = useCallback(
     (map: maplibregl.Map) => {
-      // A. Congestion Polygons (Amber & Red over Basmanny corridor)
-      const amberPolygonCoords = [
-        [37.6650, 55.7680],
-        [37.6750, 55.7760],
-        [37.7100, 55.7820],
-        [37.7020, 55.7730],
-        [37.6650, 55.7680],
-      ];
+      // A. Congestion zone — buffer around congestionSegment
+      if (!map.getSource("congestion-zones") && route.congestionSegment.length >= 2) {
+        const seg = route.congestionSegment;
+        const buf = 0.004;
+        const amberCoords = [
+          [seg[0][0] - buf, seg[0][1] - buf * 0.6],
+          [seg[0][0] - buf * 0.5, seg[0][1] + buf * 0.8],
+          [seg[seg.length - 1][0] + buf, seg[seg.length - 1][1] + buf * 0.6],
+          [seg[seg.length - 1][0] + buf * 0.5, seg[seg.length - 1][1] - buf * 0.8],
+          [seg[0][0] - buf, seg[0][1] - buf * 0.6],
+        ];
+        const redCoords = [
+          [seg[0][0] - buf * 0.4, seg[0][1] - buf * 0.3],
+          [seg[0][0] - buf * 0.2, seg[0][1] + buf * 0.5],
+          [seg[seg.length - 1][0] + buf * 0.4, seg[seg.length - 1][1] + buf * 0.3],
+          [seg[seg.length - 1][0] + buf * 0.2, seg[seg.length - 1][1] - buf * 0.5],
+          [seg[0][0] - buf * 0.4, seg[0][1] - buf * 0.3],
+        ];
 
-      const redCongestionCoords = [
-        [37.6740, 55.7710],
-        [37.6890, 55.7765],
-        [37.7050, 55.7795],
-        [37.6980, 55.7740],
-        [37.6740, 55.7710],
-      ];
-
-      if (!map.getSource("congestion-zones")) {
         map.addSource("congestion-zones", {
           type: "geojson",
           data: {
             type: "FeatureCollection",
             features: [
-              {
-                type: "Feature",
-                properties: { level: "amber" },
-                geometry: {
-                  type: "Polygon",
-                  coordinates: [amberPolygonCoords],
-                },
-              },
-              {
-                type: "Feature",
-                properties: { level: "red" },
-                geometry: {
-                  type: "Polygon",
-                  coordinates: [redCongestionCoords],
-                },
-              },
+              { type: "Feature", properties: { level: "amber" }, geometry: { type: "Polygon", coordinates: [amberCoords] } },
+              { type: "Feature", properties: { level: "red" }, geometry: { type: "Polygon", coordinates: [redCoords] } },
             ],
           },
         });
 
-        map.addLayer({
-          id: "congestion-amber-fill",
-          type: "fill",
-          source: "congestion-zones",
-          filter: ["==", "level", "amber"],
-          paint: {
-            "fill-color": "#fbbf24",
-            "fill-opacity": isDarkMode ? 0.22 : 0.16,
-          },
-        });
-
-        map.addLayer({
-          id: "congestion-amber-line",
-          type: "line",
-          source: "congestion-zones",
-          filter: ["==", "level", "amber"],
-          paint: {
-            "line-color": "#d97706",
-            "line-width": 1.5,
-            "line-dasharray": [4, 4],
-          },
-        });
-
-        map.addLayer({
-          id: "congestion-red-fill",
-          type: "fill",
-          source: "congestion-zones",
-          filter: ["==", "level", "red"],
-          paint: {
-            "fill-color": "#ef4444",
-            "fill-opacity": isDarkMode ? 0.28 : 0.2,
-          },
-        });
-
-        map.addLayer({
-          id: "congestion-red-line",
-          type: "line",
-          source: "congestion-zones",
-          filter: ["==", "level", "red"],
-          paint: {
-            "line-color": "#dc2626",
-            "line-width": 1.5,
-            "line-dasharray": [3, 3],
-          },
-        });
+        map.addLayer({ id: "congestion-amber-fill", type: "fill", source: "congestion-zones", filter: ["==", "level", "amber"], paint: { "fill-color": "#fbbf24", "fill-opacity": isDarkMode ? 0.22 : 0.16 } });
+        map.addLayer({ id: "congestion-amber-line", type: "line", source: "congestion-zones", filter: ["==", "level", "amber"], paint: { "line-color": "#d97706", "line-width": 1.5, "line-dasharray": [4, 4] } });
+        map.addLayer({ id: "congestion-red-fill", type: "fill", source: "congestion-zones", filter: ["==", "level", "red"], paint: { "fill-color": "#ef4444", "fill-opacity": isDarkMode ? 0.28 : 0.2 } });
+        map.addLayer({ id: "congestion-red-line", type: "line", source: "congestion-zones", filter: ["==", "level", "red"], paint: { "line-color": "#dc2626", "line-width": 1.5, "line-dasharray": [3, 3] } });
       }
 
-      // B. Route m3 Polyline
-      const m3Coordinates: [number, number][] = [
-        [37.6420, 55.7580],
-        [37.6610, 55.7645],
-        [37.6791, 55.7724], // м. Бауманская
-        [37.6970, 55.7785], // Бакунинская
-        [37.7189, 55.7831], // м. Электрозаводская
-        [37.7340, 55.7890], // м. Семёновская
-      ];
-
-      if (!map.getSource("m3-route")) {
+      // B. Route polyline from route.routeGeometry
+      if (!map.getSource("m3-route") && route.routeGeometry.length >= 2) {
         map.addSource("m3-route", {
           type: "geojson",
-          data: {
-            type: "Feature",
-            properties: { name: "Маршрут м3" },
-            geometry: {
-              type: "LineString",
-              coordinates: m3Coordinates,
-            },
-          },
+          data: { type: "Feature", properties: { name: route.name }, geometry: { type: "LineString", coordinates: route.routeGeometry } },
         });
-
-        map.addLayer({
-          id: "m3-route-line-casing",
-          type: "line",
-          source: "m3-route",
-          layout: {
-            "line-cap": "round",
-            "line-join": "round",
-          },
-          paint: {
-            "line-color": isDarkMode ? "#064e3b" : "#ffffff",
-            "line-width": 7,
-            "line-opacity": 0.7,
-          },
-        });
-
-        map.addLayer({
-          id: "m3-route-line",
-          type: "line",
-          source: "m3-route",
-          layout: {
-            "line-cap": "round",
-            "line-join": "round",
-          },
-          paint: {
-            "line-color": isDarkMode ? "#10b981" : "#00875A",
-            "line-width": 5,
-            "line-opacity": 0.95,
-          },
-        });
+        map.addLayer({ id: "m3-route-line-casing", type: "line", source: "m3-route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": isDarkMode ? "#064e3b" : "#ffffff", "line-width": 7, "line-opacity": 0.7 } });
+        map.addLayer({ id: "m3-route-line", type: "line", source: "m3-route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": isDarkMode ? "#10b981" : "#00875A", "line-width": 5, "line-opacity": 0.95 } });
       }
 
       // C. Headway connector line source
       if (!map.getSource("headway-connector")) {
         map.addSource("headway-connector", {
           type: "geojson",
-          data: {
-            type: "FeatureCollection",
-            features: [],
-          },
+          data: { type: "FeatureCollection", features: [] },
         });
-
-        map.addLayer({
-          id: "headway-connector-line",
-          type: "line",
-          source: "headway-connector",
-          paint: {
-            "line-color": ["get", "color"],
-            "line-width": 3,
-            "line-dasharray": [4, 4],
-            "line-opacity": 0.9,
-          },
-        });
+        map.addLayer({ id: "headway-connector-line", type: "line", source: "headway-connector", paint: { "line-color": ["get", "color"], "line-width": 3, "line-dasharray": [4, 4], "line-opacity": 0.9 } });
       }
     },
-    [isDarkMode]
+    [isDarkMode, route]
   );
 
-  // 3. Initialize MapLibre GL Map — probe tileserver first, then create map
+  // 3. Initialize MapLibre GL Map
   useEffect(() => {
     if (!mapContainerRef.current || mapInstanceRef.current) return;
 
-    const initialCenter: [number, number] = [37.6850, 55.7745]; // [lng, lat]
+    const initialCenter: [number, number] = [37.6840, 55.7720];
     const initialZoom = 13;
 
-    let cancelled = false;
-
-    const initMap = (style: string | maplibregl.StyleSpecification, tileServerOk: boolean) => {
-      if (cancelled || !mapContainerRef.current) return;
-
-      setIsTileServerAvailable(tileServerOk);
-
-      const map = new maplibregl.Map({
-        container: mapContainerRef.current!,
-        style,
-        center: initialCenter,
-        zoom: initialZoom,
-        attributionControl: false,
-        renderWorldCopies: false,
-      });
-
-      // Only log tile-level errors, do NOT switch to fallback on individual tile 404s
-      map.on("error", (e) => {
-        console.warn("[MapLibre] Tile/resource error (non-fatal):", e?.error?.message);
-      });
-
-      map.on("load", () => {
-        setupSituationalLayers(map);
-        map.resize();
-      });
-
-      mapInstanceRef.current = map;
-      setTimeout(() => map.resize(), 200);
-    };
-
-    // Probe tileserver availability, then init
     const targetStyle = isDarkMode ? TILESERVER_DARK : TILESERVER_LIGHT;
 
-    fetch(targetStyle, { method: "HEAD", signal: AbortSignal.timeout(3000) })
-      .then((res) => {
-        if (!cancelled && res.ok) {
-          initMap(targetStyle, true);
-        } else {
-          throw new Error(`TileServer responded ${res.status}`);
+    const map = new maplibregl.Map({
+      container: mapContainerRef.current!,
+      style: targetStyle,
+      center: initialCenter,
+      zoom: initialZoom,
+      minZoom: 10,
+      maxZoom: 17,
+      maxBounds: [[36.8, 55.1], [38.2, 56.1]],
+      attributionControl: false,
+      renderWorldCopies: false,
+      transformRequest: (url: string) => {
+        const match = url.match(/^https?:\/\/[^/]+(\/(?:data|fonts|styles|sprites)\/.*)$/);
+        if (match) {
+          return { url: `/tiles${match[1]}` };
         }
-      })
-      .catch(() => {
-        // TileServer unavailable — use raster OSM fallback
-        console.warn("TileServer GL not reachable, using OSM raster fallback");
-        if (!cancelled) {
-          initMap(FALLBACK_STYLE, false);
-        }
-      });
+        return { url };
+      },
+    });
+
+    map.on("error", (e) => {
+      console.warn("[MapLibre] Tile/resource error (non-fatal):", e?.error?.message);
+    });
+
+    map.on("load", () => {
+      setIsTileServerAvailable(true);
+      setupSituationalLayers(map);
+      map.resize();
+    });
+
+    mapInstanceRef.current = map;
+    setTimeout(() => map.resize(), 200);
 
     const handleResize = () => mapInstanceRef.current?.resize();
     window.addEventListener("resize", handleResize);
 
     return () => {
-      cancelled = true;
       window.removeEventListener("resize", handleResize);
       Object.values(vehicleMarkersRef.current).forEach((m) => m.remove());
       vehicleMarkersRef.current = {};
@@ -462,28 +273,15 @@ export const MapView: React.FC<MapViewProps> = ({
     });
   }, [isDarkMode, setupSituationalLayers]);
 
-  // 4. Render Stop Points Markers
+  // 4. Render Stop Points Markers from route.stops
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
 
-    // Clear old stops
     stopMarkersRef.current.forEach((m) => m.remove());
     stopMarkersRef.current = [];
 
-    const stopsList = [
-      { name: "ул. Покровка", coords: [37.6610, 55.7645] as [number, number] },
-      { name: "м. Бауманская", coords: [37.6791, 55.7724] as [number, number] },
-      { name: "Бакунинская ул.", coords: [37.6970, 55.7785] as [number, number] },
-      { name: "м. Электрозаводская", coords: [37.7189, 55.7831] as [number, number] },
-      { name: "м. Семёновская", coords: [37.7340, 55.7890] as [number, number] },
-    ];
-
-    stopsList.forEach((stop) => {
-      const isCritical = stop.name === "м. Бауманская";
-      const isWarning = stop.name === "Бакунинская ул.";
-      const dotColor = isCritical ? "#dc2626" : isWarning ? "#d97706" : "#71717a";
-
+    route.stops.forEach((stop) => {
       const el = document.createElement("div");
       el.className = "stop-marker-item";
       el.style.display = "flex";
@@ -502,20 +300,17 @@ export const MapView: React.FC<MapViewProps> = ({
       el.style.userSelect = "none";
 
       el.innerHTML = `
-        <span style="width: 6px; height: 6px; border-radius: 50%; background: ${dotColor};"></span>
+        <span style="width: 6px; height: 6px; border-radius: 50%; background: ${stop.color};"></span>
         <span>${stop.name}</span>
       `;
 
-      const marker = new maplibregl.Marker({
-        element: el,
-        anchor: "bottom",
-      })
-        .setLngLat(stop.coords)
+      const marker = new maplibregl.Marker({ element: el, anchor: "bottom" })
+        .setLngLat([stop.lon, stop.lat])
         .addTo(map);
 
       stopMarkersRef.current.push(marker);
     });
-  }, [isDarkMode]);
+  }, [isDarkMode, route.stops]);
 
   // 5. Draw and Update Vehicle Markers and Headway Connector dynamically
   useEffect(() => {
@@ -773,7 +568,7 @@ export const MapView: React.FC<MapViewProps> = ({
         <button
           onClick={() =>
             mapInstanceRef.current?.flyTo({
-              center: [37.6850, 55.7745],
+              center: [37.6840, 55.7720],
               zoom: 13,
               duration: 1000,
             })

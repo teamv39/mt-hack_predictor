@@ -81,10 +81,8 @@ export interface StopPoint {
 export interface RouteData {
   routeId: string;
   name: string;
-  greenPolyline: [number, number][];
-  orangePolyline: [number, number][];
-  redCorridorPolyline: [number, number][];
-  riskPolygon: [number, number][];
+  routeGeometry: [number, number][];
+  congestionSegment: [number, number][];
   stops: StopPoint[];
 }
 
@@ -106,41 +104,36 @@ export const MOCK_SYSTEM_METRICS = {
 };
 
 export const MOCK_STOPS: StopPoint[] = [
-  { id: "s1", name: "м. Бауманская", lat: 55.7724, lon: 37.6791, color: "#f97316" },
-  { id: "s2", name: "м. Семёновская", lat: 55.7831, lon: 37.7189, color: "#10b981" },
+  { id: "s1", name: "ул. Покровка", lat: 55.7588, lon: 37.6497, color: "#71717a" },
+  { id: "s2", name: "Лялин пер.", lat: 55.7585, lon: 37.6598, color: "#71717a" },
+  { id: "s3", name: "м. Бауманская", lat: 55.7724, lon: 37.6791, color: "#f97316" },
+  { id: "s4", name: "Бакунинская ул.", lat: 55.7785, lon: 37.6970, color: "#d97706" },
+  { id: "s5", name: "м. Электрозаводская", lat: 55.7818, lon: 37.7082, color: "#0284c7" },
+  { id: "s6", name: "м. Семёновская", lat: 55.7868, lon: 37.7225, color: "#10b981" },
 ];
 
-// Coordinates around Baumanskaya — Semyonovskaya in Moscow
+// Реальная трасса м3: Покровка → Лялин → Бауманская → Бакунинская → Электрозаводская → Семёновская
+// По улицам: Покровка → Старая Басманная → Спартаковская → Бакунинская → Бол. Семёновская
 export const MOCK_ROUTE_DATA: RouteData = {
   routeId: "м3",
   name: "Серебряный бор — Семёновская",
-  greenPolyline: [
-    [55.7612, 37.6475],
-    [55.7674, 37.6681],
-    [55.7724, 37.6791],
-    [55.7831, 37.7189],
-    [55.7890, 37.7340],
+  routeGeometry: [
+    [37.6497, 55.7588], // ул. Покровка
+    [37.6598, 55.7585], // Лялин пер.
+    [37.6680, 55.7630], // Старая Басманная
+    [37.6735, 55.7665], // Спартаковская
+    [37.6791, 55.7724], // м. Бауманская
+    [37.6855, 55.7750], // Бакунинская ул., начало
+    [37.6970, 55.7785], // Бакунинская ул.
+    [37.7020, 55.7802], // Бакунинская д.84
+    [37.7082, 55.7818], // м. Электрозаводская
+    [37.7155, 55.7845], // Бол. Семёновская
+    [37.7225, 55.7868], // м. Семёновская
   ],
-  orangePolyline: [
-    [55.7550, 37.6700],
-    [55.7650, 37.6750],
-    [55.7724, 37.6791],
-    [55.7800, 37.6830],
-    [55.7950, 37.6900],
-  ],
-  redCorridorPolyline: [
-    [55.7745, 37.6854],
-    [55.7773, 37.6942],
-    [55.7798, 37.7011],
-    [55.7818, 37.7082],
-    [55.7831, 37.7189],
-  ],
-  // Soft peach/coral shaded sector over the problematic stretch
-  riskPolygon: [
-    [55.7730, 37.6820],
-    [55.7810, 37.7250],
-    [55.7860, 37.7220],
-    [55.7780, 37.6790],
+  congestionSegment: [
+    [37.6791, 55.7724], // м. Бауманская
+    [37.6970, 55.7785], // Бакунинская
+    [37.7082, 55.7818], // м. Электрозаводская
   ],
   stops: MOCK_STOPS,
 };
