@@ -42,6 +42,10 @@ export interface Vehicle {
   nextStop: string;
 }
 
+export interface AlertMetrics {
+  headway_collapse_sec?: number;
+}
+
 export interface AlertItem {
   id: string;
   vehicleId: string;
@@ -63,6 +67,7 @@ export interface AlertItem {
   shapFactors: ShapFactor[];
   delayChartData: DelayChartPoint[];
   recommendation: Recommendation;
+  metrics?: AlertMetrics;
 }
 
 export interface StopPoint {
@@ -232,6 +237,9 @@ export const MOCK_ALERTS: AlertItem[] = [
       text: "Придержать идущий следом Борт №1043 на остановке «Метро Бауманская» на 2.5 минуты.",
       infoText: "Интервал восстановится с 2 мин до расчетных 7.5 мин. Пачкование будет устранено на всей линии.",
       applied: false,
+    },
+    metrics: {
+      headway_collapse_sec: 96,
     },
   },
   {

@@ -95,6 +95,9 @@ function mapBackendAlert(ba: any): AlertItem {
       infoText: "Выравнивает интервал движения с 1.2 мин до 7.5 мин по формуле Велдинга.",
       applied: ba.recommendation?.applied || false,
     },
+    metrics: {
+      headway_collapse_sec: ba.headway_seconds || ba.metrics?.headway_collapse_sec || 96,
+    },
   };
 }
 

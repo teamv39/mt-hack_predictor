@@ -16,6 +16,8 @@ import {
   Compass,
 } from "lucide-react";
 
+export type SimulationAction = "play" | "pause" | "speed" | "step" | "reset";
+
 export interface TopBarProps {
   metrics?: {
     vehiclesOnLine?: number;
@@ -28,7 +30,7 @@ export interface TopBarProps {
   setActiveTab?: (tab: string) => void;
   isSimPlaying?: boolean;
   simSpeed?: number;
-  onControl?: (action: string, value?: any) => void;
+  onControl?: (action: SimulationAction, value?: number | string) => void | Promise<void>;
   isDarkMode?: boolean;
   onToggleDarkMode?: () => void;
   onOpenGuide?: () => void;

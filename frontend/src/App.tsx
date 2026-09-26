@@ -183,7 +183,7 @@ export default function App() {
         incidentId={selectedAlert?.id ? `#${selectedAlert.id}` : "#1042-м3"}
         vehicleId={selectedVehicle?.id ? `№${selectedVehicle.id.replace("P", "")}` : "№1042"}
         leaderId="№1043"
-        intervalSec={selectedAlert?.metrics?.headway_collapse_sec || 96}
+        intervalSec={selectedAlert?.metrics?.headway_collapse_sec ?? 96}
       />
 
       {/* 4. Jury Guide / Tour Modal */}
