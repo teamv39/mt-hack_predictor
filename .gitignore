@@ -71,6 +71,13 @@ catboost_info/
 *.tar.gz
 *.zip
 *.7z
+*.osm.pbf
+*.mbtiles
+map-service/data/*.osm.pbf
+map-service/data/*.mbtiles
+map-service/data/sources/
+map-service/data/tmp/
+map-service/data/*.tsv.gz
 
 # Data & Models (ignore large files, keep samples)
 data/raw/*

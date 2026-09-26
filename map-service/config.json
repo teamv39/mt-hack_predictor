@@ -1,0 +1,39 @@
+{
+  "options": {
+    "paths": {
+      "root": "/data",
+      "fonts": "fonts",
+      "sprites": "sprites",
+      "styles": "styles",
+      "mbtiles": ""
+    },
+    "domains": [
+      "localhost:8085",
+      "localhost:5173",
+      "localhost:80",
+      "127.0.0.1:8085",
+      "127.0.0.1:5173"
+    ]
+  },
+  "data": {
+    "moscow-transport": {
+      "mbtiles": "moscow_transport.mbtiles"
+    }
+  },
+  "styles": {
+    "transport": {
+      "style": "transport.json",
+      "tilejson": {
+        "type": "vector",
+        "bounds": [36.8, 55.1, 38.2, 56.1]
+      }
+    },
+    "transport-dark": {
+      "style": "transport-dark.json",
+      "tilejson": {
+        "type": "vector",
+        "bounds": [36.8, 55.1, 38.2, 56.1]
+      }
+    }
+  }
+}

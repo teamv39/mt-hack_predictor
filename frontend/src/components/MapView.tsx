@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState, useMemo } from "react";
-import L from "leaflet";
+import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
+import * as maplibregl from "maplibre-gl";
+import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import {
   Play,
   Pause,
@@ -16,9 +17,39 @@ import {
 } from "lucide-react";
 import { Vehicle, AlertItem, RouteData } from "../mock/telemetry";
 
-// Reliable GIS Canvas tiles (No API Key Required, crystal-clear situational view)
-const ESRI_LIGHT_TILES = "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}";
-const ESRI_DARK_TILES = "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}";
+// Explicitly register MapLibre WebWorker URL for Vite
+if (typeof window !== "undefined") {
+  maplibregl.setWorkerUrl(maplibreWorkerUrl);
+}
+
+// Self-hosted autonomous vector tile server endpoints
+const TILESERVER_LIGHT = "/tiles/styles/transport/style.json";
+const TILESERVER_DARK = "/tiles/styles/transport-dark/style.json";
+
+// Fallback style if TileServer GL is not yet launched (e.g. standalone vite dev without docker)
+const FALLBACK_STYLE: maplibregl.StyleSpecification = {
+  version: 8,
+  sources: {
+    osm: {
+      type: "raster",
+      tiles: [
+        "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+      ],
+      tileSize: 256,
+      attribution: "© OpenStreetMap contributors",
+    },
+  },
+  layers: [
+    {
+      id: "osm-tiles",
+      type: "raster",
+      source: "osm",
+      minzoom: 0,
+      maxzoom: 19,
+    },
+  ],
+};
+
 const HORIZONS = ["Сейчас", "+15 мин", "+30 мин", "+45 мин"];
 
 interface MapViewProps {
@@ -35,7 +66,6 @@ interface MapViewProps {
 }
 
 export const MapView: React.FC<MapViewProps> = ({
-  route,
   vehicles,
   alert,
   selectedVehicleId,
@@ -43,19 +73,20 @@ export const MapView: React.FC<MapViewProps> = ({
   flyToTarget,
   timeStep,
   onTimeStepChange,
-  camera,
   isDarkMode,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
-  const mapInstanceRef = useRef<L.Map | null>(null);
-  const tileLayerRef = useRef<L.TileLayer | null>(null);
+  const mapInstanceRef = useRef<maplibregl.Map | null>(null);
+  const isFirstRenderRef = useRef(true);
+  const onSelectVehicleRef = useRef(onSelectVehicle);
+  onSelectVehicleRef.current = onSelectVehicle;
 
-  const routeLayerRef = useRef<L.LayerGroup | null>(null);
-  const stopsLayerRef = useRef<L.LayerGroup | null>(null);
-  const vehiclesLayerRef = useRef<L.LayerGroup | null>(null);
-  const polygonsLayerRef = useRef<L.LayerGroup | null>(null);
+  const vehicleMarkersRef = useRef<{ [id: string]: maplibregl.Marker }>({});
+  const stopMarkersRef = useRef<maplibregl.Marker[]>([]);
+  const headwayMarkerRef = useRef<maplibregl.Marker | null>(null);
 
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [isTileServerAvailable, setIsTileServerAvailable] = useState<boolean>(true);
 
   const isHoldingApplied = alert?.recommendation?.applied ?? false;
 
@@ -163,159 +194,339 @@ export const MapView: React.FC<MapViewProps> = ({
     return () => clearInterval(interval);
   }, [isPlaying, timeStep, onTimeStepChange]);
 
-  // 3. Initialize Leaflet Map with ESRI Canvas (Light Gray / Dark Gray)
+  // Function to initialize situational vector overlay layers on MapLibre
+  const setupSituationalLayers = useCallback(
+    (map: maplibregl.Map) => {
+      // A. Congestion Polygons (Amber & Red over Basmanny corridor)
+      const amberPolygonCoords = [
+        [37.6650, 55.7680],
+        [37.6750, 55.7760],
+        [37.7100, 55.7820],
+        [37.7020, 55.7730],
+        [37.6650, 55.7680],
+      ];
+
+      const redCongestionCoords = [
+        [37.6740, 55.7710],
+        [37.6890, 55.7765],
+        [37.7050, 55.7795],
+        [37.6980, 55.7740],
+        [37.6740, 55.7710],
+      ];
+
+      if (!map.getSource("congestion-zones")) {
+        map.addSource("congestion-zones", {
+          type: "geojson",
+          data: {
+            type: "FeatureCollection",
+            features: [
+              {
+                type: "Feature",
+                properties: { level: "amber" },
+                geometry: {
+                  type: "Polygon",
+                  coordinates: [amberPolygonCoords],
+                },
+              },
+              {
+                type: "Feature",
+                properties: { level: "red" },
+                geometry: {
+                  type: "Polygon",
+                  coordinates: [redCongestionCoords],
+                },
+              },
+            ],
+          },
+        });
+
+        map.addLayer({
+          id: "congestion-amber-fill",
+          type: "fill",
+          source: "congestion-zones",
+          filter: ["==", "level", "amber"],
+          paint: {
+            "fill-color": "#fbbf24",
+            "fill-opacity": isDarkMode ? 0.22 : 0.16,
+          },
+        });
+
+        map.addLayer({
+          id: "congestion-amber-line",
+          type: "line",
+          source: "congestion-zones",
+          filter: ["==", "level", "amber"],
+          paint: {
+            "line-color": "#d97706",
+            "line-width": 1.5,
+            "line-dasharray": [4, 4],
+          },
+        });
+
+        map.addLayer({
+          id: "congestion-red-fill",
+          type: "fill",
+          source: "congestion-zones",
+          filter: ["==", "level", "red"],
+          paint: {
+            "fill-color": "#ef4444",
+            "fill-opacity": isDarkMode ? 0.28 : 0.2,
+          },
+        });
+
+        map.addLayer({
+          id: "congestion-red-line",
+          type: "line",
+          source: "congestion-zones",
+          filter: ["==", "level", "red"],
+          paint: {
+            "line-color": "#dc2626",
+            "line-width": 1.5,
+            "line-dasharray": [3, 3],
+          },
+        });
+      }
+
+      // B. Route m3 Polyline
+      const m3Coordinates: [number, number][] = [
+        [37.6420, 55.7580],
+        [37.6610, 55.7645],
+        [37.6791, 55.7724], // м. Бауманская
+        [37.6970, 55.7785], // Бакунинская
+        [37.7189, 55.7831], // м. Электрозаводская
+        [37.7340, 55.7890], // м. Семёновская
+      ];
+
+      if (!map.getSource("m3-route")) {
+        map.addSource("m3-route", {
+          type: "geojson",
+          data: {
+            type: "Feature",
+            properties: { name: "Маршрут м3" },
+            geometry: {
+              type: "LineString",
+              coordinates: m3Coordinates,
+            },
+          },
+        });
+
+        map.addLayer({
+          id: "m3-route-line-casing",
+          type: "line",
+          source: "m3-route",
+          layout: {
+            "line-cap": "round",
+            "line-join": "round",
+          },
+          paint: {
+            "line-color": isDarkMode ? "#064e3b" : "#ffffff",
+            "line-width": 7,
+            "line-opacity": 0.7,
+          },
+        });
+
+        map.addLayer({
+          id: "m3-route-line",
+          type: "line",
+          source: "m3-route",
+          layout: {
+            "line-cap": "round",
+            "line-join": "round",
+          },
+          paint: {
+            "line-color": isDarkMode ? "#10b981" : "#00875A",
+            "line-width": 5,
+            "line-opacity": 0.95,
+          },
+        });
+      }
+
+      // C. Headway connector line source
+      if (!map.getSource("headway-connector")) {
+        map.addSource("headway-connector", {
+          type: "geojson",
+          data: {
+            type: "FeatureCollection",
+            features: [],
+          },
+        });
+
+        map.addLayer({
+          id: "headway-connector-line",
+          type: "line",
+          source: "headway-connector",
+          paint: {
+            "line-color": ["get", "color"],
+            "line-width": 3,
+            "line-dasharray": [4, 4],
+            "line-opacity": 0.9,
+          },
+        });
+      }
+    },
+    [isDarkMode]
+  );
+
+  // 3. Initialize MapLibre GL Map — probe tileserver first, then create map
   useEffect(() => {
     if (!mapContainerRef.current || mapInstanceRef.current) return;
 
-    const initialCenter: [number, number] = [55.7745, 37.6850];
+    const initialCenter: [number, number] = [37.6850, 55.7745]; // [lng, lat]
     const initialZoom = 13;
 
-    const map = L.map(mapContainerRef.current, {
-      center: initialCenter,
-      zoom: initialZoom,
-      zoomControl: false,
-      attributionControl: false,
-    });
+    let cancelled = false;
 
-    const tileUrl = isDarkMode ? ESRI_DARK_TILES : ESRI_LIGHT_TILES;
+    const initMap = (style: string | maplibregl.StyleSpecification, tileServerOk: boolean) => {
+      if (cancelled || !mapContainerRef.current) return;
 
-    tileLayerRef.current = L.tileLayer(tileUrl, {
-      maxZoom: 18,
-      attribution: "© OpenStreetMap, Esri, Мосгортранс",
-    }).addTo(map);
+      setIsTileServerAvailable(tileServerOk);
 
-    polygonsLayerRef.current = L.layerGroup().addTo(map);
-    routeLayerRef.current = L.layerGroup().addTo(map);
-    stopsLayerRef.current = L.layerGroup().addTo(map);
-    vehiclesLayerRef.current = L.layerGroup().addTo(map);
+      const map = new maplibregl.Map({
+        container: mapContainerRef.current!,
+        style,
+        center: initialCenter,
+        zoom: initialZoom,
+        attributionControl: false,
+        renderWorldCopies: false,
+      });
 
-    mapInstanceRef.current = map;
+      // Only log tile-level errors, do NOT switch to fallback on individual tile 404s
+      map.on("error", (e) => {
+        console.warn("[MapLibre] Tile/resource error (non-fatal):", e?.error?.message);
+      });
 
-    // Invalidate size to guarantee full canvas rendering
-    const timer = setTimeout(() => {
-      map.invalidateSize();
-    }, 150);
+      map.on("load", () => {
+        setupSituationalLayers(map);
+        map.resize();
+      });
 
-    const handleResize = () => map.invalidateSize();
+      mapInstanceRef.current = map;
+      setTimeout(() => map.resize(), 200);
+    };
+
+    // Probe tileserver availability, then init
+    const targetStyle = isDarkMode ? TILESERVER_DARK : TILESERVER_LIGHT;
+
+    fetch(targetStyle, { method: "HEAD", signal: AbortSignal.timeout(3000) })
+      .then((res) => {
+        if (!cancelled && res.ok) {
+          initMap(targetStyle, true);
+        } else {
+          throw new Error(`TileServer responded ${res.status}`);
+        }
+      })
+      .catch(() => {
+        // TileServer unavailable — use raster OSM fallback
+        console.warn("TileServer GL not reachable, using OSM raster fallback");
+        if (!cancelled) {
+          initMap(FALLBACK_STYLE, false);
+        }
+      });
+
+    const handleResize = () => mapInstanceRef.current?.resize();
     window.addEventListener("resize", handleResize);
 
     return () => {
-      clearTimeout(timer);
+      cancelled = true;
       window.removeEventListener("resize", handleResize);
-      map.remove();
-      mapInstanceRef.current = null;
+      Object.values(vehicleMarkersRef.current).forEach((m) => m.remove());
+      vehicleMarkersRef.current = {};
+      stopMarkersRef.current.forEach((m) => m.remove());
+      stopMarkersRef.current = [];
+      if (headwayMarkerRef.current) {
+        headwayMarkerRef.current.remove();
+        headwayMarkerRef.current = null;
+      }
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
     };
   }, []);
 
-  // Update tilelayer on isDarkMode toggle
+  // Update style on isDarkMode toggle (skip first mount)
   useEffect(() => {
-    if (!mapInstanceRef.current || !tileLayerRef.current) return;
-    const newTileUrl = isDarkMode ? ESRI_DARK_TILES : ESRI_LIGHT_TILES;
-    tileLayerRef.current.setUrl(newTileUrl);
-  }, [isDarkMode]);
+    if (isFirstRenderRef.current) {
+      isFirstRenderRef.current = false;
+      return;
+    }
 
-  // 4. Draw Route Polylines, Congestion Polygons, and Stop Markers
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    const targetStyle = isDarkMode ? TILESERVER_DARK : TILESERVER_LIGHT;
+    map.setStyle(targetStyle);
+
+    map.once("style.load", () => {
+      setupSituationalLayers(map);
+    });
+  }, [isDarkMode, setupSituationalLayers]);
+
+  // 4. Render Stop Points Markers
   useEffect(() => {
     const map = mapInstanceRef.current;
-    if (!map || !routeLayerRef.current || !stopsLayerRef.current || !polygonsLayerRef.current) return;
+    if (!map) return;
 
-    routeLayerRef.current.clearLayers();
-    stopsLayerRef.current.clearLayers();
-    polygonsLayerRef.current.clearLayers();
+    // Clear old stops
+    stopMarkersRef.current.forEach((m) => m.remove());
+    stopMarkersRef.current = [];
 
-    // Congestion Polygons (Amber & Red over Basmanny corridor)
-    const amberPolygonCoords: [number, number][] = [
-      [55.7680, 37.6650],
-      [55.7760, 37.6750],
-      [55.7820, 37.7100],
-      [55.7730, 37.7020],
-    ];
-
-    const redCongestionCoords: [number, number][] = [
-      [55.7710, 37.6740],
-      [55.7765, 37.6890],
-      [55.7795, 37.7050],
-      [55.7740, 37.6980],
-    ];
-
-    L.polygon(amberPolygonCoords, {
-      color: "#d97706",
-      fillColor: "#fbbf24",
-      fillOpacity: isDarkMode ? 0.22 : 0.16,
-      weight: 1.5,
-      dashArray: "4 4",
-    }).addTo(polygonsLayerRef.current);
-
-    L.polygon(redCongestionCoords, {
-      color: "#dc2626",
-      fillColor: "#ef4444",
-      fillOpacity: isDarkMode ? 0.28 : 0.2,
-      weight: 1.5,
-      dashArray: "3 3",
-    }).addTo(polygonsLayerRef.current);
-
-    // Primary Route m3 Polyline (Emerald Green #00875A / Neon Emerald)
-    const m3Coordinates: [number, number][] = [
-      [55.7580, 37.6420],
-      [55.7645, 37.6610],
-      [55.7724, 37.6791], // м. Бауманская
-      [55.7785, 37.6970], // Бакунинская
-      [55.7831, 37.7189], // м. Электрозаводская
-      [55.7890, 37.7340], // м. Семёновская
-    ];
-
-    L.polyline(m3Coordinates, {
-      color: isDarkMode ? "#10b981" : "#00875A",
-      weight: 5,
-      opacity: 0.95,
-      lineCap: "round",
-      lineJoin: "round",
-    }).addTo(routeLayerRef.current);
-
-    // Stop Points
     const stopsList = [
-      { name: "ул. Покровка", coords: [55.7645, 37.6610] as [number, number] },
-      { name: "м. Бауманская", coords: [55.7724, 37.6791] as [number, number] },
-      { name: "Бакунинская ул.", coords: [55.7785, 37.6970] as [number, number] },
-      { name: "м. Электрозаводская", coords: [55.7831, 37.7189] as [number, number] },
-      { name: "м. Семёновская", coords: [55.7890, 37.7340] as [number, number] },
+      { name: "ул. Покровка", coords: [37.6610, 55.7645] as [number, number] },
+      { name: "м. Бауманская", coords: [37.6791, 55.7724] as [number, number] },
+      { name: "Бакунинская ул.", coords: [37.6970, 55.7785] as [number, number] },
+      { name: "м. Электрозаводская", coords: [37.7189, 55.7831] as [number, number] },
+      { name: "м. Семёновская", coords: [37.7340, 55.7890] as [number, number] },
     ];
 
     stopsList.forEach((stop) => {
-      const stopIcon = L.divIcon({
-        className: "stop-icon",
-        html: `
-          <div style="
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            background: ${isDarkMode ? "#18181b" : "#ffffff"};
-            border: 2px solid ${isDarkMode ? "#10b981" : "#00875A"};
-            border-radius: 6px;
-            padding: 2px 6px;
-            box-shadow: 0 2px 8px rgba(0,0,0,${isDarkMode ? "0.4" : "0.15"});
-            font-size: 10px;
-            font-weight: 700;
-            color: ${isDarkMode ? "#f4f4f5" : "#18181b"};
-            white-space: nowrap;
-            transform: translate(-50%, -100%);
-          ">
-            <span style="width: 5px; height: 5px; border-radius: 50%; background: ${isDarkMode ? "#10b981" : "#00875A"};"></span>
-            <span>${stop.name}</span>
-          </div>
-        `,
-        iconSize: [90, 22],
-        iconAnchor: [45, 11],
-      });
+      const el = document.createElement("div");
+      el.className = "stop-marker-item";
+      el.style.display = "flex";
+      el.style.alignItems = "center";
+      el.style.gap = "4px";
+      el.style.background = isDarkMode ? "#18181b" : "#ffffff";
+      el.style.border = `2px solid ${isDarkMode ? "#10b981" : "#00875A"}`;
+      el.style.borderRadius = "6px";
+      el.style.padding = "2px 6px";
+      el.style.boxShadow = `0 2px 8px rgba(0,0,0,${isDarkMode ? "0.4" : "0.15"})`;
+      el.style.fontSize = "10px";
+      el.style.fontWeight = "700";
+      el.style.color = isDarkMode ? "#f4f4f5" : "#18181b";
+      el.style.whiteSpace = "nowrap";
+      el.style.cursor = "default";
+      el.style.userSelect = "none";
 
-      L.marker(stop.coords, { icon: stopIcon }).addTo(stopsLayerRef.current!);
+      el.innerHTML = `
+        <span style="width: 5px; height: 5px; border-radius: 50%; background: ${isDarkMode ? "#10b981" : "#00875A"};"></span>
+        <span>${stop.name}</span>
+      `;
+
+      const marker = new maplibregl.Marker({
+        element: el,
+        anchor: "bottom",
+      })
+        .setLngLat(stop.coords)
+        .addTo(map);
+
+      stopMarkersRef.current.push(marker);
     });
-  }, [route, isDarkMode]);
+  }, [isDarkMode]);
 
-  // 5. Draw Vehicle Markers dynamically from displayedVehicles
+  // 5. Draw and Update Vehicle Markers and Headway Connector dynamically
   useEffect(() => {
-    if (!vehiclesLayerRef.current) return;
-    vehiclesLayerRef.current.clearLayers();
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    const activeIds = new Set(displayedVehicles.map((v) => v.id));
+
+    // Remove obsolete markers
+    Object.keys(vehicleMarkersRef.current).forEach((id) => {
+      if (!activeIds.has(id)) {
+        vehicleMarkersRef.current[id].remove();
+        delete vehicleMarkersRef.current[id];
+      }
+    });
 
     displayedVehicles.forEach((veh) => {
       const isSelected = veh.id === selectedVehicleId;
@@ -323,7 +534,6 @@ export const MapView: React.FC<MapViewProps> = ({
       const isDelayed = veh.status === "DELAYED";
       const cleanId = veh.id.replace(/^P/, "");
 
-      // Dynamic color theme
       const badgeBg = isBunching ? "#dc2626" : isDelayed ? "#d97706" : "#00875A";
       const statusText = isBunching
         ? `№${cleanId} • Пачкование ${veh.speedKmh} км/ч`
@@ -331,72 +541,90 @@ export const MapView: React.FC<MapViewProps> = ({
         ? `№${cleanId} • +${Math.round(veh.delaySeconds / 60)}м (${veh.speedKmh} км/ч)`
         : `№${cleanId} • ${veh.speedKmh} км/ч`;
 
-      const vehicleIcon = L.divIcon({
-        className: `bus-marker-${veh.id}`,
-        html: `
-          <div style="position: relative; display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -50%); cursor: pointer;">
-            ${(isBunching || isSelected) ? `
-              <div style="
-                position: absolute;
-                width: ${isSelected ? "52px" : "44px"};
-                height: ${isSelected ? "52px" : "44px"};
-                border-radius: 50%;
-                background: ${isBunching ? "rgba(239, 68, 68, 0.3)" : "rgba(37, 99, 235, 0.35)"};
-                animation: pulse-ring 2s infinite;
-              "></div>
-            ` : ""}
-            
-            <!-- Badge Pill -->
-            <div style="
-              position: relative;
-              z-index: 10;
-              display: flex;
-              align-items: center;
-              gap: 4px;
-              background: ${badgeBg};
-              color: #ffffff;
-              font-size: 11px;
-              font-weight: 800;
-              padding: 3px 8px;
-              border-radius: 9999px;
-              box-shadow: 0 4px 14px ${isBunching ? "rgba(220, 38, 38, 0.45)" : "rgba(0, 135, 90, 0.4)"};
-              border: 2px solid ${isSelected ? "#38bdf8" : "#ffffff"};
-              white-space: nowrap;
-              transition: transform 0.15s ease-in-out;
-            ">
-              <span style="width: 6px; height: 6px; border-radius: 50%; background: #ffffff;"></span>
-              <span>${statusText}</span>
-            </div>
-            
-            <!-- Vehicle Direction Pin -->
-            <div style="
-              width: 18px;
-              height: 18px;
-              border-radius: 50%;
-              background: ${badgeBg};
-              border: 2px solid ${isSelected ? "#38bdf8" : "#ffffff"};
-              margin-top: 2px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-            ">
-              <div style="width: 6px; height: 6px; border-radius: 50%; background: #ffffff;"></div>
-            </div>
-          </div>
-        `,
-        iconSize: [220, 48],
-        iconAnchor: [110, 24],
-      });
+      let marker = vehicleMarkersRef.current[veh.id];
 
-      const marker = L.marker([veh.latitude, veh.longitude], { icon: vehicleIcon });
-      marker.on("click", () => onSelectVehicle(veh.id));
-      vehiclesLayerRef.current?.addLayer(marker);
+      if (!marker) {
+        const el = document.createElement("div");
+        el.className = `bus-marker-${veh.id}`;
+        el.style.cursor = "pointer";
+        el.onclick = () => onSelectVehicleRef.current(veh.id);
+
+        marker = new maplibregl.Marker({
+          element: el,
+          anchor: "center",
+        })
+          .setLngLat([veh.longitude, veh.latitude])
+          .addTo(map);
+
+        vehicleMarkersRef.current[veh.id] = marker;
+      } else {
+        marker.setLngLat([veh.longitude, veh.latitude]);
+      }
+
+      // Update inner HTML of vehicle marker
+      const el = marker.getElement();
+      el.innerHTML = `
+        <div style="position: relative; display: flex; flex-direction: column; align-items: center; cursor: pointer;">
+          ${
+            isBunching || isSelected
+              ? `
+            <div style="
+              position: absolute;
+              width: ${isSelected ? "52px" : "44px"};
+              height: ${isSelected ? "52px" : "44px"};
+              border-radius: 50%;
+              background: ${isBunching ? "rgba(239, 68, 68, 0.3)" : "rgba(37, 99, 235, 0.35)"};
+              animation: pulse-ring 2s infinite;
+            "></div>
+          `
+              : ""
+          }
+          
+          <!-- Badge Pill -->
+          <div style="
+            position: relative;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: ${badgeBg};
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 9999px;
+            box-shadow: 0 4px 14px ${isBunching ? "rgba(220, 38, 38, 0.45)" : "rgba(0, 135, 90, 0.4)"};
+            border: 2px solid ${isSelected ? "#38bdf8" : "#ffffff"};
+            white-space: nowrap;
+            transition: transform 0.15s ease-in-out;
+          ">
+            <span style="width: 6px; height: 6px; border-radius: 50%; background: #ffffff;"></span>
+            <span>${statusText}</span>
+          </div>
+          
+          <!-- Vehicle Direction Pin -->
+          <div style="
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: ${badgeBg};
+            border: 2px solid ${isSelected ? "#38bdf8" : "#ffffff"};
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+          ">
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: #ffffff;"></div>
+          </div>
+        </div>
+      `;
     });
 
     // 6. Headway Connector between trailing bus and leading bus
     const trailingVeh = displayedVehicles.find((v) => v.id.includes("1043"));
     const leadingVeh = displayedVehicles.find((v) => v.id.includes("1042"));
+    const headwaySource = map.getSource("headway-connector") as maplibregl.GeoJSONSource | undefined;
 
     if (trailingVeh && leadingVeh) {
       const isCritical =
@@ -405,19 +633,24 @@ export const MapView: React.FC<MapViewProps> = ({
           : trailingVeh.status === "BUNCHING_RISK" || leadingVeh.status === "BUNCHING_RISK";
       const connectorColor = isCritical ? "#ef4444" : "#10b981";
 
-      const connectorLine = L.polyline(
-        [
-          [trailingVeh.latitude, trailingVeh.longitude],
-          [leadingVeh.latitude, leadingVeh.longitude],
-        ],
-        {
-          color: connectorColor,
-          weight: 3,
-          dashArray: isCritical ? "5, 7" : "4, 6",
-          opacity: 0.9,
-        }
-      );
-      vehiclesLayerRef.current.addLayer(connectorLine);
+      if (headwaySource) {
+        headwaySource.setData({
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              properties: { color: connectorColor },
+              geometry: {
+                type: "LineString",
+                coordinates: [
+                  [trailingVeh.longitude, trailingVeh.latitude],
+                  [leadingVeh.longitude, leadingVeh.latitude],
+                ],
+              },
+            },
+          ],
+        });
+      }
 
       // Midpoint interval tag
       const midLat = (trailingVeh.latitude + leadingVeh.latitude) / 2;
@@ -434,38 +667,58 @@ export const MapView: React.FC<MapViewProps> = ({
         intervalText = isHoldingApplied ? "Δ 8.5 мин • График в норме" : "Δ 1.8 мин • Нарушение такта";
       }
 
-      const headwayBadge = L.divIcon({
-        className: "headway-badge",
-        html: `
-          <div style="
-            background: ${isCritical ? "#dc2626" : "#00875A"};
-            color: #ffffff;
-            font-size: 10px;
-            font-weight: 800;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            padding: 2px 8px;
-            border-radius: 9999px;
-            border: 1.5px solid #ffffff;
-            box-shadow: 0 2px 10px ${isCritical ? "rgba(220, 38, 38, 0.5)" : "rgba(0, 135, 90, 0.4)"};
-            white-space: nowrap;
-            transform: translate(-50%, -50%);
-          ">
-            ${intervalText}
-          </div>
-        `,
-        iconSize: [200, 24],
-        iconAnchor: [100, 12],
-      });
-      vehiclesLayerRef.current.addLayer(L.marker([midLat, midLon], { icon: headwayBadge }));
+      if (!headwayMarkerRef.current) {
+        const badgeEl = document.createElement("div");
+        badgeEl.className = "headway-badge";
+        headwayMarkerRef.current = new maplibregl.Marker({
+          element: badgeEl,
+          anchor: "center",
+        })
+          .setLngLat([midLon, midLat])
+          .addTo(map);
+      } else {
+        headwayMarkerRef.current.setLngLat([midLon, midLat]);
+      }
+
+      const el = headwayMarkerRef.current.getElement();
+      el.innerHTML = `
+        <div style="
+          background: ${isCritical ? "#dc2626" : "#00875A"};
+          color: #ffffff;
+          font-size: 10px;
+          font-weight: 800;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          padding: 2px 8px;
+          border-radius: 9999px;
+          border: 1.5px solid #ffffff;
+          box-shadow: 0 2px 10px ${isCritical ? "rgba(220, 38, 38, 0.5)" : "rgba(0, 135, 90, 0.4)"};
+          white-space: nowrap;
+        ">
+          ${intervalText}
+        </div>
+      `;
+    } else {
+      if (headwaySource) {
+        headwaySource.setData({
+          type: "FeatureCollection",
+          features: [],
+        });
+      }
+      if (headwayMarkerRef.current) {
+        headwayMarkerRef.current.remove();
+        headwayMarkerRef.current = null;
+      }
     }
-  }, [displayedVehicles, selectedVehicleId, onSelectVehicle, isDarkMode, timeStep, isHoldingApplied]);
+  }, [displayedVehicles, selectedVehicleId, isDarkMode, timeStep, isHoldingApplied]);
 
   // FlyTo handler
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (map && flyToTarget) {
-      map.flyTo([flyToTarget.lat, flyToTarget.lon], flyToTarget.zoom || 14, {
-        duration: 1.2,
+      map.flyTo({
+        center: [flyToTarget.lon, flyToTarget.lat],
+        zoom: flyToTarget.zoom || 14,
+        duration: 1200,
       });
     }
   }, [flyToTarget]);
@@ -493,13 +746,11 @@ export const MapView: React.FC<MapViewProps> = ({
 
   return (
     <div className="relative w-full h-full flex-1 overflow-hidden select-none">
-      {/* 1. Leaflet Map Viewport */}
+      {/* 1. MapLibre GL Map Viewport */}
       <div ref={mapContainerRef} className="absolute inset-0 w-full h-full z-0" />
 
       {/* 2. Floating Map Tools (Right side of left panel) */}
-      <div
-        className="absolute top-5 left-[365px] z-20 flex flex-col gap-1 p-1.5 rounded-xl border border-zinc-700/80 bg-[#18181b]/95 text-zinc-200 shadow-xl shadow-black/25 pointer-events-auto backdrop-blur-xl transition-all"
-      >
+      <div className="absolute top-5 left-[365px] z-20 flex flex-col gap-1 p-1.5 rounded-xl border border-zinc-700/80 bg-[#18181b]/95 text-zinc-200 shadow-xl shadow-black/25 pointer-events-auto backdrop-blur-xl transition-all">
         <button
           onClick={() => mapInstanceRef.current?.zoomIn()}
           className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer hover:bg-slate-800 text-slate-200"
@@ -516,15 +767,28 @@ export const MapView: React.FC<MapViewProps> = ({
         </button>
         <div className="h-px my-0.5 bg-slate-700" />
         <button
-          onClick={() => mapInstanceRef.current?.flyTo([55.7745, 37.6850], 13)}
+          onClick={() =>
+            mapInstanceRef.current?.flyTo({
+              center: [37.6850, 55.7745],
+              zoom: 13,
+              duration: 1000,
+            })
+          }
           className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer hover:bg-slate-800 text-slate-200"
           title="Центрировать на перегоне"
         >
           <Crosshair size={14} />
         </button>
         <button
+          onClick={() => {
+            const map = mapInstanceRef.current;
+            if (map) {
+              const currentPitch = map.getPitch();
+              map.easeTo({ pitch: currentPitch > 20 ? 0 : 45, duration: 800 });
+            }
+          }}
           className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer hover:bg-slate-800 text-slate-200"
-          title="Слои карты"
+          title="Переключить перспективу 2D/2.5D"
         >
           <Layers size={14} />
         </button>
@@ -713,7 +977,9 @@ export const MapView: React.FC<MapViewProps> = ({
 
         {/* Subtle source attribution */}
         <div className={`text-[9px] text-center font-medium ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
-          Esri Canvas GIS • Прогностический движок СППР Мосгортранс
+          {isTileServerAvailable
+            ? "Автономная векторная карта Москвы (TileServer GL • Planetiler) • СППР Мосгортранс"
+            : "Резервная карта (TileServer GL offline) • СППР Мосгортранс"}
         </div>
       </div>
     </div>

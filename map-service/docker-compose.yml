@@ -1,0 +1,16 @@
+services:
+  tileserver:
+    image: maptiler/tileserver-gl:latest
+    container_name: moscow-map-tileserver
+    restart: unless-stopped
+    ports:
+      - "8085:80"
+    volumes:
+      - ./data:/data
+      - ./styles:/data/styles
+      - ./config.json:/data/config.json
+    command: ["--config", "/data/config.json", "-p", "80"]
+    deploy:
+      resources:
+        limits:
+          memory: 2G

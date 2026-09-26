@@ -61,3 +61,18 @@ docker-down: ## Остановить все Docker-контейнеры
 
 docker-logs: ## Смотреть логи всех Docker-сервисов в реальном времени
 	docker compose logs -f
+
+map-download: ## Скачать дамп OpenStreetMap Москвы
+	@./map-service/scripts/download_osm.sh
+
+map-build: ## Собрать векторные тайлы Москвы через Planetiler
+	@./map-service/scripts/build_tiles.sh
+
+map-up: ## Запустить автономный тайловый сервер TileServer GL (:8085)
+	cd map-service && docker compose up -d
+
+map-down: ## Остановить тайловый сервер
+	cd map-service && docker compose down
+
+map-logs: ## Смотреть логи тайлового сервера
+	cd map-service && docker compose logs -f

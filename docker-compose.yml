@@ -51,7 +51,7 @@ services:
     networks:
       - mt-network
 
-  # Situation Center Dashboard (React + Leaflet + Nginx Reverse Proxy)
+  # Situation Center Dashboard (React + MapLibre GL + Nginx Reverse Proxy)
   frontend:
     build:
       context: ./frontend
@@ -62,7 +62,27 @@ services:
       - "5173:80"
     depends_on:
       - backend
+      - tileserver
     restart: unless-stopped
+    networks:
+      - mt-network
+
+  # Autonomous Moscow Vector Tile Server (TileServer GL :8085)
+  tileserver:
+    image: maptiler/tileserver-gl:latest
+    container_name: mt-predictor-tileserver
+    restart: unless-stopped
+    ports:
+      - "8085:80"
+    volumes:
+      - ./map-service/data:/data
+      - ./map-service/styles:/data/styles
+      - ./map-service/config.json:/data/config.json
+    command: ["--config", "/data/config.json", "-p", "80"]
+    deploy:
+      resources:
+        limits:
+          memory: 2G
     networks:
       - mt-network
 
