@@ -11,6 +11,7 @@ import { DriverTerminal } from "./components/DriverTerminal";
 import { JuryGuideModal } from "./components/JuryGuideModal";
 import { SlidersHorizontal } from "lucide-react";
 import { loadPreferences, savePreferences } from "./utils/storage";
+import type { AlertItem } from "./mock/telemetry";
 
 export default function App() {
   const initialPrefs = useMemo(() => loadPreferences(), []);
@@ -62,7 +63,7 @@ export default function App() {
     savePreferences({ isInspectorOpen: open });
   };
 
-  const handleAlertClick = (alert: any) => {
+  const handleAlertClick = (alert: AlertItem) => {
     handleSelectAlert(alert);
     handleSetInspectorOpen(true);
   };

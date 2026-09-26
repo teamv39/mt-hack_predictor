@@ -14,6 +14,7 @@ import {
   Activity,
   Layers,
   Compass,
+  Smartphone,
 } from "lucide-react";
 
 export type SimulationAction = "play" | "pause" | "speed" | "step" | "reset";
@@ -159,7 +160,8 @@ export const TopBar: React.FC<TopBarProps> = ({
                 : "text-red-100 hover:text-white hover:bg-white/10"
             }`}
           >
-            <span>📱 Терминал борта</span>
+            <Smartphone size={13} />
+            <span>Терминал борта</span>
           </button>
         </nav>
       </div>

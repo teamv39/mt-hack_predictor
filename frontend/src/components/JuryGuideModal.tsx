@@ -3,16 +3,10 @@ import {
   X,
   Compass,
   CheckCircle2,
-  Clock,
-  Layers,
-  Activity,
   ArrowRight,
   ArrowLeft,
-  Cpu,
   ShieldCheck,
-  Radio,
   Sparkles,
-  ExternalLink,
 } from "lucide-react";
 
 interface JuryGuideModalProps {

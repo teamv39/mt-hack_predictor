@@ -20,7 +20,7 @@ const SCENARIOS: ScenarioItem[] = [
     id: "holding",
     code: "HOLDING",
     title: "СЦЕНАРИЙ 1: HOLDING (Удержание лидера)",
-    badge: "★ РЕКОМЕНДАЦИЯ ИИ • ЭФФЕКТ 96%",
+    badge: "РЕКОМЕНДАЦИЯ ИИ • ЭФФЕКТ 96%",
     effect: "96%",
     command: "Придержать идущий следом лидер №1043 на остановке м. Бауманская на 2.5 мин.",
     bullets: [

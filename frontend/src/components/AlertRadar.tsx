@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   AlertTriangle,
-  MoreHorizontal,
   Search,
   Sparkles,
 } from "lucide-react";

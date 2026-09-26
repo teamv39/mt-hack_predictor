@@ -1,13 +1,13 @@
 import React from "react";
 import {
   X,
-  Maximize2,
   CheckCircle2,
   GitBranch,
   Gauge,
   Clock,
   MapPin,
-  TrendingDown,
+  Grid2x2,
+  ChevronDown,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -255,7 +255,11 @@ export const Inspector: React.FC<InspectorProps> = ({
 
       {/* 4. SHAP factor breakdown */}
       <div
-        className="rounded-xl border border-zinc-800 bg-[#18181b] text-white p-3.5 shadow-md flex flex-col gap-2"
+        className={`rounded-xl border p-3.5 shadow-md flex flex-col gap-2 ${
+          isDarkMode
+            ? "border-zinc-800 bg-[#18181b] text-white"
+            : "border-slate-200 bg-slate-900 text-white"
+        }`}
       >
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold text-white flex items-center gap-1.5">
@@ -340,8 +344,8 @@ export const Inspector: React.FC<InspectorProps> = ({
           <CheckCircle2 size={16} />
           <span>
             {isApplied
-              ? `✓ Команда передана на борт ${targetVehId}`
-              : `✓ Применить Holding (${targetVehId})`}
+              ? `Команда передана на борт ${targetVehId}`
+              : `Применить Holding (${targetVehId})`}
           </span>
         </button>
 
@@ -354,7 +358,9 @@ export const Inspector: React.FC<InspectorProps> = ({
               : "border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-800"
           }`}
         >
-          <span>⚡ Матрица сценариев СППР (4 варианта) ▾</span>
+          <Grid2x2 size={13} className="shrink-0" />
+          <span>Матрица сценариев СППР (4 варианта)</span>
+          <ChevronDown size={12} className="shrink-0" />
         </button>
       </div>
     </aside>

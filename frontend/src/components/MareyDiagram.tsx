@@ -2,14 +2,11 @@ import React, { useState } from "react";
 import {
   TrendingUp,
   AlertTriangle,
-  Clock,
   CheckCircle2,
-  Sliders,
-  ChevronRight,
-  Maximize2,
-  RefreshCw,
   Cpu,
   Bus,
+  Grid2x2,
+  ChevronDown,
 } from "lucide-react";
 
 interface MareyDiagramProps {
@@ -27,10 +24,10 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
 }) => {
   const [filterMode, setFilterMode] = useState<"all" | "anomalies">("all");
   const [showPlan, setShowPlan] = useState<boolean>(true);
-  const [holdingApplied, setHoldingApplied] = useState<boolean>(isApplied);
+  // Derive holding state from parent prop to keep sync across tabs
+  const holdingApplied = isApplied;
 
   const handleApply = () => {
-    setHoldingApplied(true);
     if (onApplyHolding) onApplyHolding();
   };
 
@@ -579,7 +576,7 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
               }`}
             >
               <CheckCircle2 className="w-4 h-4" />
-              <span>{holdingApplied ? "✓ Holding №1043 применён" : "✓ Применить Holding №1043 (2.5м)"}</span>
+              <span>{holdingApplied ? "Holding №1043 применён" : "Применить Holding №1043 (2.5м)"}</span>
             </button>
 
             <button
@@ -590,7 +587,9 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
                   : "border-slate-300 bg-white hover:bg-slate-100 text-slate-700"
               }`}
             >
-              <span>⚡ Ситуационная матрица (4 сценария) ▾</span>
+              <Grid2x2 size={13} className="shrink-0" />
+              <span>Ситуационная матрица (4 сценария)</span>
+              <ChevronDown size={12} className="shrink-0" />
             </button>
           </div>
         </aside>

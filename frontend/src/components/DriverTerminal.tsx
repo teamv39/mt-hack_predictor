@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   CheckCircle2,
+  Check,
   Clock,
   PhoneCall,
   AlertTriangle,
@@ -9,8 +10,6 @@ import {
   RotateCcw,
   ArrowRight,
   Shield,
-  Gauge,
-  Zap,
 } from "lucide-react";
 import { loadPreferences, savePreferences } from "../utils/storage";
 
@@ -401,8 +400,9 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
                 }`}>
                   «Уважаемые пассажиры, технологическая регулировка интервала движения».
                 </p>
-                <span className="text-[10px] text-emerald-600 font-mono font-semibold">
-                  ✓ Оповещение воспроизведено
+                <span className="text-[10px] text-emerald-600 font-mono font-semibold flex items-center gap-1">
+                  <Check size={11} className="shrink-0" />
+                  Оповещение воспроизведено
                 </span>
               </div>
             </div>
