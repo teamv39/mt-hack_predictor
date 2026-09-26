@@ -240,7 +240,7 @@ export function useTelemetry() {
         model: "ЛиАЗ-6274 (Электробус)",
         routeId: selectedAlert.routeId || "т88",
         routeName: `Маршрут ${selectedAlert.routeNumberBadge}`,
-        status: (selectedAlert.category === "critical" ? "DELAYED" : "BUNCHING_RISK") as const,
+        status: selectedAlert.category === "critical" ? ("DELAYED" as const) : ("BUNCHING_RISK" as const),
         delaySeconds: (selectedAlert.urgencyMinutes || 6) * 60,
         predictedTerminalDelayMinutes: selectedAlert.urgencyMinutes || 6,
         speedKmh: 19,
