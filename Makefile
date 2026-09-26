@@ -40,6 +40,10 @@ check: ## Проверить компиляцию Go, сборку фронте�
 	cd ml && uv run pytest
 	@echo "==> Все доступные проверки пройдены успешно!"
 
+status: ## Проверить доступность и сквозную связку сервисов (ML ↔ Backend ↔ WebSocket ↔ Frontend)
+	@./scripts/check_live.sh
+
+
 docker-build: ## Собрать все Docker-образы проекта
 	docker compose build
 
