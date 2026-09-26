@@ -37,7 +37,7 @@ const STEPS: StepItem[] = [
     points: [
       {
         title: "Таймлайн прогнозирования",
-        desc: "Переключайте бегунок снизу: «Сейчас» ➔ «+15м (ML)» ➔ «+30м» ➔ «+45м». На T+15 мин наглядно виден очаг пачкования на перегоне Бауманская → Бакунинская.",
+        desc: "Переключайте бегунок снизу: «Сейчас» → «+15м (ML)» → «+30м» → «+45м». На T+15 мин наглядно виден очаг пачкования на перегоне Бауманская → Бакунинская.",
       },
       {
         title: "Светофорная индикация",
@@ -61,7 +61,7 @@ const STEPS: StepItem[] = [
     points: [
       {
         title: "Декомпозиция задержки",
-        desc: "В правой панели «Инспектор» рассчитывается точный вклад факторов: затор на Бакунинской (+2.3 мин, 55%), посадка в дождь (+1.1 мин, 27%), светофор ТТК (+0.8 мин, 18%).",
+        desc: "В правой панели «Инспектор» рассчитывается точный вклад факторов: затор на Бакунинской (+2.3 мин, 46%), посадка в непогоду (+1.1 мин, 28%), светофор ТТК (+0.8 мин, 16%).",
       },
       {
         title: "Сравнение траекторий (Recharts)",
@@ -93,7 +93,7 @@ const STEPS: StepItem[] = [
       },
       {
         title: "Матрица сценариев СППР (What-if)",
-        desc: "Кнопка «Матрица сценариев» открывает 4 тактические стратегии: Holding, нагон графика, размен ниток, ввод резервного борта.",
+        desc: "Кнопка «Матрица альтернативных сценариев» открывает 4 тактические стратегии: Holding, экспресс-пропуск, укорачивание рейса, ввод резерва.",
       },
     ],
     actionPrompt: "Нажмите зелёную кнопку «Применить Holding» в Инспекторе",
@@ -101,50 +101,50 @@ const STEPS: StepItem[] = [
   },
   {
     id: 4,
-    badge: "Шаг 4 • График Марея",
-    criterion: "Бонусная фича (Магистрали)",
-    title: "Струнный график движения Марея (маршрут м3)",
+    badge: "Шаг 4 • График движения Марея",
+    criterion: "Критерий 2 (Глубина визуализации)",
+    title: "Диаграмма Марея для магистрали м3",
     summary:
-      "Профессиональный рабочий инструмент главного диспетчера службы движения Мостранспорта.",
+      "Классический железнодорожный и трамвайно-автобусный график движения в осях «Время — Дистанция».",
     points: [
       {
-        title: "12 электробусов в реальном времени",
-        desc: "Координатная сетка «Время (X) — Остановочные пункты (Y)». Нитка каждого борта отображает фактическое положение и прогноз.",
+        title: "Пространство — Время",
+        desc: "По вертикали — остановочные пункты от м. Семёновская до Лужников (18.4 км). По горизонтали — астрономическое время.",
       },
       {
-        title: "Коэффициент вариации интервалов (CV)",
-        desc: "В верхней плашке отображается метрика регулярности CV: норма < 0.20. При пачковании — 0.42 (Сбой), после Holding — 0.18 (Норма).",
+        title: "Визуальный сбой траекторий",
+        desc: "Траектория борта #1042 настигает борт #1043 (красная линия). Видно пересечение ниток (пачкование).",
       },
       {
-        title: "Интерактивная точка пересечения",
-        desc: "Клик по зоне пересечения траекторий открывает плавающее окно упреждения с возможностью применить Holding прямо на графике.",
+        title: "Проекция упреждения",
+        desc: "После нажатия «Применить Holding» горизонтальная площадка удержания 2.5 мин сдвигает нитку графика и восстанавливает такт 8 минут.",
       },
     ],
-    actionPrompt: "Перейдите на вкладку «График Марея (м3)» в шапке",
+    actionPrompt: "Переключите вкладку в шапке на «График Марея (м3)»",
     tabTarget: "marey",
   },
   {
     id: 5,
     badge: "Шаг 5 • Борт ТС",
-    criterion: "Бонусная фича (End-to-End)",
-    title: "Кабинный терминал водителя (Гранит-Навигатор)",
+    criterion: "Критерий 3 (АСУ-РДС интеграция)",
+    title: "Интерфейс бортового компьютера водителя",
     summary:
-      "Замыкание контура управления: передача управляющей директивы из диспетчерского центра прямо в кабину водителя.",
+      "Прямая передача управляющей директивы из СППР диспетчера в кабину электробуса ЛиАЗ-6274.",
     points: [
       {
         title: "Таймер технологической выдержки",
-        desc: "Большие антибликовые цифры обратного отсчета (150 сек). Водитель точно видит расчетное время отправления (00:53 МСК).",
+        desc: "Крупный обратный отсчёт оставшегося времени стоянки (02:09) с визуальной шкалой заполнения такта.",
       },
       {
-        title: "Схема перегона и автоинформатор",
-        desc: "Наглядный трек дистанции до лидера + автоматическая трансляция сообщения пассажирам: «Уважаемые пассажиры, технологическая регулировка интервала».",
+        title: "АСМПП и автоинформатор",
+        desc: "Мониторинг занятости салона (48/85 пасс.) и автоматическое голосовое оповещение пассажиров в салоне.",
       },
       {
         title: "Квитирование команды",
-        desc: "Кнопка подтверждения фиксирует отметку исполнения директивы и отправляет статус обратно в диспетчерскую.",
+        desc: "Водитель нажимает «Подтвердить прием и выполнение директивы» — статус исполнения мгновенно возвращается на пульт диспетчера.",
       },
     ],
-    actionPrompt: "Перейдите на вкладку «Терминал борта» в шапке",
+    actionPrompt: "Переключите вкладку на «Терминал борта»",
     tabTarget: "terminal",
   },
 ];
@@ -179,35 +179,35 @@ export const JuryGuideModal: React.FC<JuryGuideModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in font-sans select-none">
       <div
-        className={`w-full max-w-3xl rounded-2xl border shadow-2xl overflow-hidden flex flex-col transition-all max-h-[92vh] ${
+        className={`w-full max-w-3xl rounded-xl border shadow-xl overflow-hidden flex flex-col transition-all max-h-[90vh] ${
           isDarkMode
-            ? "bg-[#18181b] border-zinc-700/80 text-zinc-100 shadow-black/80"
-            : "bg-white border-zinc-200 text-zinc-900 shadow-slate-900/20"
+            ? "bg-[#18181b] border-white/10 text-zinc-100 shadow-black/80"
+            : "bg-white border-zinc-200 text-zinc-900 shadow-zinc-900/15"
         }`}
         data-purpose="jury-guide-modal"
       >
         {/* Header */}
         <div
           className={`px-5 py-3.5 border-b flex items-center justify-between shrink-0 ${
-            isDarkMode ? "bg-[#121214] border-zinc-800" : "bg-gradient-to-r from-red-50 to-white border-zinc-200"
+            isDarkMode ? "bg-[#141416] border-white/10" : "bg-zinc-50 border-zinc-200"
           }`}
         >
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#D32F2F] text-white flex items-center justify-center shadow-xs">
-              <Compass className="w-4 h-4" />
+            <div className="w-7 h-7 rounded-lg bg-zinc-800 border border-white/10 text-zinc-200 flex items-center justify-center shadow-xs">
+              <Compass className="w-4 h-4 text-zinc-300" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-black uppercase tracking-wider text-[#D32F2F]">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-200">
                   Инструкция для экспертов и жюри
                 </span>
                 <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded font-mono ${
-                  isDarkMode ? "bg-zinc-800 text-zinc-300" : "bg-zinc-100 text-zinc-700"
+                  isDarkMode ? "bg-zinc-800 text-zinc-300" : "bg-zinc-200 text-zinc-700"
                 }`}>
                   Трек №3 • MT-Hack
                 </span>
               </div>
-              <h2 className="text-sm font-extrabold tracking-tight">
+              <h2 className="text-xs font-semibold tracking-tight text-zinc-400">
                 Экскурсия по ключевым возможностям решения
               </h2>
             </div>
@@ -215,10 +215,10 @@ export const JuryGuideModal: React.FC<JuryGuideModalProps> = ({
 
           <button
             onClick={onClose}
-            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+            className={`p-1 rounded-md transition-colors cursor-pointer ${
               isDarkMode
-                ? "hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100"
-                : "hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900"
+                ? "hover:bg-white/10 text-zinc-400 hover:text-white"
+                : "hover:bg-zinc-200 text-zinc-500 hover:text-zinc-900"
             }`}
             title="Закрыть экскурсию"
           >
@@ -228,8 +228,8 @@ export const JuryGuideModal: React.FC<JuryGuideModalProps> = ({
 
         {/* Step Navigation Pills */}
         <div
-          className={`px-5 py-2.5 border-b flex items-center justify-between gap-1 overflow-x-auto shrink-0 ${
-            isDarkMode ? "bg-[#151518] border-zinc-800" : "bg-zinc-50 border-zinc-100"
+          className={`px-4 py-2 border-b flex items-center justify-between gap-1 overflow-x-auto shrink-0 ${
+            isDarkMode ? "bg-[#18181b] border-white/10" : "bg-zinc-100/70 border-zinc-200"
           }`}
         >
           {STEPS.map((step, idx) => {
@@ -239,22 +239,24 @@ export const JuryGuideModal: React.FC<JuryGuideModalProps> = ({
               <button
                 key={step.id}
                 onClick={() => setCurrentStepIdx(idx)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
+                className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                   isActive
-                    ? "bg-[#D32F2F] text-white shadow-xs"
-                    : isCompleted
                     ? isDarkMode
-                      ? "bg-zinc-800 text-emerald-400 hover:bg-zinc-700"
-                      : "bg-white text-emerald-700 border border-zinc-200 hover:bg-zinc-100"
+                      ? "bg-zinc-800 text-white shadow-xs"
+                      : "bg-white text-zinc-900 shadow-xs border border-zinc-200"
+                    : isCompleted
+                    ? "text-emerald-500 hover:bg-white/5"
                     : isDarkMode
-                    ? "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
-                    : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200"
+                    ? "text-zinc-400 hover:text-zinc-200"
+                    : "text-zinc-500 hover:text-zinc-900"
                 }`}
               >
                 {isCompleted ? (
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                 ) : (
-                  <span className="w-4 h-4 rounded-full bg-white/20 text-[10px] font-mono flex items-center justify-center">
+                  <span className={`w-4 h-4 rounded-full text-[10px] font-mono flex items-center justify-center ${
+                    isActive ? "bg-zinc-700 text-white" : "bg-zinc-300 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-400"
+                  }`}>
                     {step.id}
                   </span>
                 )}
@@ -265,47 +267,46 @@ export const JuryGuideModal: React.FC<JuryGuideModalProps> = ({
         </div>
 
         {/* Modal Body */}
-        <div className="p-5 sm:p-6 overflow-y-auto flex-1 flex flex-col gap-4">
-          {/* Active Step Badge and Title */}
+        <div className="p-4 sm:p-5 overflow-y-auto flex-1 flex flex-col gap-3">
           <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="text-[11px] font-mono font-bold text-amber-500 uppercase tracking-wider">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-wider">
                 {currentStep.badge}
               </span>
               <span className="text-zinc-400">•</span>
-              <span className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded ${
-                isDarkMode ? "bg-zinc-800 text-cyan-300" : "bg-blue-50 text-blue-700 border border-blue-200"
+              <span className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded border ${
+                isDarkMode ? "bg-zinc-800 text-zinc-300 border-white/5" : "bg-zinc-100 text-zinc-700 border-zinc-200"
               }`}>
                 {currentStep.criterion}
               </span>
             </div>
-            <h3 className="text-lg sm:text-xl font-black tracking-tight">
+            <h3 className="text-base font-bold tracking-tight">
               {currentStep.title}
             </h3>
-            <p className={`text-xs sm:text-sm mt-1 leading-relaxed ${isDarkMode ? "text-zinc-300" : "text-zinc-600"}`}>
+            <p className={`text-xs mt-1 leading-relaxed ${isDarkMode ? "text-zinc-300" : "text-zinc-600"}`}>
               {currentStep.summary}
             </p>
           </div>
 
           {/* Key Details Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 my-1">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 my-1">
             {currentStep.points.map((pt, i) => (
               <div
                 key={i}
-                className={`p-3.5 rounded-xl border flex flex-col justify-between shadow-xs transition-colors ${
+                className={`p-3 rounded-lg border flex flex-col justify-between transition-colors ${
                   isDarkMode
-                    ? "bg-[#1f1f23] border-zinc-700/80 text-zinc-200"
+                    ? "bg-[#222226] border-white/5 text-zinc-200"
                     : "bg-zinc-50 border-zinc-200 text-zinc-800"
                 }`}
               >
                 <div>
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <span className="w-2 h-2 rounded-full bg-[#D32F2F]" />
-                    <h4 className="text-xs font-black tracking-tight uppercase">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
+                    <h4 className="text-[11px] font-bold tracking-tight uppercase">
                       {pt.title}
                     </h4>
                   </div>
-                  <p className={`text-[11px] leading-relaxed font-medium ${
+                  <p className={`text-[11px] leading-relaxed ${
                     isDarkMode ? "text-zinc-400" : "text-zinc-600"
                   }`}>
                     {pt.desc}
@@ -317,64 +318,49 @@ export const JuryGuideModal: React.FC<JuryGuideModalProps> = ({
 
           {/* Action Prompt Callout */}
           <div
-            className={`p-3 rounded-xl border flex items-center justify-between gap-3 text-xs font-medium ${
+            className={`p-2.5 rounded-lg border flex items-center justify-between gap-3 text-xs font-medium ${
               isDarkMode
-                ? "bg-amber-950/20 border-amber-600/40 text-amber-200"
-                : "bg-amber-50/80 border-amber-300 text-amber-950"
+                ? "bg-amber-950/20 border-amber-800/40 text-amber-300"
+                : "bg-amber-50/70 border-amber-200 text-amber-900"
             }`}
           >
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
-              <span>
-                <strong>Совет для проверки:</strong> {currentStep.actionPrompt}
-              </span>
+              <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>{currentStep.actionPrompt}</span>
             </div>
-          </div>
-
-          {/* System Architecture Micro-Banner */}
-          <div
-            className={`p-3 rounded-xl border flex flex-wrap items-center justify-between gap-2 text-[10px] font-mono ${
-              isDarkMode ? "bg-[#121214] border-zinc-800 text-zinc-400" : "bg-zinc-100/70 border-zinc-200 text-zinc-600"
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-              <span>Архитектура: NDTP TCP :9201 ➔ Go Core :8080 ➔ CatBoost ML :8000 ➔ React :5173</span>
-            </div>
-            <span className="text-emerald-500 font-bold">100% готовность к защите</span>
           </div>
         </div>
 
-        {/* Footer Actions */}
+        {/* Modal Footer */}
         <div
-          className={`px-5 py-3.5 border-t flex items-center justify-between shrink-0 ${
-            isDarkMode ? "bg-[#121214] border-zinc-800" : "bg-zinc-50 border-zinc-200"
+          className={`px-5 py-3 border-t flex items-center justify-between shrink-0 ${
+            isDarkMode ? "bg-[#141416] border-white/10" : "bg-zinc-50 border-zinc-200"
           }`}
         >
           <button
             onClick={handlePrev}
             disabled={isFirst}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
               isFirst
-                ? "opacity-30 cursor-not-allowed text-zinc-400"
+                ? "opacity-40 cursor-not-allowed border-transparent text-zinc-500"
                 : isDarkMode
-                ? "hover:bg-zinc-800 text-zinc-300"
-                : "hover:bg-zinc-200 text-zinc-700"
+                ? "border-white/10 hover:bg-white/5 text-zinc-300"
+                : "border-zinc-300 hover:bg-white text-zinc-700"
             }`}
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Назад</span>
           </button>
 
-          {/* Step indicator dots */}
+          {/* Step dots */}
           <div className="flex items-center gap-1.5">
             {STEPS.map((_, i) => (
               <span
                 key={i}
                 className={`h-1.5 rounded-full transition-all ${
                   i === currentStepIdx
-                    ? "w-6 bg-[#D32F2F]"
-                    : "w-1.5 bg-zinc-400/40"
+                    ? "w-5 bg-zinc-400"
+                    : "w-1.5 bg-zinc-300 dark:bg-zinc-700"
                 }`}
               />
             ))}
@@ -382,19 +368,13 @@ export const JuryGuideModal: React.FC<JuryGuideModalProps> = ({
 
           <button
             onClick={handleNext}
-            className={`px-4 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer shadow-md active:scale-95 ${
-              isLast
-                ? "bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white shadow-emerald-950/20"
-                : "bg-[#D32F2F] hover:bg-[#b71c1c] text-white shadow-red-950/20"
-            }`}
+            className="px-4 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-900 text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
           >
-            <span>{isLast ? "Понятно, начать работу" : "Далее"}</span>
-            {!isLast && <ArrowRight className="w-3.5 h-3.5" />}
+            <span>{isLast ? "Понятно, начать" : "Далее"}</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
     </div>
   );
 };
-
-export default JuryGuideModal;

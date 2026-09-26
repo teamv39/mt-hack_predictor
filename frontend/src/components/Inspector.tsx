@@ -7,7 +7,9 @@ import {
   Clock,
   MapPin,
   Grid2x2,
-  ChevronDown,
+  ArrowRight,
+  TrendingDown,
+  Sparkles,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -36,7 +38,6 @@ export const Inspector: React.FC<InspectorProps> = ({
   onClose,
   isDarkMode = false,
 }) => {
-  // Chart data
   const chartData = alert?.delayChartData?.length
     ? alert.delayChartData.map((d) => ({
         stop: d.stop,
@@ -55,29 +56,25 @@ export const Inspector: React.FC<InspectorProps> = ({
   const isApplied = recommendation?.applied || false;
   const alertId = alert?.id || "alert_1042";
 
-  // SHAP factors
-  const shapBars = alert?.shapFactors?.length
+  const shapFactors = alert?.shapFactors?.length
     ? alert.shapFactors.map((f, i) => ({
         code: ["BUR", "PHR", "SSR", "SRP", "CFD", "PET", "FHR"][i] || `F${i}`,
-        height: Math.min(95, Math.max(15, f.percent * 1.4)),
-        value: `+${f.delayMinutes.toFixed(1)}`,
-        label: f.title,
+        percent: f.percent,
+        delayMinutes: f.delayMinutes,
+        title: f.title,
       }))
     : [
-        { code: "BUR", height: 85, value: "+0.42", label: "Затор перегона" },
-        { code: "PHR", height: 60, value: "+0.28", label: "Посадка в дождь" },
-        { code: "SSR", height: 45, value: "+0.20", label: "Светофор" },
-        { code: "SRP", height: 35, value: "+0.15", label: "Интервал" },
-        { code: "CFD", height: 25, value: "+0.10", label: "Пассажиропоток" },
-        { code: "PET", height: 16, value: "+0.05", label: "Посадка ТПУ" },
-        { code: "FHR", height: 10, value: "+0.03", label: "Маневры" },
+        { code: "BUR", percent: 46, delayMinutes: 2.3, title: "Затор на перегоне" },
+        { code: "PHR", percent: 28, delayMinutes: 1.1, title: "Посадка в непогоду" },
+        { code: "SSR", percent: 16, delayMinutes: 0.8, title: "Светофорный цикл" },
+        { code: "SRP", percent: 10, delayMinutes: 0.5, title: "Интервальный сдвиг" },
       ];
 
   const vehicleCleanId = vehicle ? vehicle.id.replace(/^P/, "") : "1042";
   const vehicleTitle = `Электробус №${vehicleCleanId}`;
   const routeBadge = vehicle
-    ? `${vehicle.routeId} (${vehicle.routeName.split("—")[0].trim()} ➔ ${vehicle.routeName.split("—")[1]?.trim() || "Лужники"})`
-    : `${alert?.routeNumberBadge || "м3"} (Семёновская ➔ Лужники)`;
+    ? `${vehicle.routeId} • ${vehicle.routeName.split("—")[0].trim()} → ${vehicle.routeName.split("—")[1]?.trim() || "Лужники"}`
+    : `${alert?.routeNumberBadge || "м3"} • Семёновская → Лужники`;
 
   const targetVehId = recommendation?.targetVehicleId || "№1043";
   const effectPercent = recommendation?.effectPercent || 96;
@@ -89,73 +86,67 @@ export const Inspector: React.FC<InspectorProps> = ({
 
   return (
     <aside
-      className={`w-[360px] max-h-[calc(100vh-100px)] overflow-y-auto rounded-2xl border shadow-2xl p-4 flex flex-col gap-3.5 z-20 pointer-events-auto shrink-0 select-none scrollbar-thin backdrop-blur-xl transition-colors duration-200 ${
+      className={`w-[350px] max-h-[calc(100vh-80px)] overflow-y-auto rounded-xl border shadow-lg p-3.5 flex flex-col gap-3 z-20 pointer-events-auto shrink-0 select-none scrollbar-thin backdrop-blur-xl transition-colors duration-200 ${
         isDarkMode
-          ? "bg-[#18181b]/95 border-zinc-700/80 text-zinc-200 shadow-black/60"
-          : "bg-white/95 border-slate-300 text-slate-800 shadow-slate-950/15"
+          ? "bg-[#18181b]/95 border-white/10 text-zinc-200 shadow-black/50"
+          : "bg-white/95 border-zinc-200 text-zinc-800 shadow-xs"
       }`}
     >
-      {/* 1. Header: Inspector Title and Controls */}
+      {/* 1. Header: Inspector Title and Close */}
       <div
         className={`flex items-center justify-between pb-2 border-b ${
-          isDarkMode ? "border-slate-800 text-slate-400" : "border-slate-200 text-slate-600"
+          isDarkMode ? "border-white/10 text-zinc-400" : "border-zinc-100 text-zinc-600"
         }`}
       >
-        <div className="flex items-center gap-2">
-          <GitBranch size={15} className={isDarkMode ? "text-cyan-400" : "text-emerald-700"} />
-          <span className={`text-xs font-black uppercase tracking-wider ${isDarkMode ? "text-slate-300" : "text-slate-800"}`}>
+        <div className="flex items-center gap-1.5">
+          <GitBranch size={14} className="opacity-70" />
+          <span className={`text-xs font-bold uppercase tracking-wider ${isDarkMode ? "text-zinc-300" : "text-zinc-800"}`}>
             Инспектор СППР
           </span>
         </div>
-        <div className="flex items-center gap-1.5">
-          {onClose && (
-            <button
-              onClick={onClose}
-              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                isDarkMode ? "hover:bg-slate-800 text-slate-400 hover:text-slate-200" : "hover:bg-slate-100 text-slate-500 hover:text-slate-800"
-              }`}
-              title="Свернуть инспектор"
-            >
-              <X size={15} />
-            </button>
-          )}
-        </div>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className={`p-1 rounded-md transition-colors cursor-pointer ${
+              isDarkMode ? "hover:bg-white/10 text-zinc-400 hover:text-white" : "hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900"
+            }`}
+            title="Свернуть инспектор"
+          >
+            <X size={14} />
+          </button>
+        )}
       </div>
 
-      {/* 2. Unit Title, Route Badge, and Telemetry Grid */}
+      {/* 2. Unit Title, Route Badge, and Telemetry Capsules */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <h2 className={`text-lg font-black tracking-tight ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+          <h2 className={`text-base font-bold tracking-tight ${isDarkMode ? "text-white" : "text-zinc-900"}`}>
             {vehicleTitle}
           </h2>
           <span
-            className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+            className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${
               vehicle?.status === "BUNCHING_RISK" || alert?.category === "critical"
-                ? isDarkMode
-                  ? "bg-rose-900/60 text-rose-300 border border-rose-700/80"
-                  : "bg-rose-100 text-rose-700"
-                : isDarkMode
-                ? "bg-amber-900/60 text-amber-300 border border-amber-700/80"
-                : "bg-amber-100 text-amber-800"
+                ? "bg-rose-500/10 text-rose-400 border-rose-500/30"
+                : "bg-amber-500/10 text-amber-400 border-amber-500/30"
             }`}
           >
             {vehicle?.status === "BUNCHING_RISK" ? "ПАЧКОВАНИЕ" : "РИСК СБОЯ"}
           </span>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-wrap">
           <span
-            className={`px-2 py-0.5 rounded-md text-[11px] font-bold border ${
+            className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${
               isDarkMode
-                ? "bg-emerald-950/60 border-emerald-800/80 text-emerald-300"
-                : "bg-emerald-50 border-emerald-200 text-emerald-800"
+                ? "bg-[#27272a] border-white/10 text-zinc-200"
+                : "bg-zinc-100 border-zinc-200 text-zinc-800"
             }`}
           >
             {routeBadge}
           </span>
           <span
-            className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
-              isDarkMode ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-600"
+            className={`text-[10px] font-mono font-medium px-1.5 py-0.5 rounded border ${
+              isDarkMode ? "bg-[#222226] text-zinc-400 border-white/5" : "bg-zinc-100 text-zinc-600 border-zinc-200"
             }`}
           >
             {vehicle?.plateNumber || "В 042 АХ 777"}
@@ -163,45 +154,45 @@ export const Inspector: React.FC<InspectorProps> = ({
         </div>
 
         {/* Live Telemetry Metric Capsules */}
-        <div className="grid grid-cols-3 gap-2 mt-1">
+        <div className="grid grid-cols-3 gap-1.5 mt-0.5">
           <div
-            className={`p-2.5 rounded-xl border flex flex-col items-center justify-center text-center ${
-              isDarkMode ? "bg-[#222226] border-zinc-700/70" : "bg-slate-50 border-slate-200"
+            className={`p-2 rounded-lg border flex flex-col items-center justify-center text-center ${
+              isDarkMode ? "bg-[#222226] border-white/5" : "bg-zinc-50 border-zinc-200"
             }`}
           >
-            <div className="flex items-center gap-1 text-[10px] text-slate-400 mb-0.5">
-              <Gauge size={12} className="text-cyan-400" />
+            <div className="flex items-center gap-1 text-[10px] text-zinc-400 mb-0.5">
+              <Gauge size={11} className="opacity-70" />
               <span>Скорость</span>
             </div>
-            <span className="text-xs font-black font-mono text-cyan-400">
+            <span className={`text-xs font-bold font-mono ${isDarkMode ? "text-zinc-100" : "text-zinc-900"}`}>
               {vehicle?.speedKmh ?? 14} км/ч
             </span>
           </div>
 
           <div
-            className={`p-2.5 rounded-xl border flex flex-col items-center justify-center text-center ${
-              isDarkMode ? "bg-[#222226] border-zinc-700/70" : "bg-slate-50 border-slate-200"
+            className={`p-2 rounded-lg border flex flex-col items-center justify-center text-center ${
+              isDarkMode ? "bg-[#222226] border-white/5" : "bg-zinc-50 border-zinc-200"
             }`}
           >
-            <div className="flex items-center gap-1 text-[10px] text-slate-400 mb-0.5">
-              <Clock size={12} className="text-rose-400" />
+            <div className="flex items-center gap-1 text-[10px] text-zinc-400 mb-0.5">
+              <Clock size={11} className="opacity-70" />
               <span>Задержка</span>
             </div>
-            <span className="text-xs font-black font-mono text-rose-400">
+            <span className="text-xs font-bold font-mono text-rose-400">
               +{Math.round((vehicle?.delaySeconds ?? 180) / 60)} мин
             </span>
           </div>
 
           <div
-            className={`p-2.5 rounded-xl border flex flex-col items-center justify-center text-center ${
-              isDarkMode ? "bg-[#222226] border-zinc-700/70" : "bg-slate-50 border-slate-200"
+            className={`p-2 rounded-lg border flex flex-col items-center justify-center text-center ${
+              isDarkMode ? "bg-[#222226] border-white/5" : "bg-zinc-50 border-zinc-200"
             }`}
           >
-            <div className="flex items-center gap-1 text-[10px] text-slate-400 mb-0.5">
-              <MapPin size={12} className="text-emerald-400" />
+            <div className="flex items-center gap-1 text-[10px] text-zinc-400 mb-0.5">
+              <MapPin size={11} className="opacity-70" />
               <span>Остановка</span>
             </div>
-            <span className={`text-[11px] font-bold truncate max-w-full ${isDarkMode ? "text-slate-200" : "text-slate-700"}`}>
+            <span className={`text-[11px] font-semibold truncate max-w-full ${isDarkMode ? "text-zinc-200" : "text-zinc-700"}`}>
               {vehicle?.nextStop || "м. Бауманская"}
             </span>
           </div>
@@ -210,161 +201,155 @@ export const Inspector: React.FC<InspectorProps> = ({
 
       {/* 3. Recharts Trajectory comparison curve */}
       <div
-        className={`rounded-xl border p-3.5 shadow-sm flex flex-col gap-2 ${
-          isDarkMode ? "bg-[#222226] border-zinc-700/80" : "bg-white border-slate-200"
+        className={`rounded-lg border p-3 flex flex-col gap-1.5 ${
+          isDarkMode ? "bg-[#222226] border-white/10" : "bg-white border-zinc-200"
         }`}
       >
         <div className="flex items-center justify-between">
-          <span className={`text-xs font-bold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+          <span className={`text-xs font-bold ${isDarkMode ? "text-white" : "text-zinc-900"}`}>
             Прогноз задержки (сек)
           </span>
-          <div className="flex items-center gap-2 text-[10px] font-semibold">
-            <span className="text-blue-400 flex items-center gap-1">
-              <span className="w-2.5 h-0.5 bg-blue-500 inline-block" /> План
+          <div className="flex items-center gap-2 text-[10px] font-medium">
+            <span className="text-zinc-400 flex items-center gap-1">
+              <span className="w-2 h-0.5 border-t border-dashed border-zinc-400 inline-block" /> План
             </span>
             <span className="text-rose-400 flex items-center gap-1">
-              <span className="w-2.5 h-0.5 bg-rose-500 inline-block" /> Без мер
+              <span className="w-2 h-0.5 bg-rose-500 inline-block" /> Без мер
             </span>
             <span className="text-emerald-400 flex items-center gap-1">
-              <span className="w-2.5 h-0.5 bg-emerald-500 inline-block" /> Holding
+              <span className="w-2 h-0.5 bg-emerald-500 inline-block" /> Holding
             </span>
           </div>
         </div>
 
-        <div className="h-32 w-full mt-1">
+        <div className="h-28 w-full mt-1">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
-              <XAxis dataKey="stop" tick={{ fontSize: 9, fill: isDarkMode ? "#71717a" : "#94a3b8" }} axisLine={false} tickLine={false} />
-              <YAxis domain={["auto", "auto"]} tick={{ fontSize: 9, fill: isDarkMode ? "#71717a" : "#94a3b8" }} axisLine={false} tickLine={false} unit="с" />
+            <LineChart data={chartData} margin={{ top: 5, right: 8, left: -25, bottom: 0 }}>
+              <XAxis dataKey="stop" tick={{ fontSize: 9, fill: isDarkMode ? "#a1a1aa" : "#71717a" }} axisLine={false} tickLine={false} />
+              <YAxis domain={["auto", "auto"]} tick={{ fontSize: 9, fill: isDarkMode ? "#a1a1aa" : "#71717a" }} axisLine={false} tickLine={false} unit="с" />
               <Tooltip
                 contentStyle={{
                   fontSize: "11px",
-                  borderRadius: "8px",
+                  borderRadius: "6px",
                   backgroundColor: isDarkMode ? "rgba(24, 24, 27, 0.95)" : "rgba(255, 255, 255, 0.95)",
-                  borderColor: isDarkMode ? "#3f3f46" : "#e2e8f0",
-                  color: isDarkMode ? "#f8fafc" : "#0f172a",
+                  borderColor: isDarkMode ? "rgba(255, 255, 255, 0.1)" : "#e4e4e7",
+                  color: isDarkMode ? "#f4f4f5" : "#18181b",
                 }}
               />
-              <Line type="monotone" dataKey="plan" name="План" stroke="#3b82f6" strokeWidth={2} strokeDasharray="4 3" dot={{ r: 2 }} isAnimationActive={false} />
-              <Line type="monotone" dataKey="withoutAction" name="Без мер" stroke="#ef4444" strokeWidth={2} dot={{ r: 2.5 }} isAnimationActive={false} />
-              <Line type="monotone" dataKey="withHolding" name="С Holding" stroke="#10b981" strokeWidth={2.5} dot={{ r: 3 }} isAnimationActive={false} />
+              <Line type="monotone" dataKey="plan" name="План" stroke="#71717a" strokeWidth={1.5} strokeDasharray="3 3" dot={{ r: 2 }} isAnimationActive={false} />
+              <Line type="monotone" dataKey="withoutAction" name="Без мер" stroke="#ef4444" strokeWidth={2} dot={{ r: 2 }} isAnimationActive={false} />
+              <Line type="monotone" dataKey="withHolding" name="С Holding" stroke="#10b981" strokeWidth={2} dot={{ r: 2.5 }} isAnimationActive={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      {/* 4. SHAP factor breakdown */}
+      {/* 4. Explainable AI: SHAP Factor Decomposition */}
       <div
-        className={`rounded-xl border p-3.5 shadow-md flex flex-col gap-2 ${
+        className={`rounded-lg border p-3 flex flex-col gap-2 ${
           isDarkMode
-            ? "border-zinc-800 bg-[#18181b] text-white"
-            : "border-slate-200 bg-slate-900 text-white"
+            ? "border-white/10 bg-[#222226] text-white"
+            : "border-zinc-200 bg-zinc-50/70 text-zinc-900"
         }`}
       >
         <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-white flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+          <span className="text-xs font-bold flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
             <span>Факторный анализ (SHAP)</span>
           </span>
-          <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-slate-800 text-cyan-300 border border-slate-700">
+          <span className={`text-[10px] font-bold font-mono px-1.5 py-0.5 rounded border ${
+            isDarkMode ? "bg-[#18181b] text-zinc-300 border-white/5" : "bg-white text-zinc-700 border-zinc-200"
+          }`}>
             CatBoost ML
           </span>
         </div>
 
-        {/* Vertical Bar Chart */}
-        <div className="h-20 w-full flex items-end justify-between pt-2 px-1 border-b border-slate-800">
-          {shapBars.map((bar) => (
-            <div key={bar.code} className="flex flex-col items-center gap-1 group relative cursor-pointer" title={bar.label}>
-              <span className="text-[9px] font-mono opacity-0 group-hover:opacity-100 transition-opacity absolute -top-4 text-cyan-300">
-                {bar.value}
-              </span>
-              <div
-                className="w-5 rounded-t-sm bg-gradient-to-t from-blue-600 to-cyan-400 transition-all group-hover:brightness-125"
-                style={{ height: `${bar.height}%` }}
-              />
+        {/* Clear Horizontal Bar List */}
+        <div className="space-y-1.5 text-xs">
+          {shapFactors.map((f, i) => (
+            <div key={f.code}>
+              <div className="flex justify-between items-center text-[10px] font-medium mb-0.5">
+                <span className={isDarkMode ? "text-zinc-300" : "text-zinc-700"}>
+                  {f.title} <span className="opacity-60 font-mono">({f.code})</span>
+                </span>
+                <span className={`font-mono font-semibold ${i === 0 ? "text-rose-400 font-bold" : "text-zinc-400"}`}>
+                  +{f.delayMinutes.toFixed(1)}м ({f.percent}%)
+                </span>
+              </div>
+              <div className={`h-1.5 w-full rounded-full overflow-hidden ${isDarkMode ? "bg-zinc-800" : "bg-zinc-200"}`}>
+                <div
+                  className={`h-full rounded-full ${
+                    i === 0 ? "bg-rose-500" : "bg-zinc-500"
+                  }`}
+                  style={{ width: `${f.percent}%` }}
+                />
+              </div>
             </div>
           ))}
         </div>
-
-        {/* Bar Labels Row */}
-        <div className="flex justify-between px-1 text-[9px] font-mono font-bold text-slate-400">
-          {shapBars.map((bar) => (
-            <span key={bar.code} className="w-5 text-center">
-              {bar.code}
-            </span>
-          ))}
-        </div>
-
-        <div className="flex items-center justify-between text-[11px] pt-1 border-t border-slate-800">
-          <span className="text-slate-300">
-            Ключевой фактор: <strong className="text-white">{shapBars[0]?.label || "Затор"}</strong>
-          </span>
-          <span className="font-bold text-cyan-400">{shapBars[0]?.value || "+0.42"} мин</span>
-        </div>
       </div>
 
-      {/* 5. Holding Action CTA Box */}
+      {/* 5. Holding Action DSS Recommendation Box */}
       <div
-        className={`rounded-xl border p-4 shadow-md flex flex-col gap-2.5 ${
+        className={`rounded-lg border p-3 flex flex-col gap-2 ${
           isDarkMode
-            ? "border-emerald-700/80 bg-emerald-950/40"
-            : "border-emerald-200 bg-emerald-50/60"
+            ? "border-zinc-700 bg-[#242429]"
+            : "border-zinc-200 bg-zinc-50"
         }`}
       >
         <div className="flex items-center justify-between">
-          <span className={`text-xs font-black uppercase tracking-wider ${
-            isDarkMode ? "text-emerald-300" : "text-emerald-900"
+          <span className={`text-xs font-bold uppercase tracking-wider ${
+            isDarkMode ? "text-zinc-100" : "text-zinc-900"
           }`}>
             СППР: Рекомендация Holding
           </span>
-          <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-            isDarkMode ? "bg-emerald-900 text-emerald-200" : "bg-emerald-200 text-emerald-900"
+          <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold font-mono border ${
+            isDarkMode ? "bg-emerald-950/60 text-emerald-400 border-emerald-800/60" : "bg-emerald-50 text-emerald-800 border-emerald-200"
           }`}>
             ЭФФЕКТ: {effectPercent}%
           </span>
         </div>
 
-        <p className={`text-xs leading-relaxed ${isDarkMode ? "text-slate-200" : "text-slate-800"}`}>
+        <p className={`text-xs leading-relaxed ${isDarkMode ? "text-zinc-300" : "text-zinc-700"}`}>
           {recText}
         </p>
-        <span className={`text-[11px] font-medium ${isDarkMode ? "text-emerald-400" : "text-emerald-800"}`}>
+        <span className={`text-[11px] font-medium ${isDarkMode ? "text-emerald-400" : "text-emerald-700"}`}>
           {recInfoText}
         </span>
 
-        {/* Prominent Action Button */}
+        {/* Primary Action Button */}
         <button
           onClick={() => !isApplied && onApplyHolding && onApplyHolding(alertId)}
           disabled={isApplied}
-          className={`w-full h-11 px-4 rounded-xl text-white font-black text-xs shadow-lg transition-all flex items-center justify-center gap-2 uppercase tracking-wider cursor-pointer ${
+          className={`w-full h-9 px-3 rounded-lg text-white font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5 uppercase tracking-wider cursor-pointer ${
             isApplied
-              ? "bg-emerald-800 cursor-default opacity-90"
-              : "bg-[#00875A] hover:bg-[#00965E] active:scale-98 shadow-emerald-900/30"
+              ? "bg-zinc-700 text-zinc-300 cursor-default"
+              : "bg-emerald-600 hover:bg-emerald-500 active:scale-98 shadow-emerald-900/20"
           }`}
         >
-          <CheckCircle2 size={16} />
+          <CheckCircle2 size={14} />
           <span>
             {isApplied
-              ? `Команда передана на борт ${targetVehId}`
+              ? `Holding применён • Команда на ${targetVehId}`
               : `Применить Holding (${targetVehId})`}
           </span>
         </button>
 
-        {/* Alternative Scenarios Button */}
-        <button
-          onClick={() => onOpenScenarios && onOpenScenarios()}
-          className={`w-full h-9 px-3 rounded-lg border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs ${
-            isDarkMode
-              ? "border-emerald-600/80 bg-[#222226] hover:bg-[#2c2c31] text-emerald-300"
-              : "border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-800"
-          }`}
-        >
-          <Grid2x2 size={13} className="shrink-0" />
-          <span>Матрица сценариев СППР (4 варианта)</span>
-          <ChevronDown size={12} className="shrink-0" />
-        </button>
+        {/* Secondary: Scenarios Matrix */}
+        {onOpenScenarios && (
+          <button
+            onClick={onOpenScenarios}
+            className={`w-full h-7 px-2.5 rounded-md border text-[11px] font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              isDarkMode
+                ? "bg-[#1c1c20] hover:bg-white/5 border-white/10 text-zinc-300"
+                : "bg-white hover:bg-zinc-100 border-zinc-200 text-zinc-700"
+            }`}
+          >
+            <Grid2x2 size={12} />
+            <span>Матрица альтернативных сценариев (4)</span>
+          </button>
+        )}
       </div>
     </aside>
   );
 };
-
-export default Inspector;

@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import {
-  TrendingUp,
   AlertTriangle,
   CheckCircle2,
   Cpu,
-  Bus,
   Grid2x2,
   ChevronDown,
+  Activity,
+  SlidersHorizontal,
 } from "lucide-react";
 
 interface MareyDiagramProps {
@@ -24,7 +24,6 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
 }) => {
   const [filterMode, setFilterMode] = useState<"all" | "anomalies">("all");
   const [showPlan, setShowPlan] = useState<boolean>(true);
-  // Derive holding state from parent prop to keep sync across tabs
   const holdingApplied = isApplied;
 
   const handleApply = () => {
@@ -64,311 +63,204 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
 
   return (
     <div className={`w-full h-full flex flex-col font-sans select-none overflow-hidden transition-colors ${
-      isDarkMode ? "bg-[#121214] text-zinc-200" : "bg-[#f1f4f8] text-slate-800"
+      isDarkMode ? "bg-[#121214] text-zinc-200" : "bg-[#f4f4f5] text-zinc-800"
     }`}>
       {/* 1. Sub-Header: Route m3 KPI Bar */}
-      <div className={`h-14 px-5 border-b flex items-center justify-between shrink-0 shadow-sm transition-colors ${
-        isDarkMode ? "bg-[#18181b] border-zinc-800" : "bg-white border-slate-200"
+      <div className={`h-12 px-4 border-b flex items-center justify-between shrink-0 transition-colors ${
+        isDarkMode ? "bg-[#18181b] border-white/10" : "bg-white border-zinc-200"
       }`}>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-7 rounded-lg bg-[#D32F2F] text-white font-black text-xs flex items-center justify-center tracking-tight shadow-sm">
+          <div className="w-8 h-6 rounded bg-[#D32F2F] text-white font-bold text-xs flex items-center justify-center font-mono">
             м3
           </div>
           <div className="flex flex-col">
-            <span className={`text-xs font-black tracking-tight uppercase ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+            <span className={`text-xs font-bold tracking-tight uppercase ${isDarkMode ? "text-white" : "text-zinc-900"}`}>
               Магистраль м3: «Метро Семёновская ⇄ Стадион Лужники»
             </span>
-            <span className="text-[10px] font-medium text-slate-400 font-mono">
+            <span className="text-[10px] font-medium text-zinc-400 font-mono">
               Оперативный график движения Марея • Мониторинг интервалов и пачкования
             </span>
           </div>
         </div>
 
         {/* Route Realtime KPIs */}
-        <div className="flex items-center gap-3">
-          <div className={`px-3 py-1.5 rounded-xl border flex flex-col ${
-            isDarkMode ? "bg-[#222226] border-zinc-700/80" : "bg-slate-50 border-slate-200"
+        <div className="flex items-center gap-2">
+          <div className={`px-2.5 py-1 rounded-md border flex items-center gap-2 ${
+            isDarkMode ? "bg-[#222226] border-white/10" : "bg-zinc-50 border-zinc-200"
           }`}>
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Бортов на линии</span>
-            <div className="flex items-baseline gap-1">
-              <span className={`text-xs font-black font-mono ${isDarkMode ? "text-white" : "text-slate-900"}`}>12</span>
-              <span className="text-[10px] text-slate-400 font-medium">/ 12 план</span>
-            </div>
+            <span className="text-[10px] text-zinc-400 font-medium">Бортов:</span>
+            <span className={`text-xs font-bold font-mono ${isDarkMode ? "text-white" : "text-zinc-900"}`}>12/12</span>
           </div>
 
-          <div className={`px-3 py-1.5 rounded-xl border flex flex-col ${
-            isDarkMode ? "bg-[#222226] border-zinc-700/80" : "bg-slate-50 border-slate-200"
+          <div className={`px-2.5 py-1 rounded-md border flex items-center gap-2 ${
+            isDarkMode ? "bg-[#222226] border-white/10" : "bg-zinc-50 border-zinc-200"
           }`}>
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Плановый такт</span>
-            <div className="flex items-baseline gap-1">
-              <span className="text-xs font-black text-emerald-400 font-mono">8.0</span>
-              <span className="text-[10px] text-slate-400 font-medium">мин</span>
-            </div>
+            <span className="text-[10px] text-zinc-400 font-medium">Плановый такт:</span>
+            <span className={`text-xs font-bold font-mono ${isDarkMode ? "text-zinc-100" : "text-zinc-900"}`}>8.0 мин</span>
           </div>
 
-          <div className={`px-3 py-1.5 rounded-xl border flex flex-col ${
-            isDarkMode ? "bg-amber-950/40 border-amber-800" : "bg-amber-50 border-amber-200"
+          <div className={`px-2.5 py-1 rounded-md border flex items-center gap-2 ${
+            isDarkMode ? "bg-[#222226] border-white/10" : "bg-zinc-50 border-zinc-200"
           }`}>
-            <div className="flex items-center gap-1">
-              <span className="text-[9px] font-bold text-amber-500 uppercase tracking-wider">Факт интервал</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
-            </div>
-            <div className="flex items-baseline gap-1">
-              <span className="text-xs font-black text-amber-400 font-mono">
-                {holdingApplied ? "7.5 — 8.2" : "1.4 — 14.8"}
-              </span>
-              <span className="text-[10px] text-amber-400/80 font-medium">мин</span>
-            </div>
+            <span className="text-[10px] text-zinc-400 font-medium">Факт интервал:</span>
+            <span className={`text-xs font-bold font-mono ${holdingApplied ? (isDarkMode ? "text-zinc-100" : "text-zinc-900") : "text-amber-400"}`}>
+              {holdingApplied ? "7.5 — 8.2 мин" : "1.4 — 14.8 мин"}
+            </span>
           </div>
 
-          <div className={`px-3 py-1.5 rounded-xl border flex flex-col ${
-            holdingApplied
-              ? isDarkMode ? "bg-emerald-950/40 border-emerald-800" : "bg-emerald-50 border-emerald-200"
-              : isDarkMode ? "bg-rose-950/40 border-rose-800" : "bg-red-50 border-red-200"
+          <div className={`px-2.5 py-1 rounded-md border flex items-center gap-2 ${
+            isDarkMode ? "bg-[#222226] border-white/10" : "bg-zinc-50 border-zinc-200"
           }`}>
-            <div className="flex items-center gap-1">
-              <span className={`text-[9px] font-bold uppercase tracking-wider ${
-                holdingApplied ? "text-emerald-400" : "text-rose-400"
-              }`}>
-                Коэфф. CV
-              </span>
-              <span className={`text-[9px] font-extrabold ${holdingApplied ? "text-emerald-400" : "text-rose-500"}`}>
-                {holdingApplied ? "НОРМА" : "СБОЙ"}
-              </span>
-            </div>
-            <div className="flex items-baseline gap-1">
-              <span className={`text-xs font-black font-mono ${holdingApplied ? "text-emerald-300" : "text-rose-400"}`}>
-                {holdingApplied ? "0.18" : "0.42"}
-              </span>
-              <span className="text-[9px] text-slate-400 font-medium">(Норма &lt;0.20)</span>
-            </div>
+            <span className="text-[10px] text-zinc-400 font-medium">Коэфф. вариации CV:</span>
+            <span className={`text-xs font-bold font-mono ${holdingApplied ? "text-emerald-400" : "text-rose-400"}`}>
+              {holdingApplied ? "0.18" : "0.42"}
+            </span>
           </div>
         </div>
       </div>
 
-      {/* 2. Main Work Area: Marey Diagram Canvas + Right Roster/DSS Dock */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left/Center: Marey Canvas Area */}
-        <div className="flex-1 flex flex-col p-4 overflow-hidden">
-          <div className={`flex-1 rounded-2xl border shadow-sm flex flex-col relative overflow-hidden transition-colors ${
-            isDarkMode ? "bg-[#18181b] border-zinc-800" : "bg-white border-slate-200"
+      {/* 2. Main Workspace: Space-Time Diagram + Fleet Sidebar */}
+      <div className="flex-1 flex min-h-0 overflow-hidden">
+        {/* Left: Space-Time Diagram Workspace */}
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+          {/* Controls Bar */}
+          <div className={`h-9 px-4 border-b flex items-center justify-between shrink-0 text-xs ${
+            isDarkMode ? "bg-[#141416] border-white/10" : "bg-zinc-50 border-zinc-200"
           }`}>
-            {/* Toolbar */}
-            <div className={`h-10 px-4 border-b flex items-center justify-between shrink-0 ${
-              isDarkMode ? "bg-[#121214] border-zinc-800" : "bg-slate-50 border-slate-200"
-            }`}>
-              <div className="flex items-center gap-4">
-                <span className={`text-xs font-black tracking-tight flex items-center gap-2 ${
-                  isDarkMode ? "text-slate-200" : "text-slate-800"
-                }`}>
-                  <TrendingUp className="w-4 h-4 text-emerald-400" />
-                  ТРАЕКТОРИИ БОРТОВ (ДИАГРАММА МАРЕЯ)
-                </span>
-                <div className={`h-4 w-px ${isDarkMode ? "bg-slate-800" : "bg-slate-200"}`} />
-                {/* Legends */}
-                <div className="flex items-center gap-3 text-[10px] font-mono">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-3.5 h-[3px] bg-emerald-500 rounded-full inline-block" />
-                    <span className={isDarkMode ? "text-slate-300" : "text-slate-600"}>Факт</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-3.5 h-[1.5px] border-b-2 border-dashed border-slate-500 inline-block" />
-                    <span className={isDarkMode ? "text-slate-400" : "text-slate-600"}>План</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-3.5 h-[3px] bg-[#ef4444] rounded-full inline-block" />
-                    <span className="text-rose-400 font-bold">Схлопывание (Пачка)</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-3.5 h-[2px] border-b-2 border-dashed border-emerald-500 inline-block" />
-                    <span className="text-emerald-400 font-bold">СППР Holding</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Time Step & Controls */}
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono text-slate-400">Шаг: 15 мин</span>
-                <button
-                  onClick={() => setShowPlan(!showPlan)}
-                  className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${
-                    showPlan
-                      ? isDarkMode ? "bg-zinc-800 border-zinc-700 text-zinc-200" : "bg-zinc-200 border-zinc-300 text-zinc-800"
-                      : isDarkMode ? "bg-[#18181b] border-zinc-800 text-zinc-400" : "bg-white border-slate-200 text-slate-600"
-                  }`}
-                >
-                  Сетка плана
-                </button>
-              </div>
+            <div className="flex items-center gap-4 text-[11px] font-semibold">
+              <span className="flex items-center gap-1.5">
+                <span className="w-3 h-0.5 bg-emerald-500 inline-block" /> Факт
+              </span>
+              <span className="flex items-center gap-1.5 text-zinc-400">
+                <span className="w-3 h-0.5 border-t border-dashed border-zinc-400 inline-block" /> План
+              </span>
+              <span className="flex items-center gap-1.5 text-rose-500">
+                <span className="w-3 h-0.5 bg-rose-500 inline-block" /> Пачкование
+              </span>
+              <span className="flex items-center gap-1.5 text-emerald-400">
+                <span className="w-3 h-0.5 border-t-2 border-dashed border-emerald-400 inline-block" /> СППР Holding
+              </span>
             </div>
 
-            {/* Coordinate SVG Space */}
-            <div className="flex-1 flex overflow-hidden relative">
-              {/* Y-Axis: Stations Ruler on Left */}
-              <div className={`w-48 border-r flex flex-col justify-between py-6 px-3 text-right select-none shrink-0 z-20 ${
-                isDarkMode ? "bg-[#18181b] border-zinc-800" : "bg-slate-50 border-slate-200"
-              }`}>
-                {STATIONS.map((st, i) => (
-                  <div
-                    key={i}
-                    className={`flex items-center justify-end gap-2 pr-1 ${
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowPlan(!showPlan)}
+                className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-colors cursor-pointer ${
+                  showPlan
+                    ? isDarkMode ? "bg-zinc-800 border-white/20 text-white" : "bg-white border-zinc-300 text-zinc-800"
+                    : "text-zinc-400 border-transparent"
+                }`}
+              >
+                Сетка плана
+              </button>
+            </div>
+          </div>
+
+          {/* Time-Space SVG Graph Surface */}
+          <div className="flex-1 min-h-0 overflow-auto relative">
+            <div className="min-w-[900px] h-[640px] relative p-4 flex">
+              {/* Station Axis Labels on Left */}
+              <div className="w-[180px] shrink-0 flex flex-col justify-between py-4 pr-3 border-r border-zinc-200 dark:border-white/10 text-right">
+                {STATIONS.map((st) => (
+                  <div key={st.name} className="flex flex-col items-end">
+                    <span className={`text-[11px] font-semibold truncate ${
                       st.isCritical
-                        ? isDarkMode ? "bg-rose-950/60 py-1 px-2 rounded-lg border-r-2 border-rose-500" : "bg-red-50/90 py-1 px-2 rounded-lg border-r-2 border-red-500"
+                        ? "text-rose-500 font-bold"
                         : st.isWarning
-                        ? isDarkMode ? "bg-amber-950/40 py-0.5 px-2 rounded" : "bg-amber-50/70 py-0.5 px-2 rounded"
-                        : ""
-                    }`}
-                  >
-                    <div className="flex flex-col text-right">
-                      <span
-                        className={`text-[11px] leading-tight ${
-                          st.isCritical
-                            ? "font-black text-rose-400"
-                            : st.isWarning
-                            ? "font-bold text-amber-400"
-                            : st.isMajor
-                            ? isDarkMode ? "font-bold text-white" : "font-bold text-slate-800"
-                            : isDarkMode ? "font-medium text-slate-400" : "font-medium text-slate-600"
-                        }`}
-                      >
-                        {st.name}
-                      </span>
-                      <span className="text-[9px] font-mono text-slate-500">
-                        {st.pk} ({st.km})
-                      </span>
-                    </div>
-                    <span
-                      className={`rounded-full shrink-0 ${
-                        st.isCritical
-                          ? "w-2.5 h-2.5 bg-rose-500 border-2 border-white shadow-sm"
-                          : st.isWarning
-                          ? "w-2 h-2 bg-amber-500"
-                          : st.isMajor
-                          ? "w-2.5 h-2.5 border-2 border-emerald-500 bg-white"
-                          : isDarkMode ? "w-1.5 h-1.5 bg-zinc-700" : "w-1.5 h-1.5 bg-slate-300"
-                      }`}
-                    />
+                        ? "text-amber-500 font-bold"
+                        : st.isMajor
+                        ? isDarkMode ? "text-white font-bold" : "text-zinc-900 font-bold"
+                        : isDarkMode ? "text-zinc-400" : "text-zinc-600"
+                    }`}>
+                      {st.name}
+                    </span>
+                    <span className="text-[9px] font-mono text-zinc-400">
+                      {st.pk} • {st.km}
+                    </span>
                   </div>
                 ))}
               </div>
 
-              {/* Central SVG Canvas */}
-              <div className={`flex-1 h-full w-full relative overflow-hidden ${
-                isDarkMode ? "bg-[#121214]" : "bg-white"
-              }`}>
-                {/* ML Forecast Background Shading (X >= 50%) */}
-                <div className={`absolute left-1/2 top-0 bottom-0 right-0 border-l pointer-events-none z-0 ${
-                  isDarkMode ? "bg-zinc-800/25 border-zinc-700/60" : "bg-zinc-100/50 border-zinc-200"
-                }`}>
-                  <div className={`p-2.5 flex items-center justify-between text-[10px] font-mono font-bold uppercase tracking-wider ${
-                    isDarkMode ? "text-amber-400" : "text-zinc-600"
-                  }`}>
-                    <span className="flex items-center gap-1.5">
-                      <Cpu className="w-3.5 h-3.5" />
-                      ЗОНА МОДЕЛИРОВАНИЯ ML (T+45 МИН)
+              {/* Time-Space Grid & Curves */}
+              <div className="flex-1 relative ml-3">
+                {/* Horizontal Station Lines */}
+                {STATIONS.map((st) => (
+                  <div
+                    key={st.name}
+                    className={`absolute left-0 right-0 border-b ${
+                      st.isMajor
+                        ? isDarkMode ? "border-white/15" : "border-zinc-300"
+                        : isDarkMode ? "border-white/5" : "border-zinc-100"
+                    }`}
+                    style={{ top: `${(st.y / 600) * 100}%` }}
+                  />
+                ))}
+
+                {/* Vertical Time Grid Columns */}
+                {["14:00", "14:15", "14:30", "14:45", "15:00", "15:15", "15:30"].map((t, idx) => (
+                  <div
+                    key={t}
+                    className={`absolute top-0 bottom-0 border-r ${
+                      isDarkMode ? "border-white/10" : "border-zinc-200"
+                    }`}
+                    style={{ left: `${(idx / 6) * 100}%` }}
+                  >
+                    <span className={`absolute top-0 -translate-x-1/2 text-[10px] font-mono font-medium ${
+                      isDarkMode ? "text-zinc-400" : "text-zinc-500"
+                    }`}>
+                      {t}
                     </span>
-                    <span>ТОЧНОСТЬ: 96.4%</span>
                   </div>
-                </div>
+                ))}
 
-                {/* Top Time Scale Overlay */}
-                <div className={`absolute top-0 left-0 right-0 h-6 border-b flex justify-between px-6 z-10 text-[10px] font-mono font-bold ${
-                  isDarkMode
-                    ? "bg-[#18181b]/90 border-zinc-800 text-zinc-300 backdrop-blur-xs"
-                    : "bg-slate-50/90 border-slate-200 text-slate-600 backdrop-blur-xs"
-                }`}>
-                  <span>14:00</span>
-                  <span>14:15</span>
-                  <span>14:30</span>
-                  <span className="text-rose-400 font-bold bg-rose-950/60 px-2 rounded border border-rose-800">
-                    14:45 (T=0 СЕЙЧАС)
-                  </span>
-                  <span className="text-zinc-400 font-bold">15:00 (+15м)</span>
-                  <span className="text-zinc-400 font-bold">15:15 (+30м)</span>
-                  <span className="text-zinc-400 font-bold">15:30 (+45м)</span>
-                </div>
-
-                {/* SVG Vector Marey Canvas */}
-                <svg
-                  className="w-full h-full pt-6 pb-6"
-                  preserveAspectRatio="none"
-                  viewBox="0 0 1000 600"
-                >
-                  <defs>
-                    <pattern id="mareyGrid" width="16.66" height="66.66" patternUnits="userSpaceOnUse">
-                      <line x1="0" y1="0" x2="16.66" y2="0" stroke={isDarkMode ? "#222226" : "#f1f5f9"} strokeWidth="0.5" />
-                      <line x1="0" y1="0" x2="0" y2="66.66" stroke={isDarkMode ? "#27272a" : "#f8fafc"} strokeWidth="0.5" />
-                    </pattern>
-                  </defs>
-
-                  <rect width="1000" height="600" fill="url(#mareyGrid)" />
-
-                  {/* Horizontal Station Lines */}
-                  {STATIONS.map((st, i) => (
-                    <line
-                      key={i}
-                      x1="0"
-                      y1={st.y}
-                      x2="1000"
-                      y2={st.y}
-                      stroke={st.isCritical ? (isDarkMode ? "#7f1d1d" : "#fee2e2") : (isDarkMode ? "#27272a" : "#e2e8f0")}
-                      strokeWidth={st.isCritical ? 1.5 : 1}
-                      strokeDasharray={st.isMajor ? "none" : "2,2"}
-                    />
-                  ))}
-
-                  {/* Vertical Time Grid Lines */}
-                  <line x1="166.6" y1="0" x2="166.6" y2="600" stroke={isDarkMode ? "#27272a" : "#e2e8f0"} strokeDasharray="3,3" />
-                  <line x1="333.3" y1="0" x2="333.3" y2="600" stroke={isDarkMode ? "#27272a" : "#e2e8f0"} strokeDasharray="3,3" />
-                  <line x1="666.6" y1="0" x2="666.6" y2="600" stroke={isDarkMode ? "#27272a" : "#e2e8f0"} strokeDasharray="3,3" />
-                  <line x1="833.3" y1="0" x2="833.3" y2="600" stroke={isDarkMode ? "#27272a" : "#e2e8f0"} strokeDasharray="3,3" />
-
-                  {/* Scheduled Nominal Trajectories */}
+                {/* Trajectory SVG Curves */}
+                <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 900 600" preserveAspectRatio="none">
+                  {/* Plan Lines */}
                   {showPlan && (
-                    <g opacity={isDarkMode ? "0.35" : "0.45"} stroke={isDarkMode ? "#64748b" : "#94a3b8"} strokeDasharray="4,4" strokeWidth="1.2">
-                      <path d="M 40 30 L 310 570" />
-                      <path d="M 130 30 L 400 570" />
-                      <path d="M 220 30 L 490 570" />
-                      <path d="M 310 30 L 580 570" />
-                      <path d="M 400 30 L 670 570" />
-                      <path d="M 490 30 L 760 570" />
-                      <path d="M 580 30 L 850 570" />
+                    <g stroke={isDarkMode ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)"} strokeWidth="1" strokeDasharray="3 3">
+                      <line x1="50" y1="30" x2="350" y2="570" />
+                      <line x1="200" y1="30" x2="500" y2="570" />
+                      <line x1="350" y1="30" x2="650" y2="570" />
+                      <line x1="500" y1="30" x2="800" y2="570" />
                     </g>
                   )}
 
-                  {/* Realized string trajectories */}
-                  <path d="M 0 150 L 80 270 L 170 390 L 240 450 L 320 570" fill="none" stroke="#10b981" strokeWidth="2.5" />
-                  <circle cx="320" cy="570" r="3.5" fill="#10b981" />
-                  <text x="325" y="565" fill={isDarkMode ? "#e4e4e7" : "#047857"} fontFamily="monospace" fontSize="9" fontWeight="bold">#1040 (Финиш)</text>
+                  {/* Vehicle 1040 */}
+                  <path d="M 0 150 L 80 270 L 170 390 L 240 450 L 320 570" fill="none" stroke="#059669" strokeWidth="2.5" />
+                  <circle cx="320" cy="570" r="3.5" fill="#059669" />
+                  <text x="325" y="565" fill={isDarkMode ? "#cbd5e1" : "#065f46"} fontFamily="monospace" fontSize="9" fontWeight="bold">#1040 (Финиш)</text>
 
-                  <path d="M 140 30 L 210 150 L 290 270 L 390 390 L 485 450" fill="none" stroke="#10b981" strokeWidth="2.5" />
-                  <circle cx="485" cy="450" r="4" fill="#10b981" stroke="#fff" strokeWidth="1.5" />
-                  <text x="415" y="445" fill={isDarkMode ? "#e4e4e7" : "#047857"} fontFamily="monospace" fontSize="10" fontWeight="bold">#1041 (+0.4м)</text>
+                  {/* Vehicle 1041 */}
+                  <path d="M 140 30 L 210 150 L 290 270 L 390 390 L 485 450" fill="none" stroke="#059669" strokeWidth="2.5" />
+                  <circle cx="485" cy="450" r="4" fill="#059669" stroke="#fff" strokeWidth="1.5" />
+                  <text x="415" y="445" fill={isDarkMode ? "#cbd5e1" : "#065f46"} fontFamily="monospace" fontSize="10" fontWeight="bold">#1041 (+0.4м)</text>
 
-                  <path d="M 290 30 L 350 90 L 420 150 L 500 210" fill="none" stroke="#10b981" strokeWidth="2.8" />
-                  <circle cx="500" cy="210" r="4.5" fill="#10b981" stroke="#fff" strokeWidth="1.5" />
-                  <text x="510" y="205" fill={isDarkMode ? "#e4e4e7" : "#047857"} fontFamily="monospace" fontSize="10" fontWeight="bold">#1043 (м. Бауманская)</text>
+                  {/* Vehicle 1043 (Leader) */}
+                  <path d="M 290 30 L 350 90 L 420 150 L 500 210" fill="none" stroke="#059669" strokeWidth="2.8" />
+                  <circle cx="500" cy="210" r="4.5" fill="#059669" stroke="#fff" strokeWidth="1.5" />
+                  <text x="510" y="205" fill={isDarkMode ? "#cbd5e1" : "#065f46"} fontFamily="monospace" fontSize="10" fontWeight="bold">#1043 (м. Бауманская)</text>
 
-                  <path d="M 370 30 L 420 90 L 460 150 L 488 185" fill="none" stroke="#ef4444" strokeWidth="3" />
-                  <circle cx="488" cy="185" r="5" fill="#ef4444" stroke="#fff" strokeWidth="1.5" />
-                  <text x="405" y="180" fill="#f87171" fontFamily="monospace" fontSize="10" fontWeight="bold">#1042 (+5.8м ДОГОНЯЕТ!)</text>
+                  {/* Vehicle 1042 (Approaching Leader - Bunching Confluence) */}
+                  <path d="M 370 30 L 420 90 L 460 150 L 488 185" fill="none" stroke="#dc2626" strokeWidth="3" />
+                  <circle cx="488" cy="185" r="5" fill="#dc2626" stroke="#fff" strokeWidth="1.5" />
+                  <text x="390" y="180" fill="#f87171" fontFamily="monospace" fontSize="10" fontWeight="bold">#1042 (+5.8м ДОГОНЯЕТ)</text>
 
-                  {/* Future holding projection */}
+                  {/* Future Projection Lines */}
                   {holdingApplied ? (
                     <>
-                      <line x1="500" y1="210" x2="530" y2="210" stroke="#10b981" strokeWidth="4.5" strokeLinecap="round" />
-                      <path d="M 530 210 L 590 270 L 660 330 L 730 390 L 800 450 L 880 570" fill="none" stroke="#10b981" strokeWidth="2.5" strokeDasharray="5,3" />
-                      <path d="M 488 185 L 510 210 L 570 270 L 640 330 L 710 390 L 780 450 L 860 570" fill="none" stroke="#10b981" strokeWidth="2" strokeDasharray="4,3" />
+                      <line x1="500" y1="210" x2="530" y2="210" stroke="#059669" strokeWidth="4" strokeLinecap="round" />
+                      <path d="M 530 210 L 590 270 L 660 330 L 730 390 L 800 450 L 880 570" fill="none" stroke="#059669" strokeWidth="2.5" strokeDasharray="4 3" />
+                      <path d="M 488 185 L 510 210 L 570 270 L 640 330 L 710 390 L 780 450 L 860 570" fill="none" stroke="#059669" strokeWidth="2" strokeDasharray="3 3" />
                     </>
                   ) : (
                     <>
-                      <path d="M 500 210 L 550 270 L 610 330 L 680 390 L 740 450" fill="none" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="2,2" opacity="0.4" />
-                      <path d="M 488 185 L 515 210 L 555 270 L 613 330 L 682 390" fill="none" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="2,2" opacity="0.4" />
+                      <path d="M 500 210 L 550 270 L 610 330 L 680 390 L 740 450" fill="none" stroke="#dc2626" strokeWidth="1.5" strokeDasharray="2 2" opacity="0.4" />
+                      <path d="M 488 185 L 515 210 L 555 270 L 613 330 L 682 390" fill="none" stroke="#dc2626" strokeWidth="1.5" strokeDasharray="2 2" opacity="0.4" />
                     </>
                   )}
 
-                  {/* Red Now vertical line */}
-                  <line x1="500" y1="0" x2="500" y2="600" stroke="#dc2626" strokeWidth="2" />
+                  {/* Now Reference Vertical Line */}
+                  <line x1="500" y1="0" x2="500" y2="600" stroke="#dc2626" strokeWidth="1.5" />
                   <g transform="translate(460, 2)">
                     <rect width="80" height="18" rx="4" fill="#dc2626" />
                     <text x="40" y="12" fill="#fff" fontFamily="monospace" fontSize="9" fontWeight="bold" textAnchor="middle">
@@ -377,147 +269,134 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
                   </g>
                 </svg>
 
-                {/* Floating Warning Card if not yet applied */}
+                {/* Floating Warning Popover Card */}
                 {!holdingApplied ? (
-                  <div className={`absolute left-[360px] top-[130px] rounded-2xl p-4 shadow-2xl w-[320px] pointer-events-auto z-30 border ${
-                    isDarkMode ? "bg-[#18181b] border-rose-500/80 text-white shadow-black/60" : "bg-white border-slate-300 text-slate-800"
+                  <div className={`absolute left-[360px] top-[130px] rounded-xl p-3.5 shadow-lg w-[310px] pointer-events-auto z-30 border ${
+                    isDarkMode ? "bg-[#1c1c20] border-rose-500/40 text-zinc-100 shadow-black/60" : "bg-white border-rose-300 text-zinc-800 shadow-zinc-900/10"
                   }`}>
-                    <div className="flex items-center justify-between gap-1 border-b border-rose-500/30 pb-2 mb-2">
-                      <div className="flex items-center gap-1.5 text-rose-400 font-bold text-xs">
-                        <AlertTriangle className="w-4 h-4 text-rose-500" />
+                    <div className="flex items-center justify-between gap-1 border-b border-rose-500/20 pb-2 mb-2">
+                      <div className="flex items-center gap-1.5 text-rose-500 font-bold text-xs">
+                        <AlertTriangle className="w-3.5 h-3.5" />
                         <span>ОПАСНОСТЬ ПАЧКОВАНИЯ</span>
                       </div>
-                      <span className="px-2 py-0.5 bg-rose-500/20 text-rose-300 rounded text-[9px] font-black border border-rose-500/30">
+                      <span className="px-1.5 py-0.5 bg-rose-500/20 text-rose-300 rounded text-[9px] font-bold border border-rose-500/30">
                         РИСК 94%
                       </span>
                     </div>
-                    <div className={`text-xs leading-relaxed ${isDarkMode ? "text-zinc-300" : "text-slate-700"}`}>
-                      Интервал между <strong className="text-emerald-400 font-bold">#1043</strong> и <strong className="text-rose-400 font-bold">#1042</strong> схлопнулся до{" "}
-                      <span className="font-mono font-bold text-rose-400 bg-rose-950/60 px-1.5 py-0.5 rounded border border-rose-800">1.4 мин</span> (Норма 8.0 мин).
+                    <div className={`text-xs leading-relaxed ${isDarkMode ? "text-zinc-300" : "text-zinc-600"}`}>
+                      Интервал между <strong className="text-emerald-500">#1043</strong> и <strong className="text-rose-500">#1042</strong> схлопнулся до{" "}
+                      <span className="font-mono font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/60 px-1 py-0.5 rounded border border-rose-200 dark:border-rose-800">1.4 мин</span> (Норма 8.0 мин).
                     </div>
-                    <div className={`mt-3 p-2.5 rounded-xl border flex items-center justify-between ${
-                      isDarkMode ? "bg-emerald-950/40 border-emerald-800" : "bg-emerald-50 border-emerald-200"
+                    <div className={`mt-2.5 p-2 rounded-lg border flex items-center justify-between ${
+                      isDarkMode ? "bg-emerald-950/30 border-emerald-800/60" : "bg-emerald-50 border-emerald-200"
                     }`}>
                       <div className={`text-xs font-bold ${isDarkMode ? "text-emerald-300" : "text-emerald-900"}`}>
                         Holding №1043: +2.5м
                       </div>
                       <button
                         onClick={handleApply}
-                        className="bg-[#00875A] hover:bg-[#00965E] text-white px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer active:scale-95 shadow-sm"
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded text-[11px] font-bold transition-all cursor-pointer shadow-xs active:scale-95"
                       >
                         Применить
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div className="absolute left-[540px] top-[225px] bg-[#00875A] text-white text-[11px] font-mono font-semibold px-3 py-1.5 rounded-xl shadow-lg z-20 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Holding №1043 активен (2.5 мин на м. Бауманская)</span>
+                  <div className="absolute left-[520px] top-[220px] bg-emerald-700 text-white text-[11px] font-mono font-semibold px-3 py-1.5 rounded-lg shadow-md z-20 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Holding №1043 активен (+2.5 мин на м. Бауманская)</span>
                   </div>
                 )}
               </div>
             </div>
+          </div>
 
-            {/* Bottom Footer Bar */}
-            <div className={`h-9 px-4 border-t flex items-center justify-between shrink-0 text-[10px] font-mono ${
-              isDarkMode ? "bg-[#121214] border-zinc-800 text-zinc-400" : "bg-white border-slate-200 text-slate-500"
-            }`}>
-              <div className="flex items-center gap-3">
-                <span className={`font-bold ${isDarkMode ? "text-zinc-200" : "text-slate-800"}`}>
-                  Телеметрический срез: 14:45:00
-                </span>
-                <span>•</span>
-                <span>Модель движения: АСУ «Навигатор-ГПТ»</span>
-                <span>•</span>
-                <span>Погрешность: ±1.8м</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <span>Расчётный такт восстановления:</span>
-                <span className="font-bold text-emerald-400">15:02 (через 17 мин)</span>
-              </div>
+          {/* Bottom Footer Info */}
+          <div className={`h-8 px-4 border-t flex items-center justify-between shrink-0 text-[10px] font-mono ${
+            isDarkMode ? "bg-[#141416] border-white/10 text-zinc-400" : "bg-white border-zinc-200 text-zinc-500"
+          }`}>
+            <div className="flex items-center gap-2">
+              <span className={`font-semibold ${isDarkMode ? "text-zinc-300" : "text-zinc-700"}`}>
+                Телеметрический срез: 14:45:00
+              </span>
+              <span>•</span>
+              <span>Модель движения: АСУ «Навигатор-ГПТ»</span>
+            </div>
+            <div>
+              <span>Расчётный такт восстановления: </span>
+              <span className="text-emerald-500 font-bold">15:02 (через 17 мин)</span>
             </div>
           </div>
         </div>
 
-        {/* Right Sidebar: Fleet Roster & Predictive DSS Box */}
-        <aside className={`w-88 border-l flex flex-col shrink-0 overflow-hidden shadow-2xl z-30 ${
-          isDarkMode ? "bg-[#18181b] border-zinc-800 text-zinc-200" : "bg-white border-slate-200 text-slate-800"
+        {/* Right: Fleet Monitoring Sidebar */}
+        <aside className={`w-[280px] border-l flex flex-col shrink-0 transition-colors ${
+          isDarkMode ? "bg-[#18181b] border-white/10 text-zinc-200" : "bg-white border-zinc-200 text-zinc-800"
         }`}>
-          {/* Panel Header */}
-          <div className={`p-3.5 border-b flex items-center justify-between shrink-0 ${
-            isDarkMode ? "bg-[#121214] border-zinc-800" : "bg-slate-50 border-slate-200"
-          }`}>
-            <div>
-              <div className={`text-xs font-black flex items-center gap-1.5 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                <Bus className="w-3.5 h-3.5 text-[#D32F2F]" />
+          {/* Sidebar Header */}
+          <div className={`p-3 border-b shrink-0 ${isDarkMode ? "bg-[#141416] border-white/10" : "bg-zinc-50 border-zinc-200"}`}>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className={`text-xs font-bold ${isDarkMode ? "text-white" : "text-zinc-900"}`}>
                 Мониторинг бортов м3 (12 ед.)
-              </div>
-              <div className="text-[10px] font-mono text-slate-400 mt-0.5">
-                ЛиАЗ-6274 / КамАЗ-6282
-              </div>
+              </span>
+              <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border ${
+                isDarkMode ? "bg-white/10 text-zinc-300 border-white/10" : "bg-zinc-100 text-zinc-600 border-zinc-200"
+              }`}>
+                LIVE
+              </span>
             </div>
-            <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border ${
-              isDarkMode ? "bg-emerald-950/60 text-emerald-300 border-emerald-700" : "bg-emerald-50 text-emerald-700 border-emerald-200"
-            }`}>
-              LIVE
-            </span>
-          </div>
+            <div className="text-[10px] text-zinc-400 font-mono mb-2">
+              ЛиАЗ-6274 • КамАЗ-6282
+            </div>
 
-          {/* Roster Filters */}
-          <div className={`px-3.5 py-2.5 border-b flex items-center justify-between shrink-0 ${
-            isDarkMode ? "bg-[#18181b] border-zinc-800" : "bg-white border-slate-200"
-          }`}>
-            <div className={`flex items-center gap-1 p-0.5 rounded-lg border ${
-              isDarkMode ? "bg-[#121214] border-zinc-800" : "bg-slate-100 border-slate-200"
-            }`}>
+            {/* Filter Chips */}
+            <div className="flex items-center gap-1.5">
               <button
                 onClick={() => setFilterMode("all")}
-                className={`px-2.5 py-1 text-[10px] font-bold rounded-md cursor-pointer transition-all ${
+                className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors cursor-pointer ${
                   filterMode === "all"
-                    ? isDarkMode ? "bg-slate-800 text-white shadow-xs" : "bg-white text-slate-800 shadow-xs"
-                    : "text-slate-400 hover:text-slate-200"
+                    ? isDarkMode ? "bg-zinc-700 text-white" : "bg-zinc-800 text-white"
+                    : isDarkMode ? "bg-[#222226] text-zinc-400" : "bg-zinc-100 text-zinc-600"
                 }`}
               >
-                Все борты (12)
+                Все борта ({BUS_FLEET.length})
               </button>
               <button
                 onClick={() => setFilterMode("anomalies")}
-                className={`px-2.5 py-1 text-[10px] font-bold rounded-md cursor-pointer transition-all flex items-center gap-1 ${
+                className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors cursor-pointer ${
                   filterMode === "anomalies"
-                    ? "bg-rose-600 text-white shadow-xs"
-                    : "text-rose-400 hover:text-rose-300"
+                    ? "bg-rose-600 text-white"
+                    : isDarkMode ? "bg-[#222226] text-zinc-400" : "bg-zinc-100 text-zinc-600"
                 }`}
               >
-                <span>Аномалии (2)</span>
+                Аномалии (2)
               </button>
             </div>
           </div>
 
-          {/* Fleet Table */}
-          <div className={`flex-1 overflow-y-auto divide-y font-sans text-xs ${
-            isDarkMode ? "divide-zinc-800" : "divide-slate-100"
-          }`}>
+          {/* Fleet List */}
+          <div className="flex-1 overflow-y-auto divide-y divide-zinc-100 dark:divide-white/5">
             {filteredFleet.map((b) => (
               <div
                 key={b.id}
-                className={`p-3 flex items-center justify-between transition-colors ${
+                className={`p-2.5 flex items-center justify-between transition-colors ${
                   b.risk === "critical"
-                    ? isDarkMode ? "bg-rose-950/30 border-l-2 border-rose-500" : "bg-red-50/40 border-l-2 border-red-500"
+                    ? "bg-rose-500/10 border-l-2 border-rose-500"
                     : b.risk === "warning"
-                    ? isDarkMode ? "bg-amber-950/30 border-l-2 border-amber-500" : "bg-amber-50/40 border-l-2 border-amber-500"
-                    : isDarkMode ? "hover:bg-zinc-800/40" : "hover:bg-slate-50"
+                    ? "bg-amber-500/10 border-l-2 border-amber-500"
+                    : isDarkMode ? "hover:bg-white/5" : "hover:bg-zinc-50"
                 }`}
               >
                 <div className="flex flex-col">
-                  <div className="flex items-center gap-2">
-                    <span className={`font-mono font-black ${isDarkMode ? "text-white" : "text-slate-900"}`}>{b.id}</span>
-                    <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded border ${
-                      isDarkMode ? "text-zinc-400 bg-zinc-800/80 border-zinc-700" : "text-slate-500 bg-slate-100 border-slate-200"
+                  <div className="flex items-center gap-1.5">
+                    <span className={`font-mono text-xs font-bold ${isDarkMode ? "text-white" : "text-zinc-900"}`}>{b.id}</span>
+                    <span className={`text-[9px] font-mono px-1 py-0.2 rounded border ${
+                      isDarkMode ? "text-zinc-400 bg-zinc-800/80 border-white/5" : "text-zinc-500 bg-zinc-100 border-zinc-200"
                     }`}>
                       {b.model}
                     </span>
                   </div>
-                  <span className="text-[10px] text-slate-400 mt-0.5">{b.pos}</span>
+                  <span className="text-[10px] text-zinc-400 mt-0.5">{b.pos}</span>
                 </div>
                 <div className="flex flex-col items-end text-right">
                   <span
@@ -526,18 +405,18 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
                         ? "text-rose-400"
                         : b.risk === "warning"
                         ? "text-amber-400"
-                        : isDarkMode ? "text-slate-300" : "text-slate-700"
+                        : isDarkMode ? "text-zinc-300" : "text-zinc-700"
                     }`}
                   >
                     {b.dev}
                   </span>
                   <span
-                    className={`text-[10px] font-bold mt-0.5 ${
+                    className={`text-[9px] font-bold mt-0.5 ${
                       b.risk === "critical"
                         ? "text-rose-400"
                         : b.risk === "warning"
                         ? "text-amber-400"
-                        : "text-emerald-400"
+                        : isDarkMode ? "text-zinc-400" : "text-zinc-600"
                     }`}
                   >
                     {b.status}
@@ -548,49 +427,53 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
           </div>
 
           {/* Bottom DSS Box */}
-          <div className={`p-3.5 border-t flex flex-col gap-2.5 shrink-0 ${
-            isDarkMode ? "bg-[#121214] border-zinc-800" : "bg-slate-50 border-slate-200"
+          <div className={`p-3 border-t flex flex-col gap-2 shrink-0 ${
+            isDarkMode ? "bg-[#141416] border-white/10" : "bg-zinc-50 border-zinc-200"
           }`}>
             <div className="flex items-center justify-between">
-              <span className={`text-[10px] font-black uppercase tracking-wider ${
-                isDarkMode ? "text-zinc-300" : "text-slate-800"
+              <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                isDarkMode ? "text-zinc-300" : "text-zinc-700"
               }`}>
-                СППР Регулирование интервала
+                СППР Регулирование
               </span>
-              <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[10px] font-bold rounded border border-emerald-500/30">
+              <span className={`px-1.5 py-0.2 text-[9px] font-bold rounded border ${
+                isDarkMode ? "bg-emerald-950/60 text-emerald-400 border-emerald-800/60" : "bg-emerald-50 text-emerald-800 border-emerald-200"
+              }`}>
                 96% УСПЕХ
               </span>
             </div>
 
-            <p className={`text-[11px] leading-relaxed ${isDarkMode ? "text-zinc-300" : "text-slate-600"}`}>
+            <p className={`text-[10.5px] leading-relaxed ${isDarkMode ? "text-zinc-400" : "text-zinc-600"}`}>
               Принудительный Holding лидера борта №1043 на остановочном пункте «м. Бауманская» на 2.5 мин.
             </p>
 
             <button
               onClick={handleApply}
               disabled={holdingApplied}
-              className={`w-full h-10 px-3 rounded-xl text-white font-black text-xs shadow-md transition-all flex items-center justify-center gap-1.5 uppercase cursor-pointer ${
+              className={`w-full h-8 px-2.5 rounded-lg text-white font-bold text-[11px] shadow-xs transition-all flex items-center justify-center gap-1.5 uppercase cursor-pointer ${
                 holdingApplied
-                  ? "bg-emerald-800 cursor-default opacity-90"
-                  : "bg-[#00875A] hover:bg-[#00965E] active:scale-95 shadow-emerald-900/30"
+                  ? "bg-zinc-700 text-zinc-300 cursor-default"
+                  : "bg-emerald-600 hover:bg-emerald-500 active:scale-95 shadow-emerald-900/20"
               }`}
             >
-              <CheckCircle2 className="w-4 h-4" />
+              <CheckCircle2 className="w-3.5 h-3.5" />
               <span>{holdingApplied ? "Holding №1043 применён" : "Применить Holding №1043 (2.5м)"}</span>
             </button>
 
-            <button
-              onClick={() => onOpenScenarios && onOpenScenarios()}
-              className={`w-full h-8 px-2 rounded-lg border text-[11px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                isDarkMode
-                  ? "border-zinc-700 bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300"
-                  : "border-slate-300 bg-white hover:bg-slate-100 text-slate-700"
-              }`}
-            >
-              <Grid2x2 size={13} className="shrink-0" />
-              <span>Ситуационная матрица (4 сценария)</span>
-              <ChevronDown size={12} className="shrink-0" />
-            </button>
+            {onOpenScenarios && (
+              <button
+                onClick={onOpenScenarios}
+                className={`w-full h-7 px-2 rounded-md border text-[10px] font-semibold transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                  isDarkMode
+                    ? "border-white/10 bg-[#222226] hover:bg-zinc-700 text-zinc-300"
+                    : "border-zinc-200 bg-white hover:bg-zinc-100 text-zinc-700"
+                }`}
+              >
+                <Grid2x2 size={11} className="shrink-0" />
+                <span>Матрица сценариев (4)</span>
+                <ChevronDown size={11} className="shrink-0" />
+              </button>
+            )}
           </div>
         </aside>
       </div>

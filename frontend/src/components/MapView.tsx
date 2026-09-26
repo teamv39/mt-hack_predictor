@@ -480,13 +480,17 @@ export const MapView: React.FC<MapViewProps> = ({
     ];
 
     stopsList.forEach((stop) => {
+      const isCritical = stop.name === "м. Бауманская";
+      const isWarning = stop.name === "Бакунинская ул.";
+      const dotColor = isCritical ? "#dc2626" : isWarning ? "#d97706" : "#71717a";
+
       const el = document.createElement("div");
       el.className = "stop-marker-item";
       el.style.display = "flex";
       el.style.alignItems = "center";
       el.style.gap = "4px";
       el.style.background = isDarkMode ? "#18181b" : "#ffffff";
-      el.style.border = `2px solid ${isDarkMode ? "#10b981" : "#00875A"}`;
+      el.style.border = isDarkMode ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(0,0,0,0.12)";
       el.style.borderRadius = "6px";
       el.style.padding = "2px 6px";
       el.style.boxShadow = `0 2px 8px rgba(0,0,0,${isDarkMode ? "0.4" : "0.15"})`;
@@ -498,7 +502,7 @@ export const MapView: React.FC<MapViewProps> = ({
       el.style.userSelect = "none";
 
       el.innerHTML = `
-        <span style="width: 5px; height: 5px; border-radius: 50%; background: ${isDarkMode ? "#10b981" : "#00875A"};"></span>
+        <span style="width: 6px; height: 6px; border-radius: 50%; background: ${dotColor};"></span>
         <span>${stop.name}</span>
       `;
 
@@ -534,7 +538,7 @@ export const MapView: React.FC<MapViewProps> = ({
       const isDelayed = veh.status === "DELAYED";
       const cleanId = veh.id.replace(/^P/, "");
 
-      const badgeBg = isBunching ? "#dc2626" : isDelayed ? "#d97706" : "#00875A";
+      const badgeBg = isBunching ? "#dc2626" : isDelayed ? "#d97706" : (isDarkMode ? "#27272a" : "#334155");
       const statusText = isBunching
         ? `№${cleanId} • Пачкование ${veh.speedKmh} км/ч`
         : isDelayed
@@ -573,7 +577,7 @@ export const MapView: React.FC<MapViewProps> = ({
               width: ${isSelected ? "52px" : "44px"};
               height: ${isSelected ? "52px" : "44px"};
               border-radius: 50%;
-              background: ${isBunching ? "rgba(239, 68, 68, 0.3)" : "rgba(37, 99, 235, 0.35)"};
+              background: ${isBunching ? "rgba(239, 68, 68, 0.3)" : "rgba(255, 255, 255, 0.15)"};
               animation: pulse-ring 2s infinite;
             "></div>
           `
@@ -593,8 +597,8 @@ export const MapView: React.FC<MapViewProps> = ({
             font-weight: 800;
             padding: 3px 8px;
             border-radius: 9999px;
-            box-shadow: 0 4px 14px ${isBunching ? "rgba(220, 38, 38, 0.45)" : "rgba(0, 135, 90, 0.4)"};
-            border: 2px solid ${isSelected ? "#38bdf8" : "#ffffff"};
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border: ${isSelected ? "2px solid #38bdf8" : "1px solid rgba(255,255,255,0.2)"};
             white-space: nowrap;
             transition: transform 0.15s ease-in-out;
           ">
@@ -608,7 +612,7 @@ export const MapView: React.FC<MapViewProps> = ({
             height: 18px;
             border-radius: 50%;
             background: ${badgeBg};
-            border: 2px solid ${isSelected ? "#38bdf8" : "#ffffff"};
+            border: ${isSelected ? "2px solid #38bdf8" : "1px solid rgba(255,255,255,0.2)"};
             margin-top: 2px;
             display: flex;
             align-items: center;
@@ -750,22 +754,22 @@ export const MapView: React.FC<MapViewProps> = ({
       <div ref={mapContainerRef} className="absolute inset-0 w-full h-full z-0" />
 
       {/* 2. Floating Map Tools (Right side of left panel) */}
-      <div className="absolute top-5 left-[365px] z-20 flex flex-col gap-1 p-1.5 rounded-xl border border-zinc-700/80 bg-[#18181b]/95 text-zinc-200 shadow-xl shadow-black/25 pointer-events-auto backdrop-blur-xl transition-all">
+      <div className="absolute top-5 left-[365px] z-20 flex flex-col gap-1 p-1.5 rounded-xl border border-white/10 bg-[#18181b]/95 text-zinc-200 shadow-xl shadow-black/25 pointer-events-auto backdrop-blur-xl transition-all">
         <button
           onClick={() => mapInstanceRef.current?.zoomIn()}
-          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer hover:bg-slate-800 text-slate-200"
+          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer hover:bg-zinc-800 text-zinc-300 hover:text-white"
           title="Приблизить"
         >
           <Plus size={15} />
         </button>
         <button
           onClick={() => mapInstanceRef.current?.zoomOut()}
-          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer hover:bg-slate-800 text-slate-200"
+          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer hover:bg-zinc-800 text-zinc-300 hover:text-white"
           title="Отдалить"
         >
           <Minus size={15} />
         </button>
-        <div className="h-px my-0.5 bg-slate-700" />
+        <div className="h-px my-0.5 bg-zinc-700" />
         <button
           onClick={() =>
             mapInstanceRef.current?.flyTo({
@@ -774,7 +778,7 @@ export const MapView: React.FC<MapViewProps> = ({
               duration: 1000,
             })
           }
-          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer hover:bg-slate-800 text-slate-200"
+          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer hover:bg-zinc-800 text-zinc-300 hover:text-white"
           title="Центрировать на перегоне"
         >
           <Crosshair size={14} />
@@ -787,7 +791,7 @@ export const MapView: React.FC<MapViewProps> = ({
               map.easeTo({ pitch: currentPitch > 20 ? 0 : 45, duration: 800 });
             }
           }}
-          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer hover:bg-slate-800 text-slate-200"
+          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer hover:bg-zinc-800 text-zinc-300 hover:text-white"
           title="Переключить перспективу 2D/2.5D"
         >
           <Layers size={14} />
@@ -799,10 +803,10 @@ export const MapView: React.FC<MapViewProps> = ({
         {/* ML Horizon Mode Indicator Badge */}
         {timeStep === "+15 мин" ? (
           <div
-            className={`px-3 py-1 rounded-full text-[11px] font-black flex items-center gap-1.5 shadow-lg border backdrop-blur-md transition-all ${
+            className={`px-3 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5 shadow-lg border backdrop-blur-md transition-all ${
               isHoldingApplied
-                ? "bg-emerald-600/95 text-white border-emerald-400"
-                : "bg-red-600/95 text-white border-red-400 animate-pulse"
+                ? "bg-emerald-950/80 text-emerald-300 border-emerald-800/60"
+                : "bg-rose-950/80 text-rose-300 border-rose-800/60 animate-pulse"
             }`}
           >
             {isHoldingApplied ? <CheckCircle2 size={13} /> : <AlertTriangle size={13} />}
@@ -813,26 +817,26 @@ export const MapView: React.FC<MapViewProps> = ({
             </span>
           </div>
         ) : timeStep === "Сейчас" ? (
-          <div className="px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 shadow border backdrop-blur-md bg-[#18181b]/90 text-emerald-400 border-zinc-700">
-            <Radio size={11} className="animate-pulse text-emerald-500" />
+          <div className="px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1.5 shadow border backdrop-blur-md bg-[#18181b]/95 text-zinc-300 border-white/10">
+            <Radio size={11} className="text-emerald-500 shrink-0" />
             <span>ОНЛАЙН ТЕЛЕМЕТРИЯ NDTP • ТЕКУЩИЙ МОМЕНТ</span>
           </div>
         ) : (
-          <div className="px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 shadow border backdrop-blur-md bg-[#18181b]/90 text-blue-400 border-zinc-700">
+          <div className="px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 shadow border backdrop-blur-md bg-[#18181b]/95 text-zinc-400 border-white/10">
             <span>ПРОГНОЗНЫЙ ГОРИЗОНТ ДВИЖЕНИЯ {timeStep}</span>
           </div>
         )}
 
-        <div className="rounded-2xl border border-zinc-700/80 shadow-2xl shadow-black/35 px-4 py-2.5 flex items-center gap-3 w-[460px] max-w-[calc(100vw-750px)] backdrop-blur-xl bg-[#18181b]/95 text-zinc-200 transition-colors">
+        <div className="rounded-2xl border border-white/10 shadow-2xl shadow-black/35 px-4 py-2.5 flex items-center gap-3 w-[460px] max-w-[calc(100vw-750px)] backdrop-blur-xl bg-[#18181b]/95 text-zinc-200 transition-colors">
           {/* Play/Pause Button */}
           <button
             onClick={() => setIsPlaying(!isPlaying)}
             className={`w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm shrink-0 cursor-pointer ${
               isPlaying
-                ? "bg-emerald-600 hover:bg-emerald-500 text-white"
+                ? isDarkMode ? "bg-zinc-700 text-white" : "bg-zinc-800 text-white"
                 : isDarkMode
-                ? "bg-blue-600 hover:bg-blue-500 text-white"
-                : "bg-slate-900 hover:bg-slate-800 text-white"
+                ? "bg-zinc-800 hover:bg-zinc-700 text-white"
+                : "bg-zinc-900 hover:bg-zinc-800 text-white"
             }`}
             title={isPlaying ? "Остановить анимацию" : "Запустить просмотр во времени"}
           >
@@ -844,8 +848,8 @@ export const MapView: React.FC<MapViewProps> = ({
             onClick={() => onTimeStepChange("Сейчас")}
             className={`transition-colors shrink-0 cursor-pointer ${
               timeStep === "Сейчас"
-                ? "text-emerald-500"
-                : "text-slate-400 hover:text-slate-200"
+                ? "text-zinc-200 font-bold"
+                : "text-zinc-400 hover:text-zinc-200"
             }`}
             title="К текущему моменту (Сейчас)"
           >
@@ -855,7 +859,7 @@ export const MapView: React.FC<MapViewProps> = ({
           {/* Step Back */}
           <button
             onClick={handlePrevStep}
-            className="text-slate-400 hover:text-slate-200 transition-colors shrink-0 cursor-pointer"
+            className="text-zinc-400 hover:text-zinc-200 transition-colors shrink-0 cursor-pointer"
             title="Предыдущий горизонт"
           >
             <ChevronLeft size={16} />
@@ -867,11 +871,11 @@ export const MapView: React.FC<MapViewProps> = ({
             <div
               onClick={handleTrackClick}
               className={`relative w-full h-2 rounded-full flex items-center cursor-pointer ${
-                isDarkMode ? "bg-slate-700/80" : "bg-slate-200"
+                isDarkMode ? "bg-zinc-700/80" : "bg-zinc-200"
               }`}
             >
               <div
-                className="h-full bg-[#00875A] rounded-full transition-all"
+                className="h-full bg-zinc-400 dark:bg-zinc-500 rounded-full transition-all"
                 style={{
                   width:
                     timeStep === "Сейчас"
@@ -884,8 +888,8 @@ export const MapView: React.FC<MapViewProps> = ({
                 }}
               />
               <div
-                className={`absolute w-3.5 h-3.5 rounded-full border-2 border-[#00875A] shadow-md transition-all ${
-                  isDarkMode ? "bg-slate-900" : "bg-white"
+                className={`absolute w-3.5 h-3.5 rounded-full border-2 border-zinc-400 dark:border-zinc-300 shadow-md transition-all ${
+                  isDarkMode ? "bg-zinc-900" : "bg-white"
                 }`}
                 style={{
                   left:
@@ -908,11 +912,11 @@ export const MapView: React.FC<MapViewProps> = ({
                 className={`cursor-pointer transition-colors ${
                   timeStep === "Сейчас"
                     ? isDarkMode
-                      ? "text-emerald-400 font-extrabold"
-                      : "text-emerald-700 font-extrabold"
+                      ? "text-zinc-100 font-extrabold"
+                      : "text-zinc-900 font-extrabold"
                     : isDarkMode
-                    ? "text-slate-400 hover:text-slate-200"
-                    : "text-slate-500 hover:text-slate-800"
+                    ? "text-zinc-400 hover:text-zinc-200"
+                    : "text-zinc-500 hover:text-zinc-800"
                 }`}
               >
                 Сейчас
@@ -923,11 +927,11 @@ export const MapView: React.FC<MapViewProps> = ({
                 className={`px-1.5 py-0.5 rounded cursor-pointer transition-all ${
                   timeStep === "+15 мин"
                     ? isDarkMode
-                      ? "bg-amber-900/60 text-amber-300 font-extrabold border border-amber-600"
-                      : "bg-amber-100 text-amber-900 font-extrabold border border-amber-300"
+                      ? "bg-amber-950/50 text-amber-300 font-extrabold border border-amber-600/50"
+                      : "bg-amber-50 text-amber-900 font-extrabold border border-amber-300"
                     : isDarkMode
-                    ? "text-slate-400 hover:text-slate-200"
-                    : "text-slate-500 hover:text-slate-800"
+                    ? "text-zinc-400 hover:text-zinc-200"
+                    : "text-zinc-500 hover:text-zinc-800"
                 }`}
               >
                 +15м (ML)
@@ -939,10 +943,10 @@ export const MapView: React.FC<MapViewProps> = ({
                   timeStep === "+30 мин"
                     ? isDarkMode
                       ? "text-white font-extrabold"
-                      : "text-slate-900 font-extrabold"
+                      : "text-zinc-900 font-extrabold"
                     : isDarkMode
-                    ? "text-slate-400 hover:text-slate-200"
-                    : "text-slate-500 hover:text-slate-800"
+                    ? "text-zinc-400 hover:text-zinc-200"
+                    : "text-zinc-500 hover:text-zinc-800"
                 }`}
               >
                 +30м
@@ -954,10 +958,10 @@ export const MapView: React.FC<MapViewProps> = ({
                   timeStep === "+45 мин"
                     ? isDarkMode
                       ? "text-white font-extrabold"
-                      : "text-slate-900 font-extrabold"
+                      : "text-zinc-900 font-extrabold"
                     : isDarkMode
-                    ? "text-slate-400 hover:text-slate-200"
-                    : "text-slate-500 hover:text-slate-800"
+                    ? "text-zinc-400 hover:text-zinc-200"
+                    : "text-zinc-500 hover:text-zinc-800"
                 }`}
               >
                 +45м
@@ -968,7 +972,7 @@ export const MapView: React.FC<MapViewProps> = ({
           {/* Next Arrow */}
           <button
             onClick={handleNextStep}
-            className="text-slate-400 hover:text-slate-200 transition-colors shrink-0 cursor-pointer"
+            className="text-zinc-400 hover:text-zinc-200 transition-colors shrink-0 cursor-pointer"
             title="Следующий горизонт"
           >
             <ChevronRight size={16} />
@@ -976,7 +980,7 @@ export const MapView: React.FC<MapViewProps> = ({
         </div>
 
         {/* Subtle source attribution */}
-        <div className={`text-[9px] text-center font-medium ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
+        <div className={`text-[9px] text-center font-medium ${isDarkMode ? "text-zinc-500" : "text-zinc-400"}`}>
           {isTileServerAvailable
             ? "Автономная векторная карта Москвы (TileServer GL • Planetiler) • СППР Мосгортранс"
             : "Резервная карта (TileServer GL offline) • СППР Мосгортранс"}

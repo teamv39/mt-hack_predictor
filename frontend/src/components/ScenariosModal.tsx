@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Check, CheckCircle2, Cpu, X, Star } from "lucide-react";
+import { Check, CheckCircle2, Cpu, X, Star, Shield, ArrowRight } from "lucide-react";
 
 export interface ScenarioItem {
   id: string;
@@ -117,46 +117,44 @@ export const ScenariosModal: React.FC<ScenariosModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-md p-6 animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in select-none font-sans"
       onClick={onClose}
     >
       <div
-        className={`relative w-full max-w-4xl border shadow-2xl rounded-2xl overflow-hidden font-sans flex flex-col my-auto transition-colors ${
+        className={`relative w-full max-w-3xl border shadow-xl rounded-xl overflow-hidden flex flex-col my-auto transition-colors ${
           isDarkMode
-            ? "bg-[#151D2A] border-slate-700 text-slate-200 shadow-black/60"
-            : "bg-white border-slate-200/90 text-slate-800 shadow-2xl"
+            ? "bg-[#18181b] border-white/10 text-zinc-200"
+            : "bg-white border-zinc-200 text-zinc-800"
         }`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className={`p-6 pb-4 flex items-start justify-between border-b shrink-0 ${
-          isDarkMode ? "border-slate-800 bg-[#111827]" : "border-slate-100 bg-white"
+        <div className={`p-4 border-b flex items-start justify-between shrink-0 ${
+          isDarkMode ? "border-white/10 bg-[#141416]" : "border-zinc-100 bg-zinc-50/70"
         }`}>
-          <div className="flex items-start space-x-3.5">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 shadow-xs border ${
-              isDarkMode ? "bg-blue-950/60 border-blue-700 text-cyan-400" : "bg-blue-50 border-blue-200 text-blue-600"
+          <div className="flex items-start gap-3">
+            <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 border ${
+              isDarkMode ? "bg-[#222226] border-white/10 text-zinc-300" : "bg-zinc-100 border-zinc-200 text-zinc-700"
             }`}>
-              <Cpu className="w-5 h-5" />
+              <Cpu className="w-4 h-4" />
             </div>
             <div>
-              <h3 className={`text-lg font-bold tracking-tight leading-snug ${isDarkMode ? "text-white" : "text-slate-900"}`}>
-                СИТУАЦИОННАЯ МАТРИЦА СППР: ЛИКВИДАЦИЯ ПАЧКОВАНИЯ М3
+              <h3 className={`text-sm font-bold tracking-tight uppercase ${isDarkMode ? "text-white" : "text-zinc-900"}`}>
+                Ситуационная матрица СППР: Ликвидация пачкования м3
               </h3>
-              <div className={`mt-1.5 flex flex-wrap items-center gap-2 text-xs font-mono ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                <span className={`px-2 py-0.5 rounded font-semibold border ${
-                  isDarkMode ? "bg-rose-950/80 text-rose-300 border-rose-700" : "bg-red-50 text-red-700 border-red-200"
+              <div className="mt-1 flex flex-wrap items-center gap-2 text-xs font-mono text-zinc-400">
+                <span className={`px-1.5 py-0.5 rounded font-semibold border ${
+                  isDarkMode ? "bg-rose-950/80 text-rose-300 border-rose-800" : "bg-rose-50 text-rose-700 border-rose-200"
                 }`}>
                   {incidentId}
                 </span>
-                <span className={`font-medium ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>
-                  Борт {vehicleId} ➔ Лидер {leaderId}
+                <span>
+                  Борт {vehicleId} → Лидер {leaderId}
                 </span>
-                <span className="text-slate-500">•</span>
+                <span>•</span>
                 <span>Перегон м. Бауманская</span>
-                <span className="text-slate-500">•</span>
-                <span className={`font-bold px-1.5 py-0.5 rounded ${
-                  isDarkMode ? "bg-rose-950/60 text-rose-300 border border-rose-800" : "text-red-600 bg-red-50/60"
-                }`}>
+                <span>•</span>
+                <span className="text-rose-400 font-bold">
                   Интервал: {intervalMin} мин (Норма: 8 мин)
                 </span>
               </div>
@@ -164,8 +162,8 @@ export const ScenariosModal: React.FC<ScenariosModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
-              isDarkMode ? "hover:bg-slate-800 text-slate-400 hover:text-slate-200" : "hover:bg-slate-100 text-slate-400 hover:text-slate-700"
+            className={`p-1 rounded-md transition-colors cursor-pointer ${
+              isDarkMode ? "hover:bg-white/10 text-zinc-400 hover:text-white" : "hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900"
             }`}
             title="Закрыть"
           >
@@ -174,183 +172,110 @@ export const ScenariosModal: React.FC<ScenariosModalProps> = ({
         </div>
 
         {/* Modal Body: 4 Tactical Strategies Grid */}
-        <div className={`grid grid-cols-2 gap-4 p-6 pt-4 overflow-y-auto max-h-[calc(85vh-160px)] ${
-          isDarkMode ? "bg-[#121214]" : "bg-slate-50/60"
+        <div className={`grid grid-cols-1 md:grid-cols-2 gap-3 p-4 overflow-y-auto max-h-[calc(85vh-140px)] ${
+          isDarkMode ? "bg-[#141416]" : "bg-zinc-50/50"
         }`}>
           {SCENARIOS.map((sc) => {
             const isSelected = sc.id === selectedId;
-            let borderClass = isDarkMode
-              ? "border-zinc-700/80 hover:border-zinc-600"
-              : "border-slate-200 hover:border-slate-300 hover:shadow-xs";
-            let bgClass = isDarkMode ? "bg-[#18181b]" : "bg-white";
-
-            if (isSelected) {
-              if (sc.theme === "emerald") {
-                borderClass = "border-2 border-emerald-500 shadow-md ring-4 ring-emerald-500/10";
-              } else if (sc.theme === "amber") {
-                borderClass = "border-2 border-amber-500 shadow-md ring-4 ring-amber-500/10";
-              } else if (sc.theme === "blue") {
-                borderClass = "border-2 border-blue-500 shadow-md ring-4 ring-blue-500/10";
-              } else {
-                borderClass = isDarkMode
-                  ? "border-2 border-zinc-500 shadow-md ring-4 ring-zinc-400/10"
-                  : "border-2 border-slate-700 shadow-md ring-4 ring-slate-500/10";
-              }
-            }
 
             return (
               <div
                 key={sc.id}
                 onClick={() => setSelectedId(sc.id)}
-                className={`relative rounded-xl p-5 cursor-pointer transition-all flex flex-col justify-between ${bgClass} ${borderClass}`}
+                className={`rounded-lg p-3.5 cursor-pointer transition-all border flex flex-col justify-between ${
+                  isSelected
+                    ? isDarkMode
+                      ? "border-zinc-400 bg-[#222226] shadow-md ring-1 ring-zinc-500/30"
+                      : "border-zinc-500 bg-white shadow-md ring-1 ring-zinc-400/30"
+                    : isDarkMode
+                    ? "border-white/10 bg-[#18181b] hover:border-white/20"
+                    : "border-zinc-200 bg-white hover:border-zinc-300"
+                }`}
               >
                 <div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-2">
                     <span
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border ${
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
                         sc.theme === "emerald"
-                          ? isDarkMode ? "bg-emerald-950/80 text-emerald-300 border-emerald-700" : "bg-emerald-100 text-emerald-800 border-emerald-300"
+                          ? isDarkMode ? "bg-emerald-950/80 text-emerald-300 border-emerald-800" : "bg-emerald-50 text-emerald-800 border-emerald-200"
                           : sc.theme === "amber"
-                          ? isDarkMode ? "bg-amber-950/80 text-amber-300 border-amber-700" : "bg-amber-50 text-amber-800 border-amber-200"
+                          ? isDarkMode ? "bg-amber-950/80 text-amber-300 border-amber-800" : "bg-amber-50 text-amber-800 border-amber-200"
                           : sc.theme === "blue"
-                          ? isDarkMode ? "bg-blue-950/80 text-blue-300 border-blue-700" : "bg-blue-50 text-blue-800 border-blue-200"
-                          : isDarkMode ? "bg-zinc-800 text-zinc-300 border-zinc-700" : "bg-slate-100 text-slate-700 border-slate-200"
+                          ? isDarkMode ? "bg-zinc-800 text-zinc-300 border-white/10" : "bg-zinc-100 text-zinc-800 border-zinc-200"
+                          : isDarkMode ? "bg-zinc-800 text-zinc-300 border-white/10" : "bg-zinc-100 text-zinc-700 border-zinc-200"
                       }`}
                     >
                       {sc.badge}
                     </span>
-                    <span
-                      className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${
-                        isSelected
-                          ? sc.theme === "emerald"
-                            ? "bg-emerald-600 text-white shadow-xs"
-                            : sc.theme === "amber"
-                            ? "bg-amber-600 text-white shadow-xs"
-                            : sc.theme === "blue"
-                            ? "bg-blue-600 text-white shadow-xs"
-                            : "bg-zinc-700 text-white shadow-xs"
-                          : isDarkMode ? "border-2 border-zinc-600" : "border-2 border-slate-300"
-                      }`}
-                    >
-                      {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                    </span>
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: sc.stars }).map((_, i) => (
+                        <Star key={i} size={11} className="text-amber-500 fill-amber-500" />
+                      ))}
+                    </div>
                   </div>
 
-                  <h4 className={`mt-3 text-sm font-bold font-mono tracking-tight ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                  <h4 className={`text-xs font-bold font-mono tracking-tight ${isDarkMode ? "text-white" : "text-zinc-900"}`}>
                     {sc.title}
                   </h4>
 
-                  <div
-                    className={`mt-2.5 text-xs leading-relaxed font-medium p-2.5 rounded-lg border ${
-                      sc.theme === "emerald"
-                        ? isDarkMode
-                          ? "bg-emerald-950/40 border-emerald-800/80 text-emerald-200"
-                          : "bg-emerald-50/70 border-emerald-200/60 text-slate-700"
-                        : isDarkMode
-                        ? "bg-[#222226] border-zinc-800 text-zinc-300"
-                        : "bg-slate-50 border-slate-200 text-slate-700"
-                    }`}
-                  >
-                    <span
-                      className={`font-bold ${
-                        sc.theme === "emerald"
-                          ? isDarkMode ? "text-emerald-300" : "text-emerald-900"
-                          : isDarkMode ? "text-white" : "text-slate-800"
-                      }`}
-                    >
-                      Команда:
-                    </span>{" "}
+                  <p className={`mt-2 text-xs leading-relaxed p-2 rounded border ${
+                    isDarkMode ? "bg-[#141416] border-white/5 text-zinc-300" : "bg-zinc-50 border-zinc-100 text-zinc-700"
+                  }`}>
                     {sc.command}
-                  </div>
+                  </p>
 
-                  <div className={`mt-3 space-y-1.5 text-xs font-sans ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
+                  <ul className="mt-2.5 space-y-1 text-[11px] text-zinc-400">
                     {sc.bullets.map((b, i) => (
-                      <div key={i} className="flex items-center gap-2">
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            sc.theme === "emerald"
-                              ? "bg-emerald-500"
-                              : sc.theme === "amber"
-                              ? "bg-amber-500"
-                              : sc.theme === "blue"
-                              ? "bg-blue-500"
-                              : "bg-slate-400"
-                          }`}
-                        />
+                      <li key={i} className="flex items-start gap-1.5">
+                        <span className="w-1 h-1 rounded-full bg-zinc-400 mt-1.5 shrink-0" />
                         <span>{b}</span>
-                      </div>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 </div>
 
-                <div className={`mt-4 pt-3 border-t flex items-center justify-between text-xs font-semibold ${
-                  isDarkMode ? "border-slate-800" : "border-slate-100"
+                <div className={`mt-3 pt-2.5 border-t flex items-center justify-between text-xs ${
+                  isDarkMode ? "border-white/5" : "border-zinc-100"
                 }`}>
-                  <div className="flex items-center gap-0.5 text-amber-500">
-                    {[1, 2, 3, 4, 5].map((st) => (
-                      <Star
-                        key={st}
-                        className={`w-3.5 h-3.5 ${
-                          st <= sc.stars
-                            ? "fill-amber-400 text-amber-400"
-                            : isDarkMode ? "text-slate-700 fill-slate-800" : "text-slate-200 fill-slate-100"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <span
-                    className={`text-[11px] font-medium ${
-                      sc.theme === "emerald"
-                        ? isDarkMode ? "text-emerald-300" : "text-emerald-800"
-                        : sc.theme === "amber"
-                        ? isDarkMode ? "text-amber-300" : "text-amber-700"
-                        : sc.theme === "blue"
-                        ? isDarkMode ? "text-blue-300" : "text-blue-700"
-                        : isDarkMode ? "text-slate-400" : "text-slate-600"
-                    }`}
-                  >
-                    {sc.tagline}
-                  </span>
+                  <span className="text-[11px] font-medium text-zinc-400">{sc.tagline}</span>
+                  <span className="font-mono font-bold text-emerald-400">Эффект: {sc.effect}</span>
                 </div>
               </div>
             );
           })}
         </div>
 
-        {/* Modal Bottom Action Bar */}
-        <div className={`px-6 py-3.5 border-t flex items-center justify-between shrink-0 shadow-xs gap-4 ${
-          isDarkMode ? "bg-[#111827] border-slate-800 text-slate-200" : "bg-white border-slate-200 text-slate-700"
+        {/* Modal Footer */}
+        <div className={`p-4 border-t flex items-center justify-between shrink-0 ${
+          isDarkMode ? "border-white/10 bg-[#141416]" : "border-zinc-100 bg-white"
         }`}>
-          <label className="flex items-center gap-2.5 text-xs cursor-pointer select-none">
+          <label className="flex items-center gap-2 text-xs text-zinc-400 cursor-pointer">
             <input
               type="checkbox"
               checked={sendToTerminal}
               onChange={(e) => setSendToTerminal(e.target.checked)}
-              className="w-4 h-4 rounded text-emerald-600 border-slate-300 focus:ring-emerald-500 cursor-pointer"
+              className="rounded border-zinc-300 text-zinc-600 focus:ring-zinc-500"
             />
-            <span className={`font-medium ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>
-              Автоматически передать команду водителю в терминал ЕГПТС и на табло остановок
-            </span>
+            <span>Автоматически передать директиву в АСУ-РДС на борт №1043</span>
           </label>
-          <div className="flex items-center gap-2.5 shrink-0">
+
+          <div className="flex items-center gap-2">
             <button
               onClick={onClose}
-              className={`px-4 py-2 rounded-xl border text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap ${
-                isDarkMode
-                  ? "border-slate-700 text-slate-300 hover:bg-slate-800"
-                  : "border-slate-200 text-slate-600 hover:bg-slate-50"
+              className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors cursor-pointer ${
+                isDarkMode ? "border-white/10 hover:bg-white/5 text-zinc-300" : "border-zinc-200 hover:bg-zinc-50 text-zinc-700"
               }`}
             >
-              Отмена / Вернуться к карте
+              Отмена
             </button>
             <button
               onClick={() => {
                 onApplyScenario(activeScenario.id, activeScenario.title);
                 onClose();
               }}
-              className="px-5 py-2.5 rounded-xl bg-[#00875A] hover:bg-[#00965E] text-white text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer active:scale-95 whitespace-nowrap"
+              className="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
             >
-              <CheckCircle2 className="w-4 h-4" />
+              <CheckCircle2 size={13} />
               <span>{activeScenario.btnLabel}</span>
             </button>
           </div>

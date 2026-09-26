@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
-  CheckCircle,
+  CheckCircle2,
   AlertTriangle,
   Play,
   Pause,
@@ -11,10 +11,10 @@ import {
   Minimize2,
   Sun,
   Moon,
-  Activity,
   Layers,
+  Activity,
+  Radio,
   Compass,
-  Smartphone,
 } from "lucide-react";
 
 export type SimulationAction = "play" | "pause" | "speed" | "step" | "reset";
@@ -48,11 +48,10 @@ export const TopBar: React.FC<TopBarProps> = ({
   onToggleDarkMode,
   onOpenGuide,
 }) => {
-  const [timeStr, setTimeStr] = useState<string>("07:14:00");
+  const [timeStr, setTimeStr] = useState<string>("14:00:00");
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
-  // Dynamic ticking clock
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
@@ -66,7 +65,6 @@ export const TopBar: React.FC<TopBarProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  // Fullscreen toggle handler
   const handleToggleFullscreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(() => {});
@@ -87,150 +85,182 @@ export const TopBar: React.FC<TopBarProps> = ({
 
   return (
     <header
-      className="h-14 w-full bg-gradient-to-r from-[#D32F2F] via-[#CC1E1E] to-[#B71C1C] border-b border-[#9E1212] px-4 lg:px-5 flex items-center justify-between relative z-30 select-none text-white shadow-lg shadow-red-950/20 shrink-0 font-sans"
+      className={`h-14 w-full px-4 lg:px-5 flex items-center justify-between relative z-30 select-none border-b transition-colors duration-200 shrink-0 font-sans ${
+        isDarkMode
+          ? "bg-[#141416]/95 border-white/10 text-zinc-100 shadow-md shadow-black/40"
+          : "bg-white/95 border-zinc-200/90 text-zinc-800 shadow-xs"
+      }`}
       data-purpose="top-navigation-bar"
     >
-      {/* 1. BRANDING & NAVIGATION TABS */}
-      <div className="flex items-center gap-4">
-        {/* Brand Lockup */}
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-white/20 border border-white/30 flex items-center justify-center shadow-inner shrink-0">
-            <svg className="w-5 h-5 text-white fill-current" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" fill="none" r="46" stroke="currentColor" strokeWidth="9" />
+      {/* 1. BRAND LOCKUP & VIEW SELECTOR */}
+      <div className="flex items-center gap-4 lg:gap-6">
+        <div className="flex items-center gap-2.5">
+          {/* Moscow Transport Ring Emblem */}
+          <div className="w-8 h-8 rounded-lg bg-[#D32F2F] flex items-center justify-center text-white shadow-xs shrink-0">
+            <svg className="w-4 h-4 fill-current" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" fill="none" r="44" stroke="currentColor" strokeWidth="10" />
               <circle cx="50" cy="50" fill="none" r="28" stroke="currentColor" strokeWidth="8" />
               <circle cx="50" cy="50" fill="currentColor" r="12" />
               <path
-                d="M50 4 V22 M50 78 V96 M4 50 H22 M78 50 H96"
+                d="M50 6 V22 M50 78 V94 M6 50 H22 M78 50 H94"
                 stroke="currentColor"
                 strokeLinecap="round"
-                strokeWidth="9"
+                strokeWidth="10"
               />
             </svg>
           </div>
 
           <div className="flex flex-col leading-tight">
             <div className="flex items-center gap-1.5">
-              <span className="text-[13px] font-black tracking-tight uppercase text-white">
+              <span className={`text-[12px] font-bold tracking-tight uppercase ${isDarkMode ? "text-white" : "text-zinc-900"}`}>
                 Московский Транспорт
               </span>
-              <span className="text-[10px] font-black px-1.5 py-0.2 rounded font-mono bg-white text-[#D32F2F] shadow-xs">
+              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded font-mono ${
+                isDarkMode ? "bg-white/10 text-zinc-300" : "bg-zinc-100 text-zinc-700"
+              }`}>
                 ЦОДД
               </span>
             </div>
-            <span className="text-[10px] font-medium text-red-100/90 tracking-tight">
+            <span className={`text-[10px] font-medium tracking-tight ${isDarkMode ? "text-zinc-400" : "text-zinc-500"}`}>
               Ситуационный Центр • СППР Headway DSS
             </span>
           </div>
         </div>
 
-        {/* Subtle Divider */}
-        <div className="h-6 w-px bg-white/25 hidden md:block" />
+        {/* Divider */}
+        <div className={`h-5 w-px hidden md:block ${isDarkMode ? "bg-white/10" : "bg-zinc-200"}`} />
 
-        {/* Navigation Tabs Pill */}
-        <nav className="flex items-center p-1 rounded-xl bg-black/20 border border-white/20 gap-1 backdrop-blur-xs">
+        {/* Segmented View Controls */}
+        <nav
+          className={`flex items-center p-0.5 rounded-lg border gap-0.5 ${
+            isDarkMode
+              ? "bg-[#222226] border-white/10"
+              : "bg-zinc-100 border-zinc-200"
+          }`}
+        >
           <button
             onClick={() => setActiveTab && setActiveTab("hall")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
               activeTab === "hall" || activeTab === "map"
-                ? "bg-white text-[#D32F2F] shadow-sm font-black"
-                : "text-red-100 hover:text-white hover:bg-white/10"
+                ? isDarkMode
+                  ? "bg-zinc-700 text-white shadow-xs"
+                  : "bg-white text-zinc-900 shadow-xs"
+                : isDarkMode
+                ? "text-zinc-400 hover:text-zinc-200 hover:bg-white/5"
+                : "text-zinc-600 hover:text-zinc-900 hover:bg-white/60"
             }`}
           >
-            <Layers size={13} />
+            <Layers size={13} className="opacity-80" />
             <span>Карта GIS</span>
           </button>
 
           <button
             onClick={() => setActiveTab && setActiveTab("marey")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
               activeTab === "marey"
-                ? "bg-white text-[#D32F2F] shadow-sm font-black"
-                : "text-red-100 hover:text-white hover:bg-white/10"
+                ? isDarkMode
+                  ? "bg-zinc-700 text-white shadow-xs"
+                  : "bg-white text-zinc-900 shadow-xs"
+                : isDarkMode
+                ? "text-zinc-400 hover:text-zinc-200 hover:bg-white/5"
+                : "text-zinc-600 hover:text-zinc-900 hover:bg-white/60"
             }`}
           >
-            <Activity size={13} />
+            <Activity size={13} className="opacity-80" />
             <span>График Марея (м3)</span>
           </button>
 
           <button
             onClick={() => setActiveTab && setActiveTab("terminal")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
               activeTab === "terminal"
-                ? "bg-white text-[#D32F2F] shadow-sm font-black"
-                : "text-red-100 hover:text-white hover:bg-white/10"
+                ? isDarkMode
+                  ? "bg-zinc-700 text-white shadow-xs"
+                  : "bg-white text-zinc-900 shadow-xs"
+                : isDarkMode
+                ? "text-zinc-400 hover:text-zinc-200 hover:bg-white/5"
+                : "text-zinc-600 hover:text-zinc-900 hover:bg-white/60"
             }`}
           >
-            <Smartphone size={13} />
+            <Radio size={13} className="opacity-80" />
             <span>Терминал борта</span>
           </button>
         </nav>
       </div>
 
-      {/* 2. CENTER: DIGITAL CLOCK CAPSULE */}
-      <div className="hidden lg:flex items-center gap-2.5 px-3.5 py-1 rounded-full border border-white/20 bg-black/25 text-white shadow-inner">
-        <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
-        </span>
-        <span className="text-sm font-bold font-mono tracking-wider text-white">
-          {timeStr}
-        </span>
-        <span className="text-[10px] font-bold font-mono text-red-200 uppercase tracking-widest pl-0.5">
-          МСК (UTC+3)
-        </span>
-      </div>
-
-      {/* 3. RIGHT CONTROLS & KPIS */}
-      <div className="flex items-center gap-2.5">
-        {/* KPI Pills Group */}
-        <div className="flex items-center gap-1.5">
-          {/* Punctuality Rate */}
-          <div className="h-8 px-2.5 rounded-xl border border-emerald-400/40 bg-emerald-950/70 text-emerald-200 flex items-center gap-1.5 shadow-xs">
-            <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-            <div className="flex items-baseline gap-1">
-              <span className="text-xs font-black font-mono">{punctuality}</span>
-              <span className="text-[10px] font-bold uppercase tracking-tight text-emerald-300/80 hidden xl:inline">
-                Такт
-              </span>
-            </div>
-          </div>
-
-          {/* Active Incidents */}
-          <div className="h-8 px-2.5 rounded-xl border border-white/20 bg-black/25 text-white flex items-center gap-1.5 shadow-xs">
-            <AlertTriangle className="w-3.5 h-3.5 text-amber-300 shrink-0 animate-pulse" />
-            <div className="flex items-baseline gap-1">
-              <span className="text-xs font-black font-mono">{incidentsCount}</span>
-              <span className="text-[10px] font-bold uppercase tracking-tight text-red-200 hidden xl:inline">
-                Сбоя
-              </span>
-            </div>
-          </div>
+      {/* 2. CENTER TELEMETRY & LIVE CLOCK */}
+      <div className="hidden lg:flex items-center gap-2.5">
+        {/* Realtime Clock */}
+        <div
+          className={`flex items-center gap-2 px-2.5 py-1 rounded-lg border text-xs font-mono font-medium ${
+            isDarkMode
+              ? "bg-[#222226] border-white/10 text-zinc-200"
+              : "bg-zinc-100 border-zinc-200 text-zinc-700"
+          }`}
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="tracking-wider font-semibold">{timeStr}</span>
+          <span className={`text-[10px] ${isDarkMode ? "text-zinc-500" : "text-zinc-400"}`}>МСК</span>
         </div>
 
-        {/* Divider */}
-        <div className="h-6 w-px bg-white/25 hidden sm:block" />
+        {/* Punctuality Badge */}
+        <div
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-medium ${
+            isDarkMode
+              ? "bg-[#222226] border-white/10 text-zinc-200"
+              : "bg-zinc-100 border-zinc-200 text-zinc-700"
+          }`}
+          title="Соблюдение расписания на маршрутах"
+        >
+          <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
+          <span className="font-mono font-bold">{punctuality}</span>
+          <span className="text-[11px] opacity-70">график</span>
+        </div>
 
-        {/* Simulation Controls Group */}
-        <div className="flex items-center p-0.5 rounded-xl border border-white/20 bg-black/20 gap-1">
+        {/* Risk Alerts Counter */}
+        <div
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-medium ${
+            isDarkMode
+              ? "bg-[#222226] border-white/10 text-zinc-200"
+              : "bg-zinc-100 border-zinc-200 text-zinc-700"
+          }`}
+          title="Активные риски интервалов"
+        >
+          <AlertTriangle size={13} className="text-amber-500 shrink-0" />
+          <span className="font-mono font-bold">{incidentsCount}</span>
+          <span className="text-[11px] opacity-70">риска</span>
+        </div>
+      </div>
+
+      {/* 3. SIMULATION CONTROLS & UTILITY TOOLBAR */}
+      <div className="flex items-center gap-2">
+        {/* Play/Pause & Sim speed controls */}
+        <div
+          className={`flex items-center p-0.5 rounded-lg border gap-0.5 ${
+            isDarkMode
+              ? "bg-[#222226] border-white/10"
+              : "bg-zinc-100 border-zinc-200"
+          }`}
+        >
           <button
             onClick={() => onControl && onControl(isSimPlaying ? "pause" : "play")}
-            className={`h-7 px-2.5 rounded-lg flex items-center gap-1.5 text-xs font-bold transition-all cursor-pointer ${
-              isSimPlaying
-                ? "bg-white text-[#D32F2F] shadow-xs hover:bg-red-50"
-                : "bg-emerald-500 hover:bg-emerald-400 text-white shadow-xs"
+            className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+              isDarkMode
+                ? "hover:bg-white/10 text-zinc-300 hover:text-white"
+                : "hover:bg-white text-zinc-700 hover:text-zinc-900"
             }`}
-            title={isSimPlaying ? "Пауза симуляции" : "Запуск симуляции"}
+            title={isSimPlaying ? "Приостановить симуляцию" : "Запустить симуляцию"}
           >
-            {isSimPlaying ? <Pause size={12} /> : <Play size={12} />}
-            <span className="hidden xl:inline">{isSimPlaying ? "Пауза" : "Пуск"}</span>
+            {isSimPlaying ? <Pause size={13} /> : <Play size={13} />}
           </button>
 
           <button
-            onClick={() =>
-              onControl &&
-              onControl("speed", simSpeed === 1 ? 5 : simSpeed === 5 ? 10 : 1)
-            }
-            className="h-7 px-2 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer hover:bg-white/10 text-white"
+            onClick={() => onControl && onControl("speed", simSpeed === 1 ? 2 : simSpeed === 2 ? 5 : 1)}
+            className={`px-2 py-1 rounded-md text-[11px] font-mono font-bold transition-colors cursor-pointer ${
+              isDarkMode
+                ? "hover:bg-white/10 text-zinc-300 hover:text-white"
+                : "hover:bg-white text-zinc-700 hover:text-zinc-900"
+            }`}
             title="Скорость симуляции"
           >
             {simSpeed}x
@@ -238,62 +268,74 @@ export const TopBar: React.FC<TopBarProps> = ({
 
           <button
             onClick={() => onControl && onControl("reset")}
-            className="h-7 w-7 rounded-lg flex items-center justify-center transition-all cursor-pointer hover:bg-white/10 text-red-200 hover:text-white"
-            title="Сбросить симуляцию"
+            className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+              isDarkMode
+                ? "hover:bg-white/10 text-zinc-300 hover:text-white"
+                : "hover:bg-white text-zinc-700 hover:text-zinc-900"
+            }`}
+            title="Сбросить состояние"
           >
-            <RotateCcw size={12} />
+            <RotateCcw size={13} />
           </button>
         </div>
 
-        {/* Divider */}
-        <div className="h-6 w-px bg-white/25 hidden sm:block" />
-
-        {/* Quick Utility Actions */}
-        <div className="flex items-center gap-1.5">
-          {/* Jury Guide / Tour button */}
-          {onOpenGuide && (
-            <button
-              onClick={onOpenGuide}
-              className="h-8 px-2.5 rounded-xl border border-white/30 bg-white/20 hover:bg-white/30 text-white flex items-center gap-1.5 text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95"
-              title="Инструкция для экспертов и жюри (Демо-тур)"
-            >
-              <Compass size={13} className="text-amber-300" />
-              <span className="hidden md:inline font-mono text-[11px]">Гайд жюри</span>
-            </button>
-          )}
-
-          {/* Dark / Light Toggle */}
-          {onToggleDarkMode && (
-            <button
-              onClick={onToggleDarkMode}
-              className="h-8 w-8 rounded-xl flex items-center justify-center border border-white/20 bg-black/20 hover:bg-white/15 text-white transition-all cursor-pointer shadow-xs"
-              title={isDarkMode ? "Светлая карта" : "Темная видеостена ЦОДД"}
-            >
-              {isDarkMode ? <Sun size={14} className="text-amber-300" /> : <Moon size={14} className="text-white" />}
-            </button>
-          )}
-
-          {/* Sound Toggle */}
+        {/* Jury Guide Tour Button */}
+        {onOpenGuide && (
           <button
-            onClick={() => setIsMuted(!isMuted)}
-            className="h-8 w-8 rounded-xl flex items-center justify-center border border-white/20 bg-black/20 hover:bg-white/15 text-white transition-all cursor-pointer shadow-xs"
-            title={isMuted ? "Включить звук" : "Выключить звук"}
+            onClick={onOpenGuide}
+            className={`h-8 px-2.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+              isDarkMode
+                ? "bg-[#222226] hover:bg-white/10 border-white/10 text-zinc-300 hover:text-white"
+                : "bg-zinc-100 hover:bg-zinc-200 border-zinc-200 text-zinc-700 hover:text-zinc-900"
+            }`}
+            title="Экскурсия по системе для жюри"
           >
-            {isMuted ? <VolumeX size={14} className="text-red-300" /> : <Volume2 size={14} />}
+            <Compass size={13} />
+            <span className="hidden sm:inline">Гайд жюри</span>
           </button>
+        )}
 
-          {/* Fullscreen Toggle */}
+        {/* Theme Toggle (Dark/Light) */}
+        {onToggleDarkMode && (
           <button
-            onClick={handleToggleFullscreen}
-            className="h-8 w-8 rounded-xl flex items-center justify-center border border-white/20 bg-black/20 hover:bg-white/15 text-white transition-all cursor-pointer shadow-xs"
-            title={isFullscreen ? "Выйти из полного экрана" : "На весь экран"}
+            onClick={onToggleDarkMode}
+            className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+              isDarkMode
+                ? "bg-[#222226] hover:bg-white/10 border-white/10 text-zinc-300 hover:text-white"
+                : "bg-zinc-100 hover:bg-zinc-200 border-zinc-200 text-zinc-700 hover:text-zinc-900"
+            }`}
+            title={isDarkMode ? "Переключить на светлую тему" : "Переключить на тёмную тему"}
           >
-            {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+            {isDarkMode ? <Sun size={14} /> : <Moon size={14} />}
           </button>
-        </div>
+        )}
+
+        {/* Audio Mute Toggle */}
+        <button
+          onClick={() => setIsMuted(!isMuted)}
+          className={`p-1.5 rounded-lg border transition-colors cursor-pointer hidden sm:flex ${
+            isDarkMode
+              ? "bg-[#222226] hover:bg-white/10 border-white/10 text-zinc-300 hover:text-white"
+              : "bg-zinc-100 hover:bg-zinc-200 border-zinc-200 text-zinc-700 hover:text-zinc-900"
+          }`}
+          title={isMuted ? "Включить звуковые оповещения" : "Выключить звук"}
+        >
+          {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+        </button>
+
+        {/* Fullscreen Toggle */}
+        <button
+          onClick={handleToggleFullscreen}
+          className={`p-1.5 rounded-lg border transition-colors cursor-pointer hidden md:flex ${
+            isDarkMode
+              ? "bg-[#222226] hover:bg-white/10 border-white/10 text-zinc-300 hover:text-white"
+              : "bg-zinc-100 hover:bg-zinc-200 border-zinc-200 text-zinc-700 hover:text-zinc-900"
+          }`}
+          title={isFullscreen ? "Выйти из полноэкранного режима" : "Во весь экран"}
+        >
+          {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+        </button>
       </div>
     </header>
   );
 };
-
-export default TopBar;
