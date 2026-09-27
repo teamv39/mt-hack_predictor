@@ -8,7 +8,7 @@ provides them, but are no longer required for offline scoring.
 from __future__ import annotations
 
 import math
-from typing import Any, Dict, List
+from typing import Any
 
 import pandas as pd
 
@@ -71,7 +71,7 @@ COMPAT_FEATURE_NAMES = [
     "delay_to_headway_ratio",
 ]
 
-FEATURE_HUMAN_TITLES: Dict[str, str] = {
+FEATURE_HUMAN_TITLES: dict[str, str] = {
     "cur_dev_s": "Текущее отклонение от графика (последняя пройденная остановка)",
     "horizon_sec": "Горизонт до планового прибытия на целевую остановку",
     "speed_kmh": "Мгновенная скорость по телеметрии",
@@ -108,7 +108,7 @@ FEATURE_HUMAN_TITLES: Dict[str, str] = {
 }
 
 # Defaults matching quiet mid-route conditions when telemetry is sparse.
-_DEFAULTS: Dict[str, float] = {
+_DEFAULTS: dict[str, float] = {
     "cur_dev_s": 0.0,
     "horizon_sec": 660.0,  # ~11 min — median official horizon
     "speed_kmh": 15.0,
@@ -147,7 +147,7 @@ def _f(value: Any, default: float) -> float:
         return float(default)
 
 
-def feature_vector_to_dict(fv: FeatureVector) -> Dict[str, Any]:
+def feature_vector_to_dict(fv: FeatureVector) -> dict[str, Any]:
     """Converts a FeatureVector into an enriched flat dict for model input."""
     hour_val = float(fv.hour_of_day)
     if fv.T is not None and hasattr(fv.T, "minute"):
@@ -253,7 +253,7 @@ def feature_vector_to_dict(fv: FeatureVector) -> Dict[str, Any]:
     }
 
 
-def feature_vectors_to_dataframe(vectors: List[FeatureVector]) -> pd.DataFrame:
+def feature_vectors_to_dataframe(vectors: list[FeatureVector]) -> pd.DataFrame:
     """Converts FeatureVector list into a DataFrame with all model-servable columns."""
     records = [feature_vector_to_dict(v) for v in vectors]
     df = pd.DataFrame(records)

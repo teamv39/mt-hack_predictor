@@ -19,15 +19,14 @@ Outputs:
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
 import json
-import os
-from pathlib import Path
 import platform
 import resource
 import sys
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import datetime
+from pathlib import Path
+from typing import Any
 
 import httpx
 import numpy as np
@@ -45,7 +44,6 @@ if str(ML_ROOT) not in sys.path:
     sys.path.insert(0, str(ML_ROOT))
 
 from src.api.server import app
-from src.core.config import get_settings
 from src.models.fallback import HeuristicFallbackPredictor
 from src.models.manager import get_model_manager
 from src.schemas.features import FeatureVector
@@ -59,7 +57,7 @@ def get_current_rss_mb() -> float:
     return rusage / 1024.0
 
 
-def compute_stats(values_ms: List[float]) -> Dict[str, float]:
+def compute_stats(values_ms: list[float]) -> dict[str, float]:
     """Calculates summary statistics from latency observations in milliseconds."""
     arr = np.array(values_ms)
     return {
@@ -100,7 +98,7 @@ def make_sample_vector(i: int = 0) -> FeatureVector:
 # ---------------------------------------------------------------------------
 # Benchmark 1: Cold Start and Memory
 # ---------------------------------------------------------------------------
-def benchmark_cold_start_and_memory() -> Dict[str, Any]:
+def benchmark_cold_start_and_memory() -> dict[str, Any]:
     print("\n[1/5] Benchmarking Cold Start & Memory Footprint...")
     mem_before = get_current_rss_mb()
     
@@ -120,16 +118,16 @@ def benchmark_cold_start_and_memory() -> Dict[str, Any]:
         "regressor_loaded": status.regressor_loaded,
         "classifier_loaded": status.classifier_loaded,
     }
-    print(f"  ✓ Cold start time: {res['cold_start_load_time_sec']} s")
-    print(f"  ✓ Process RAM (RSS): {res['rss_memory_mb']} MB")
-    print(f"  ✓ Mode: {res['active_model_mode']} (features: {res['active_features_count']})")
+    print(f"  [OK] Cold start time: {res['cold_start_load_time_sec']} s")
+    print(f"  [OK] Process RAM (RSS): {res['rss_memory_mb']} MB")
+    print(f"  [OK] Mode: {res['active_model_mode']} (features: {res['active_features_count']})")
     return res
 
 
 # ---------------------------------------------------------------------------
 # Benchmark 2: Engine-level Inference Microbenchmarks
 # ---------------------------------------------------------------------------
-def benchmark_engine_inference() -> Dict[str, Any]:
+def benchmark_engine_inference() -> dict[str, Any]:
     print("\n[2/5] Benchmarking Engine-Level Inference (CatBoost vs Fallback)...")
     manager = get_model_manager()
     fv = make_sample_vector(1)
@@ -182,16 +180,16 @@ def benchmark_engine_inference() -> Dict[str, Any]:
             "throughput_rps": round(1000.0 / shap_stats["mean_ms"], 1),
         },
     }
-    print(f"  ✓ Heuristic Fallback: {res['fallback_single']['latency_us']} µs/op ({res['fallback_single']['throughput_rps']} RPS)")
-    print(f"  ✓ CatBoost Single (Fast): {fast_stats['p50_ms']:.2f} ms p50 ({res['catboost_fast_single_no_shap']['throughput_rps']} RPS)")
-    print(f"  ✓ CatBoost Single (XAI/SHAP): {shap_stats['p50_ms']:.2f} ms p50 ({res['catboost_xai_single_with_shap']['throughput_rps']} RPS)")
+    print(f"  [OK] Heuristic Fallback: {res['fallback_single']['latency_us']} µs/op ({res['fallback_single']['throughput_rps']} RPS)")
+    print(f"  [OK] CatBoost Single (Fast): {fast_stats['p50_ms']:.2f} ms p50 ({res['catboost_fast_single_no_shap']['throughput_rps']} RPS)")
+    print(f"  [OK] CatBoost Single (XAI/SHAP): {shap_stats['p50_ms']:.2f} ms p50 ({res['catboost_xai_single_with_shap']['throughput_rps']} RPS)")
     return res
 
 
 # ---------------------------------------------------------------------------
 # Benchmark 3: Batch Scaling Analysis
 # ---------------------------------------------------------------------------
-def benchmark_batch_scaling() -> Dict[str, Any]:
+def benchmark_batch_scaling() -> dict[str, Any]:
     print("\n[3/5] Benchmarking Batch Scaling (N = 1 to 1000)...")
     manager = get_model_manager()
     manager.settings.enable_shap_calculation = False
@@ -224,7 +222,7 @@ def benchmark_batch_scaling() -> Dict[str, Any]:
             "per_vehicle_us": round(per_item_us, 1),
             "throughput_vehicles_per_sec": round(throughput_vps, 1),
         }
-        print(f"  ✓ N={n:4d}: total={mean_ms:6.2f} ms | per-item={per_item_us:6.1f} µs | {throughput_vps:9.1f} veh/sec")
+        print(f"  [OK] N={n:4d}: total={mean_ms:6.2f} ms | per-item={per_item_us:6.1f} µs | {throughput_vps:9.1f} veh/sec")
 
     return batch_results
 
@@ -232,7 +230,7 @@ def benchmark_batch_scaling() -> Dict[str, Any]:
 # ---------------------------------------------------------------------------
 # Benchmark 4: End-to-End FastAPI ASGI HTTP Benchmarks
 # ---------------------------------------------------------------------------
-async def benchmark_http_endpoints() -> Dict[str, Any]:
+async def benchmark_http_endpoints() -> dict[str, Any]:
     print("\n[4/5] Benchmarking End-to-End FastAPI HTTP API...")
     transport = httpx.ASGITransport(app=app)
     
@@ -285,7 +283,7 @@ async def benchmark_http_endpoints() -> Dict[str, Any]:
                 **b_stats,
                 "throughput_vehicles_per_sec": round(b_size / (b_stats["mean_ms"] / 1000.0), 1),
             }
-            print(f"  ✓ HTTP /predict/batch (N={b_size}): p50={b_stats['p50_ms']:.2f} ms | {batch_http_results[f'batch_{b_size}']['throughput_vehicles_per_sec']} veh/sec")
+            print(f"  [OK] HTTP /predict/batch (N={b_size}): p50={b_stats['p50_ms']:.2f} ms | {batch_http_results[f'batch_{b_size}']['throughput_vehicles_per_sec']} veh/sec")
 
         # 4. /models/reload latency
         reload_latencies = []
@@ -312,7 +310,7 @@ async def benchmark_http_endpoints() -> Dict[str, Any]:
                 "elapsed_sec": round(total_elapsed_sec, 3),
                 "rps": round(rps, 1),
             }
-            print(f"  ✓ Concurrency {workers:2d} workers: {rps:6.1f} RPS (total {total_reqs} requests in {total_elapsed_sec*1000:.1f} ms)")
+            print(f"  [OK] Concurrency {workers:2d} workers: {rps:6.1f} RPS (total {total_reqs} requests in {total_elapsed_sec*1000:.1f} ms)")
 
     return {
         "health": {**health_stats, "throughput_rps": round(1000.0 / health_stats["mean_ms"], 1)},
@@ -326,7 +324,7 @@ async def benchmark_http_endpoints() -> Dict[str, Any]:
 # ---------------------------------------------------------------------------
 # Benchmark 5: Fleet Scale Simulation & Feasibility Analysis
 # ---------------------------------------------------------------------------
-def compute_fleet_scale_analysis(batch_results: Dict[str, Any]) -> Dict[str, Any]:
+def compute_fleet_scale_analysis(batch_results: dict[str, Any]) -> dict[str, Any]:
     print("\n[5/5] Calculating Fleet Scale Feasibility for Moscow Transport...")
     # Operational scale parameters
     route_m3_buses = 25
@@ -358,18 +356,18 @@ def compute_fleet_scale_analysis(batch_results: Dict[str, Any]) -> Dict[str, Any
         "single_core_cpu_load_percent": round(cpu_utilization_percent, 2),
     }
     
-    print(f"  ✓ Route m3 (25 buses): processed in {analysis['m3_inference_time_ms']} ms")
-    print(f"  ✓ Sector (500 buses): processed in {analysis['sector_batch_time_ms']} ms")
-    print(f"  ✓ All Moscow ({moscow_total_buses} buses @ 5s): {analysis['moscow_stream_events_per_sec']} req/s stream")
-    print(f"  ✓ ML Capacity: {analysis['ml_batch_throughput_vps']} veh/s ({analysis['throughput_safety_margin_factor']}x headroom!)")
-    print(f"  ✓ Single CPU Core Load: {analysis['single_core_cpu_load_percent']}% for ALL Moscow buses!")
+    print(f"  [OK] Route m3 (25 buses): processed in {analysis['m3_inference_time_ms']} ms")
+    print(f"  [OK] Sector (500 buses): processed in {analysis['sector_batch_time_ms']} ms")
+    print(f"  [OK] All Moscow ({moscow_total_buses} buses @ 5s): {analysis['moscow_stream_events_per_sec']} req/s stream")
+    print(f"  [OK] ML Capacity: {analysis['ml_batch_throughput_vps']} veh/s ({analysis['throughput_safety_margin_factor']}x headroom!)")
+    print(f"  [OK] Single CPU Core Load: {analysis['single_core_cpu_load_percent']}% for ALL Moscow buses!")
     return analysis
 
 
 # ---------------------------------------------------------------------------
 # Report Markdown Generation
 # ---------------------------------------------------------------------------
-def generate_markdown_report(data: Dict[str, Any]) -> str:
+def generate_markdown_report(data: dict[str, Any]) -> str:
     cs = data["cold_start"]
     ei = data["engine_inference"]
     bs = data["batch_scaling"]
@@ -378,7 +376,7 @@ def generate_markdown_report(data: Dict[str, Any]) -> str:
     sys_info = data["system_info"]
     date_str = data["timestamp"]
 
-    md = f"""# ⚡ Паспорт производительности ML-сервиса (Performance Guide)
+    md = f"""# Паспорт производительности ML-сервиса (Performance Guide)
 
 > **Проект:** Интеллектуальный ситуационный предиктор сбоев и интервалов движения общественного транспорта  
 > **Контекст:** MT-Hackathon (Хакатон Московского Транспорта), Трек №3  
@@ -392,12 +390,12 @@ def generate_markdown_report(data: Dict[str, Any]) -> str:
 
 | Метрика | Значение | Норматив ТЗ / Ожидание | Статус |
 | :--- | :--- | :--- | :---: |
-| **Инференс на маршрут м3 (25 ТС)** | **{bs['batch_25']['mean_ms']:.2f} мс** | < 1–2 с (1 000 – 2 000 мс) | 🟢 **Быстрее в {int(1500 / bs['batch_25']['mean_ms'])} раз** |
-| **Пиковая пропускная способность** | **{bs['batch_1000']['throughput_vehicles_per_sec']:,.0f} ТС/сек** | Без очередей (> 1 000 ТС/сек) | 🟢 **Запас {int(bs['batch_1000']['throughput_vehicles_per_sec'] / 1600)}× к флоту Москвы** |
-| **Холодный старт сервиса** | **{cs['cold_start_load_time_sec']:.2f} с** | < 15–30 с | 🟢 **Мгновенный старт** |
-| **Потребление RAM (RSS)** | **{cs['rss_memory_mb']:.1f} МБ** | < 1 000 МБ в Docker | 🟢 **Легковесный образ** |
-| **Отказоустойчивость (Fallback)** | **{ei['fallback_single']['latency_us']:.1f} мкс** | Непрерывная работа при сбое | 🟢 **Failover < 15 мкс** |
-| **Объяснимый ИИ (TreeSHAP)** | **{ei['catboost_xai_single_with_shap']['p50_ms']:.1f} мс** | < 200 мс для карточки инцидента | 🟢 **Полная декомпозиция факторов** |
+| **Инференс на маршрут м3 (25 ТС)** | **{bs['batch_25']['mean_ms']:.2f} мс** | < 1–2 с (1 000 – 2 000 мс) | [OK] **Быстрее в {int(1500 / bs['batch_25']['mean_ms'])} раз** |
+| **Пиковая пропускная способность** | **{bs['batch_1000']['throughput_vehicles_per_sec']:,.0f} ТС/сек** | Без очередей (> 1 000 ТС/сек) | [OK] **Запас {int(bs['batch_1000']['throughput_vehicles_per_sec'] / 1600)}× к флоту Москвы** |
+| **Холодный старт сервиса** | **{cs['cold_start_load_time_sec']:.2f} с** | < 15–30 с | [OK] **Мгновенный старт** |
+| **Потребление RAM (RSS)** | **{cs['rss_memory_mb']:.1f} МБ** | < 1 000 МБ в Docker | [OK] **Легковесный образ** |
+| **Отказоустойчивость (Fallback)** | **{ei['fallback_single']['latency_us']:.1f} мкс** | Непрерывная работа при сбое | [OK] **Failover < 15 мкс** |
+| **Объяснимый ИИ (TreeSHAP)** | **{ei['catboost_xai_single_with_shap']['p50_ms']:.1f} мс** | < 200 мс для карточки инцидента | [OK] **Полная декомпозиция факторов** |
 
 ---
 

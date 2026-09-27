@@ -58,7 +58,7 @@ ml/src/
   * `GET /models/info` — метаданные активных весов и список признаков.
   * `POST /models/reload` — горячая перезагрузка весов с диска без простоя сервиса.
 
-### 2.2. Подсистема `src.models` (ML Engine & Explainability)
+### 3.2. Подсистема `src.models` (ML Engine & Explainability)
 * [`src.models.catboost_model.CatBoostPredictor`](pydoc/src.models.catboost_model.html) — инференс CatBoostRegressor (Huber Loss, signed delay) и опционального CatBoostClassifier (риск пачкования для DSS) с нативным расчетом TreeSHAP факторов.
 * [`src.models.manager.ModelManager`](pydoc/src.models.manager.html) — синглтон-координатор жизненного цикла моделей с каскадом загрузки:
   1. `competition_gold` (`catboost_competition_gold_score1.0.cbm`, 24 признака, holdout MAE 53.2c, score 1.00).
@@ -69,20 +69,20 @@ ml/src/
 * [`src.models.make_submission`](pydoc/src.models.make_submission.html) — генератор соревновательных сабмитов для `dataset/validate/points.csv` с гарантией формата и защиты от `NaN`/`Inf`.
 * [`src.models.train_competition`](pydoc/src.models.train_competition.html) — скрипт обучения соревновательной модели на KFold (MAE 53.2c) и валидацией TimeSeriesSplit.
 
-### 2.3. Подсистема `src.features` (Feature Engineering)
+### 3.3. Подсистема `src.features` (Feature Engineering)
 * [`src.features.extractor`](pydoc/src.features.extractor.html) — конвертер `FeatureVector` в матрицу признаков, маппинг русских названий факторов SHAP и классификация задержек (`early`, `ontime`, `late`).
 * [`src.features.schedule_matcher`](pydoc/src.features.schedule_matcher.html) — привязка координат к расписанию остановок, расчет расстояния по формуле Haversine и остатка времени до цели.
 * [`src.features.telemetry_cleaner`](pydoc/src.features.telemetry_cleaner.html) — очистка аномалий сырой телеметрии (Dead Reckoning, геозона Москвы, фильтрация `location_valid`).
 * [`src.features.build_features`](pydoc/src.features.build_features.html) — полный пайплайн генерации признаков из сырых CSV без заглядывания в будущее ($event\_time \le T$).
 * [`src.features.time_utils`](pydoc/src.features.time_utils.html) — высокоточные преобразования временных меток и расчет секундных дельт.
 
-### 2.4. Подсистема `src.schemas` (Pydantic v2 Data Contracts)
+### 3.4. Подсистема `src.schemas` (Pydantic v2 Data Contracts)
 * [`src.schemas.features.FeatureVector`](pydoc/src.schemas.features.html) — строгая схема входных признаков с поддержкой официальных имен (`tr_id`, `cur_dev_s`, `horizon_sec`) и Go-алиасов (`vehicle_id`, `current_delay_sec`).
 * [`src.schemas.prediction.PredictionResponse`](pydoc/src.schemas.prediction.html) — схема ответа инференса с прогнозом задержки, уровнем риска (LOW/MEDIUM/HIGH/CRITICAL), декомпозицией SHAP и рекомендациями Holding.
 * [`src.schemas.health.HealthResponse`](pydoc/src.schemas.health.html) — контракт мониторинга состояния сервиса.
 * [`src.schemas.dataset`](pydoc/src.schemas.dataset.html) — схемы сырых таблиц организаторов (`TrafficPoint`, `ScheduleStop`, `LabelPoint`, `ForecastPoint`, `SubmissionRow`).
 
-### 2.5. Подсистема `src.core` (Configuration & Logging)
+### 3.5. Подсистема `src.core` (Configuration & Logging)
 * [`src.core.config.Settings`](pydoc/src.core.config.html) — типизированные настройки приложения на базе `pydantic-settings` с префиксом `ML_`.
 * [`src.core.logging`](pydoc/src.core.logging.html) — потокобезопасное структурированное логирование.
 

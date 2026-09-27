@@ -25,7 +25,6 @@ with&nbsp;STRICT&nbsp;ZERO&nbsp;DATA&nbsp;LEAKAGE&nbsp;(event_time&nbsp;&lt;=&nb
 </td><td class="multicolumn"><a href="math.html">math</a><br>
 <a href="numpy.html">numpy</a><br>
 </td><td class="multicolumn"><a href="pandas.html">pandas</a><br>
-<a href="sys.html">sys</a><br>
 </td><td class="multicolumn"></td></tr></table></td></tr></table><p>
 <table class="section">
 <tr class="decor index-decor heading-text">
@@ -55,7 +54,7 @@ Pre-indexed,&nbsp;sorted&nbsp;telemetry&nbsp;arrays&nbsp;for&nbsp;ultra-fast&nbs
 
 <dl><dt><a name="TelemetryVehicleIndex-has_vehicle"><strong>has_vehicle</strong></a>(self, tr_id: 'int') -&gt; 'bool'</dt></dl>
 
-<dl><dt><a name="TelemetryVehicleIndex-slice_before_T"><strong>slice_before_T</strong></a>(self, tr_id: 'int', t_epoch_sec: 'int') -&gt; 'Optional[Dict[str, np.ndarray]]'</dt><dd><span class="code">Returns&nbsp;all&nbsp;telemetry&nbsp;records&nbsp;strictly&nbsp;on&nbsp;or&nbsp;before&nbsp;T&nbsp;(event_time&nbsp;&lt;=&nbsp;T).</span></dd></dl>
+<dl><dt><a name="TelemetryVehicleIndex-slice_before_T"><strong>slice_before_T</strong></a>(self, tr_id: 'int', t_epoch_sec: 'int') -&gt; 'dict[str, np.ndarray] | None'</dt><dd><span class="code">Returns&nbsp;all&nbsp;telemetry&nbsp;records&nbsp;strictly&nbsp;on&nbsp;or&nbsp;before&nbsp;T&nbsp;(event_time&nbsp;&lt;=&nbsp;T).</span></dd></dl>
 
 <hr>
 Data descriptors defined here:<br>
@@ -71,19 +70,14 @@ Data descriptors defined here:<br>
 <td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Functions</strong></td></tr>
     
 <tr><td class="decor functions-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
-<td class="singlecolumn"><dl><dt><a name="-extract_features_for_sample"><strong>extract_features_for_sample</strong></a>(sample_row: 'pd.Series', telemetry_index: 'TelemetryVehicleIndex', schedule_index: 'Optional[ScheduleIndex]') -&gt; 'Dict[str, Any]'</dt><dd><span class="code">Generates&nbsp;an&nbsp;enriched&nbsp;feature&nbsp;dict&nbsp;for&nbsp;a&nbsp;single&nbsp;(tr_id,&nbsp;T)&nbsp;prediction&nbsp;point.</span></dd></dl>
+<td class="singlecolumn"><dl><dt><a name="-extract_features_for_sample"><strong>extract_features_for_sample</strong></a>(sample_row: 'pd.Series', telemetry_index: 'TelemetryVehicleIndex', schedule_index: 'ScheduleIndex | None') -&gt; 'dict[str, Any]'</dt><dd><span class="code">Generates&nbsp;an&nbsp;enriched&nbsp;feature&nbsp;dict&nbsp;for&nbsp;a&nbsp;single&nbsp;(tr_id,&nbsp;T)&nbsp;prediction&nbsp;point.</span></dd></dl>
  <dl><dt><a name="-main"><strong>main</strong></a>() -&gt; 'None'</dt></dl>
- <dl><dt><a name="-process_dataset_split"><strong>process_dataset_split</strong></a>(split: 'str', dataset_root: 'Union[str, Path]' = 'dataset', output_dir: 'Union[str, Path]' = 'data/processed') -&gt; 'Path'</dt><dd><span class="code">Builds&nbsp;features&nbsp;for&nbsp;a&nbsp;given&nbsp;split&nbsp;('train',&nbsp;'test',&nbsp;or&nbsp;'validate').</span></dd></dl>
+ <dl><dt><a name="-process_dataset_split"><strong>process_dataset_split</strong></a>(split: 'str', dataset_root: 'str | Path' = 'dataset', output_dir: 'str | Path' = 'data/processed') -&gt; 'Path'</dt><dd><span class="code">Builds&nbsp;features&nbsp;for&nbsp;a&nbsp;given&nbsp;split&nbsp;('train',&nbsp;'test',&nbsp;or&nbsp;'validate').</span></dd></dl>
 </td></tr></table><p>
 <table class="section">
 <tr class="decor data-decor heading-text">
 <td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Data</strong></td></tr>
     
 <tr><td class="decor data-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
-<td class="singlecolumn"><strong>Dict</strong> = typing.Dict<br>
-<strong>List</strong> = typing.List<br>
-<strong>Optional</strong> = typing.Optional<br>
-<strong>Tuple</strong> = typing.Tuple<br>
-<strong>Union</strong> = typing.Union<br>
-<strong>logger</strong> = &lt;Logger build_features (INFO)&gt;</td></tr></table>
+<td class="singlecolumn"><strong>logger</strong> = &lt;Logger build_features (INFO)&gt;</td></tr></table>
 </body></html>

@@ -9,7 +9,7 @@ from __future__ import annotations
 import math
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -21,7 +21,7 @@ from .time_utils import to_epoch_s
 _WKT_POINT_RE = re.compile(r"POINT\s*\(\s*([-\d.]+)\s+([-\d.]+)\s*\)", re.IGNORECASE)
 
 
-def parse_wkt_point(wkt_str: Optional[str]) -> Tuple[Optional[float], Optional[float]]:
+def parse_wkt_point(wkt_str: str | None) -> tuple[float | None, float | None]:
     """Parses 'POINT (lon lat)' string into (lon, lat) floats."""
     if not isinstance(wkt_str, str):
         return None, None
@@ -65,13 +65,13 @@ class PlanProgress(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     stops_remaining: int = Field(description="Planned stops remaining to target (T, target]")
-    plan_time_to_target_s: Optional[float] = Field(
+    plan_time_to_target_s: float | None = Field(
         default=None, description="Plan time from last passed stop to target, seconds"
     )
-    time_since_last_stop_s: Optional[float] = Field(
+    time_since_last_stop_s: float | None = Field(
         default=None, description="Seconds since last passed stop"
     )
-    plan_sec_per_stop: Optional[float] = Field(
+    plan_sec_per_stop: float | None = Field(
         default=None, description="plan_time_to_target_s / stops_remaining"
     )
 
@@ -94,14 +94,14 @@ class ScheduleIndex:
         - `geom` (WKT geometry)
         - optional `building_address`
         """
-        self._stops_by_id: Dict[Tuple[int, int], Dict[str, Union[float, str]]] = {}
-        self._plan_times_by_vehicle: Dict[int, np.ndarray] = {}
+        self._stops_by_id: dict[tuple[int, int], dict[str, float | str]] = {}
+        self._plan_times_by_vehicle: dict[int, np.ndarray] = {}
         self._build_index(schedule_df)
 
     def _build_index(self, df: pd.DataFrame) -> None:
         geom_col = "geom" if "geom" in df.columns else None
 
-        plan_times: Dict[int, List[int]] = {}
+        plan_times: dict[int, list[int]] = {}
         for _, row in df.iterrows():
             tr_id = int(row["tr_id"])
             stop_id = int(row["tt_action_item_id"])
@@ -130,8 +130,8 @@ class ScheduleIndex:
     def plan_progress(
         self,
         tr_id: int,
-        t_epoch_sec: Union[int, Any],
-        target_time_epoch_sec: Union[int, Any],
+        t_epoch_sec: int | Any,
+        target_time_epoch_sec: int | Any,
     ) -> PlanProgress:
         """Route-progress features from planned times only (legal at moment T).
 
@@ -182,7 +182,7 @@ class ScheduleIndex:
         self,
         tr_id: int,
         target_stop_id: int,
-    ) -> Tuple[Optional[float], Optional[float]]:
+    ) -> tuple[float | None, float | None]:
         """Returns (lat, lon) of the stop if present in index."""
         info = self._stops_by_id.get((tr_id, target_stop_id))
         if info and info["lat"] is not None and info["lon"] is not None:
@@ -191,11 +191,11 @@ class ScheduleIndex:
 
     def distance_to_target_m(
         self,
-        bus_lat: Optional[float],
-        bus_lon: Optional[float],
+        bus_lat: float | None,
+        bus_lon: float | None,
         tr_id: int,
         target_stop_id: int,
-    ) -> Optional[float]:
+    ) -> float | None:
         """Calculates distance in meters between bus and target stop."""
         if bus_lat is None or bus_lon is None:
             return None
@@ -205,7 +205,7 @@ class ScheduleIndex:
         return haversine_distance_m(bus_lat, bus_lon, stop_lat, stop_lon)
 
 
-def load_schedule_index(schedule_path: Union[str, Path]) -> ScheduleIndex:
+def load_schedule_index(schedule_path: str | Path) -> ScheduleIndex:
     """Loads schedule CSV and constructs a ScheduleIndex."""
     path = Path(schedule_path)
     if not path.is_file():

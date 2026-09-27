@@ -235,7 +235,7 @@ func RegisterTrackRoutes(r interface {
 	r.Get("/tracks/{tr_id}", store.handleTrack)
 }
 
-func (s *TrackStore) handleList(w http.ResponseWriter, _ *http.Request) {
+func (s *TrackStore) handleList(w http.ResponseWriter, r *http.Request) {
 	s.mu.RLock()
 	tracks := make([]TrackSummary, 0, len(s.tracks))
 	for trID, points := range s.tracks {
@@ -246,6 +246,13 @@ func (s *TrackStore) handleList(w http.ResponseWriter, _ *http.Request) {
 	sort.Slice(tracks, func(i, j int) bool {
 		return tracks[i].TrID < tracks[j].TrID
 	})
+
+	if l := r.URL.Query().Get("limit"); l != "" {
+		if n, err := strconv.Atoi(l); err == nil && n > 0 && n < len(tracks) {
+			tracks = tracks[:n]
+		}
+	}
+
 	writeJSON(w, http.StatusOK, tracks)
 }
 

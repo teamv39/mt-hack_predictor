@@ -53,7 +53,7 @@ Candidate&nbsp;chain:&nbsp;competition&nbsp;24-feature&nbsp;model&nbsp;→&nbsp;
 (e.g.&nbsp;feature-parity&nbsp;guard)&nbsp;is&nbsp;skipped&nbsp;with&nbsp;a&nbsp;logged&nbsp;reason,&nbsp;so&nbsp;the<br>
 service&nbsp;never&nbsp;degrades&nbsp;past&nbsp;a&nbsp;usable&nbsp;model.</span></dd></dl>
 
-<dl><dt><a name="ModelManager-predict_batch"><strong>predict_batch</strong></a>(self, features: 'List[FeatureVector]') -&gt; 'List[PredictionResponse]'</dt></dl>
+<dl><dt><a name="ModelManager-predict_batch"><strong>predict_batch</strong></a>(self, features: 'list[FeatureVector]') -&gt; 'list[PredictionResponse]'</dt></dl>
 
 <dl><dt><a name="ModelManager-predict_single"><strong>predict_single</strong></a>(self, feature: 'FeatureVector') -&gt; 'PredictionResponse'</dt></dl>
 
@@ -84,8 +84,6 @@ Data descriptors defined here:<br>
 <td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Data</strong></td></tr>
     
 <tr><td class="decor data-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
-<td class="singlecolumn"><strong>List</strong> = typing.List<br>
-<strong>Optional</strong> = typing.Optional<br>
-<strong>__annotations__</strong> = {'_global_model_manager': 'Optional[ModelManager]'}<br>
+<td class="singlecolumn"><strong>__annotations__</strong> = {'_global_model_manager': 'ModelManager | None'}<br>
 <strong>logger</strong> = &lt;Logger model_manager (INFO)&gt;</td></tr></table>
 </body></html>

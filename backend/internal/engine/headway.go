@@ -99,11 +99,10 @@ func (h *HeadwayCalculator) AssessFleetHeadways(vehicles []models.Vehicle) map[s
 			// Calculate spatial distance
 			dMeters := haversine(curr.Latitude, curr.Longitude, ahead.Latitude, ahead.Longitude)
 			
-			// Approximate time headway based on avg speed (or fallback to existing HeadwaySeconds)
-			avgSpeedMs := math.Max(curr.SpeedKmH, 15.0) / 3.6
-			timeHeadway := dMeters / avgSpeedMs
-			if curr.HeadwaySeconds > 0 && curr.HeadwaySeconds < timeHeadway {
-				timeHeadway = curr.HeadwaySeconds
+			timeHeadway := curr.HeadwaySeconds
+			if timeHeadway <= 0 {
+				avgSpeedMs := math.Max(curr.SpeedKmH, 15.0) / 3.6
+				timeHeadway = dMeters / avgSpeedMs
 			}
 			if timeHeadway > 1800 {
 				timeHeadway = plan

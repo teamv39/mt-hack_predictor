@@ -70,7 +70,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-export function splitRouteIntoSegments(coords: [number, number][], maxJumpKm = 1.5): [number, number][][] {
+function splitRouteIntoSegments(coords: [number, number][], maxJumpKm = 1.5): [number, number][][] {
   if (coords.length < 2) return [coords];
   const segments: [number, number][][] = [];
   let current: [number, number][] = [coords[0]];
@@ -98,7 +98,7 @@ export function splitRouteIntoSegments(coords: [number, number][], maxJumpKm = 1
   return segments.length > 0 ? segments : [coords];
 }
 
-export function buildRouteFeature(
+function buildRouteFeature(
   name: string,
   routeId: string,
   geometry: [number, number][]
@@ -204,10 +204,6 @@ export const MapView: React.FC<MapViewProps> = ({
   const [trackGeoJson, setTrackGeoJson] = useState<Record<string, GeoJSON.Feature<GeoJSON.LineString | GeoJSON.MultiLineString>>>({});
   const [isRoutesCollapsed, setIsRoutesCollapsed] = useState<boolean>(false);
   const [routeSearch, setRouteSearch] = useState<string>("");
-
-  useEffect(() => {
-    setVisibleRouteIds(routes.map((route) => normalizeRouteId(route.routeId)));
-  }, [dataMode]);
 
   useEffect(() => {
     setVisibleRouteIds((previous) => {
@@ -1346,7 +1342,7 @@ export const MapView: React.FC<MapViewProps> = ({
   const riskRouteIds = useMemo(() => {
     const risky = new Set<string>();
     vehicles.forEach((v) => {
-      if (v.status === "BUNCHING_RISK" || v.status === "CRITICAL_HEADWAY" || v.status === "DELAYED") {
+      if (v.status === "BUNCHING_RISK" || v.status === "DELAYED") {
         risky.add(normalizeRouteId(v.routeId));
       }
     });

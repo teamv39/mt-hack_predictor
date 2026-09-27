@@ -15,7 +15,7 @@ RESET="\033[0m"
 
 echo ""
 echo -e "${BOLD}${CYAN}================================================================${RESET}"
-echo -e "${BOLD}${CYAN}   🚀 Проверка готовности сервисов: ML ↔ Backend ↔ Frontend   ${RESET}"
+echo -e "${BOLD}${CYAN}   Проверка готовности сервисов: ML ↔ Backend ↔ Frontend   ${RESET}"
 echo -e "${BOLD}${CYAN}================================================================${RESET}"
 echo ""
 
@@ -24,9 +24,9 @@ echo -ne "1. ML Инференс-сервис (FastAPI :8000)... "
 ML_RESP=$(curl -s -m 2 http://localhost:8000/health 2>/dev/null || true)
 if [[ -n "$ML_RESP" && "$ML_RESP" =~ "ok" ]]; then
     ML_MODE=$(echo "$ML_RESP" | jq -r '.models.mode // "unknown"' 2>/dev/null || echo "ok")
-    echo -e "${GREEN}✓ РАБОТАЕТ${RESET} (Режим: ${BOLD}${ML_MODE}${RESET}, SHAP: активен)"
+    echo -e "${GREEN}[OK] РАБОТАЕТ${RESET} (Режим: ${BOLD}${ML_MODE}${RESET}, SHAP: активен)"
 else
-    echo -e "${RED}✗ НЕ ОТВЕЧАЕТ${RESET}"
+    echo -e "${RED}[FAIL] НЕ ОТВЕЧАЕТ${RESET}"
     echo -e "   ${YELLOW}Запуск: make ml-run${RESET}"
 fi
 
@@ -40,9 +40,9 @@ if [[ -n "$PRED_RESP" && "$PRED_RESP" =~ "predicted_delay_sec" ]]; then
     DELAY=$(echo "$PRED_RESP" | jq -r '.predicted_delay_sec // "N/A"' 2>/dev/null)
     PROB=$(echo "$PRED_RESP" | jq -r '.bunching_risk_probability // "N/A"' 2>/dev/null)
     FACTORS=$(echo "$PRED_RESP" | jq -r '.factors | length // 0' 2>/dev/null)
-    echo -e "${GREEN}✓ УСПЕШНО${RESET} (Предикт: ${BOLD}+${DELAY}с${RESET}, Риск: ${BOLD}${PROB}${RESET}, SHAP-факторов: ${BOLD}${FACTORS}${RESET})"
+    echo -e "${GREEN}[OK] УСПЕШНО${RESET} (Предикт: ${BOLD}+${DELAY}с${RESET}, Риск: ${BOLD}${PROB}${RESET}, SHAP-факторов: ${BOLD}${FACTORS}${RESET})"
 else
-    echo -e "${RED}✗ ОШИБКА ИНФЕРЕНСА${RESET}"
+    echo -e "${RED}[FAIL] ОШИБКА ИНФЕРЕНСА${RESET}"
 fi
 
 # 3. Проверка Go Backend (:8080)
@@ -52,9 +52,9 @@ if [[ -n "$BACKEND_STATUS" && "$BACKEND_STATUS" =~ "live_simulation_active" ]]; 
     LATENCY=$(echo "$BACKEND_STATUS" | jq -r '.engine_latency_ms // "N/A"' 2>/dev/null)
     VEH_CNT=$(echo "$BACKEND_STATUS" | jq -r '.active_vehicles_count // "N/A"' 2>/dev/null)
     ALERTS_CNT=$(echo "$BACKEND_STATUS" | jq -r '.active_alerts_count // "N/A"' 2>/dev/null)
-    echo -e "${GREEN}✓ РАБОТАЕТ${RESET} (Задержка ядра: ${BOLD}${LATENCY}мс${RESET}, Бортов: ${BOLD}${VEH_CNT}${RESET}, Алертов: ${BOLD}${ALERTS_CNT}${RESET})"
+    echo -e "${GREEN}[OK] РАБОТАЕТ${RESET} (Задержка ядра: ${BOLD}${LATENCY}мс${RESET}, Бортов: ${BOLD}${VEH_CNT}${RESET}, Алертов: ${BOLD}${ALERTS_CNT}${RESET})"
 else
-    echo -e "${RED}✗ НЕ ОТВЕЧАЕТ${RESET}"
+    echo -e "${RED}[FAIL] НЕ ОТВЕЧАЕТ${RESET}"
     echo -e "   ${YELLOW}Запуск: make backend-run${RESET}"
 fi
 
@@ -74,18 +74,18 @@ setTimeout(() => { process.exit(1); }, 2000);
 ' 2>/dev/null || true)
 
 if [[ "$WS_TEST" =~ "TELEMETRY_UPDATE" || "$WS_TEST" =~ "OK" ]]; then
-    echo -e "${GREEN}✓ ПОТОК АКТИВЕН${RESET} (Кадры телеметрии передаются в UI)"
+    echo -e "${GREEN}[OK] ПОТОК АКТИВЕН${RESET} (Кадры телеметрии передаются в UI)"
 else
-    echo -e "${YELLOW}⚠ НЕТ ПОДКЛЮЧЕНИЯ${RESET} (Проверьте запуск бэкенда)"
+    echo -e "${YELLOW}[WARN] НЕТ ПОДКЛЮЧЕНИЯ${RESET} (Проверьте запуск бэкенда)"
 fi
 
 # 5. Проверка Frontend (:5173)
 echo -ne "5. Фронтенд Дашборд (React Vite :5173)... "
 FRONT_RESP=$(curl -s -m 2 http://localhost:5173 2>/dev/null || true)
 if [[ -n "$FRONT_RESP" && "$FRONT_RESP" =~ "html" ]]; then
-    echo -e "${GREEN}✓ ДОСТУПЕН${RESET} (http://localhost:5173)"
+    echo -e "${GREEN}[OK] ДОСТУПЕН${RESET} (http://localhost:5173)"
 else
-    echo -e "${RED}✗ НЕ ЗАПУЩЕН${RESET}"
+    echo -e "${RED}[FAIL] НЕ ЗАПУЩЕН${RESET}"
     echo -e "   ${YELLOW}Запуск: make frontend-dev${RESET}"
 fi
 

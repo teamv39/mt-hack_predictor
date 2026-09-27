@@ -475,7 +475,7 @@ Data and other attributes defined here:<br>
 
 <dl><dt><strong>__pydantic_computed_fields__</strong> = {}</dl>
 
-<dl><dt><strong>__pydantic_core_schema__</strong> = {'cls': &lt;class 'src.schemas.dataset.ForecastPoint'&gt;, 'config': {'extra_fields_behavior': 'ignore', 'title': 'ForecastPoint'}, 'custom_init': False, 'metadata': {'pydantic_js_functions': [&lt;bound method BaseModel.__get_pydantic_json_schema__ of &lt;class 'src.schemas.dataset.ForecastPoint'&gt;&gt;]}, 'ref': 'src.schemas.dataset.ForecastPoint:522509064208', 'root_model': False, 'schema': {'computed_fields': [], 'fields': {'T': {'metadata': {'pydantic_js_updates': {'description': 'Forecast moment (use traffic with event_time ≤ T)'}}, 'schema': {'microseconds_precision': 'truncate', 'type': 'datetime'}, 'type': 'model-field'}, 'cur_dev_s': {'metadata': {'pydantic_js_updates': {'description': 'Hint: delay on the last already passed stop, known at T (seconds)'}}, 'schema': {'type': 'float'}, 'type': 'model-field'}, 'sample_id': {'metadata': {'pydantic_js_updates': {'description': 'Unique forecast point ID for submission'}}, 'schema': {'type': 'str'}, 'type': 'model-field'}, 'target_stop_id': {'metadata': {'pydantic_js_updates': {'description': 'Target stop arrival ID (= schedule.tt_action_item_id)'}}, 'schema': {'type': 'str'}, 'type': 'model-field'}, 'target_time_begin': {'metadata': {'pydantic_js_updates': {'description': 'Planned arrival at the target stop (window T+10…T+15 min)'}}, 'schema': {'microseconds_precision': 'truncate', 'type': 'datetime'}, 'type': 'model-field'}, 'tr_id': {'metadata': {'pydantic_js_updates': {'description': 'Vehicle ID'}}, 'schema': {'type': 'str'}, 'type': 'model-field'}}, 'model_name': 'ForecastPoint', 'type': 'model-fields'}, 'type': 'model'}</dl>
+<dl><dt><strong>__pydantic_core_schema__</strong> = {'cls': &lt;class 'src.schemas.dataset.ForecastPoint'&gt;, 'config': {'extra_fields_behavior': 'ignore', 'title': 'ForecastPoint'}, 'custom_init': False, 'metadata': {'pydantic_js_functions': [&lt;bound method BaseModel.__get_pydantic_json_schema__ of &lt;class 'src.schemas.dataset.ForecastPoint'&gt;&gt;]}, 'ref': 'src.schemas.dataset.ForecastPoint:511633404944', 'root_model': False, 'schema': {'computed_fields': [], 'fields': {'T': {'metadata': {'pydantic_js_updates': {'description': 'Forecast moment (use traffic with event_time ≤ T)'}}, 'schema': {'microseconds_precision': 'truncate', 'type': 'datetime'}, 'type': 'model-field'}, 'cur_dev_s': {'metadata': {'pydantic_js_updates': {'description': 'Hint: delay on the last already passed stop, known at T (seconds)'}}, 'schema': {'type': 'float'}, 'type': 'model-field'}, 'sample_id': {'metadata': {'pydantic_js_updates': {'description': 'Unique forecast point ID for submission'}}, 'schema': {'type': 'str'}, 'type': 'model-field'}, 'target_stop_id': {'metadata': {'pydantic_js_updates': {'description': 'Target stop arrival ID (= schedule.tt_action_item_id)'}}, 'schema': {'type': 'str'}, 'type': 'model-field'}, 'target_time_begin': {'metadata': {'pydantic_js_updates': {'description': 'Planned arrival at the target stop (window T+10…T+15 min)'}}, 'schema': {'microseconds_precision': 'truncate', 'type': 'datetime'}, 'type': 'model-field'}, 'tr_id': {'metadata': {'pydantic_js_updates': {'description': 'Vehicle ID'}}, 'schema': {'type': 'str'}, 'type': 'model-field'}}, 'model_name': 'ForecastPoint', 'type': 'model-fields'}, 'type': 'model'}</dl>
 
 <dl><dt><strong>__pydantic_custom_init__</strong> = False</dl>
 
@@ -894,7 +894,7 @@ Data and other attributes inherited from <a href="pydantic.main.html#BaseModel">
 <td class="section-title" colspan=3>&nbsp;<br><a name="LabelPoint">class <strong>LabelPoint</strong></a>(<a href="src.schemas.dataset.html#ForecastPoint">ForecastPoint</a>)</td></tr>
     
 <tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
-<td class="decor title-decor" colspan=2><span class="code"><a href="#LabelPoint">LabelPoint</a>(*,&nbsp;sample_id:&nbsp;<a href="builtins.html#str">str</a>,&nbsp;tr_id:&nbsp;<a href="builtins.html#str">str</a>,&nbsp;T:&nbsp;datetime.datetime,&nbsp;target_stop_id:&nbsp;<a href="builtins.html#str">str</a>,&nbsp;target_time_begin:&nbsp;datetime.datetime,&nbsp;cur_dev_s:&nbsp;float,&nbsp;target_delay_s:&nbsp;float,&nbsp;target_class:&nbsp;Optional[src.schemas.dataset.<a href="#DelayClass">DelayClass</a>]&nbsp;=&nbsp;None)&nbsp;-&amp;gt;&nbsp;None<br>
+<td class="decor title-decor" colspan=2><span class="code"><a href="#LabelPoint">LabelPoint</a>(*,&nbsp;sample_id:&nbsp;<a href="builtins.html#str">str</a>,&nbsp;tr_id:&nbsp;<a href="builtins.html#str">str</a>,&nbsp;T:&nbsp;datetime.datetime,&nbsp;target_stop_id:&nbsp;<a href="builtins.html#str">str</a>,&nbsp;target_time_begin:&nbsp;datetime.datetime,&nbsp;cur_dev_s:&nbsp;float,&nbsp;target_delay_s:&nbsp;float,&nbsp;target_class:&nbsp;src.schemas.dataset.<a href="#DelayClass">DelayClass</a>&nbsp;|&nbsp;None&nbsp;=&nbsp;None)&nbsp;-&amp;gt;&nbsp;None<br>
 &nbsp;<br>
 Labeled&nbsp;forecast&nbsp;point&nbsp;from&nbsp;``labels/labels_train.csv``&nbsp;/&nbsp;``labels_test.csv``.<br>&nbsp;</span></td></tr>
 <tr><td>&nbsp;</td>
@@ -908,7 +908,7 @@ Labeled&nbsp;forecast&nbsp;point&nbsp;from&nbsp;``labels/labels_train.csv``&nbsp
 Data and other attributes defined here:<br>
 <dl><dt><strong>__abstractmethods__</strong> = frozenset()</dl>
 
-<dl><dt><strong>__annotations__</strong> = {'target_class': 'Optional[DelayClass]', 'target_delay_s': 'float'}</dl>
+<dl><dt><strong>__annotations__</strong> = {'target_class': 'DelayClass | None', 'target_delay_s': 'float'}</dl>
 
 <dl><dt><strong>__class_vars__</strong> = set()</dl>
 
@@ -918,7 +918,7 @@ Data and other attributes defined here:<br>
 
 <dl><dt><strong>__pydantic_computed_fields__</strong> = {}</dl>
 
-<dl><dt><strong>__pydantic_core_schema__</strong> = {'cls': &lt;class 'src.schemas.dataset.LabelPoint'&gt;, 'config': {'extra_fields_behavior': 'ignore', 'title': 'LabelPoint'}, 'custom_init': False, 'metadata': {'pydantic_js_functions': [&lt;bound method BaseModel.__get_pydantic_json_schema__ of &lt;class 'src.schemas.dataset.LabelPoint'&gt;&gt;]}, 'ref': 'src.schemas.dataset.LabelPoint:522509065232', 'root_model': False, 'schema': {'computed_fields': [], 'fields': {'T': {'metadata': {'pydantic_js_updates': {'description': 'Forecast moment (use traffic with event_time ≤ T)'}}, 'schema': {'microseconds_precision': 'truncate', 'type': 'datetime'}, 'type': 'model-field'}, 'cur_dev_s': {'metadata': {'pydantic_js_updates': {'description': 'Hint: delay on the last already passed stop, known at T (seconds)'}}, 'schema': {'type': 'float'}, 'type': 'model-field'}, 'sample_id': {'metadata': {'pydantic_js_updates': {'description': 'Unique forecast point ID for submission'}}, 'schema': {'type': 'str'}, 'type': 'model-field'}, 'target_class': {'metadata': {'pydantic_js_updates': {'description': 'Reference class: early (&lt; −60 s) / ontime / late (&gt; +120 s)'}}, 'schema': {'default': None, 'schema': {'schema': {...}, 'type': 'nullable'}, 'type': 'default'}, 'type': 'model-field'}, 'target_delay_s': {'metadata': {'pydantic_js_updates': {'description': 'TARGET: actual delay at target stop, seconds (sign: + late, − early)'}}, 'schema': {'type': 'float'}, 'type': 'model-field'}, 'target_stop_id': {'metadata': {'pydantic_js_updates': {'description': 'Target stop arrival ID (= schedule.tt_action_item_id)'}}, 'schema': {'type': 'str'}, 'type': 'model-field'}, 'target_time_begin': {'metadata': {'pydantic_js_updates': {'description': 'Planned arrival at the target stop (window T+10…T+15 min)'}}, 'schema': {'microseconds_precision': 'truncate', 'type': 'datetime'}, 'type': 'model-field'}, 'tr_id': {'metadata': {'pydantic_js_updates': {'description': 'Vehicle ID'}}, 'schema': {'type': 'str'}, 'type': 'model-field'}}, 'model_name': 'LabelPoint', 'type': 'model-fields'}, 'type': 'model'}</dl>
+<dl><dt><strong>__pydantic_core_schema__</strong> = {'cls': &lt;class 'src.schemas.dataset.LabelPoint'&gt;, 'config': {'extra_fields_behavior': 'ignore', 'title': 'LabelPoint'}, 'custom_init': False, 'metadata': {'pydantic_js_functions': [&lt;bound method BaseModel.__get_pydantic_json_schema__ of &lt;class 'src.schemas.dataset.LabelPoint'&gt;&gt;]}, 'ref': 'src.schemas.dataset.LabelPoint:511633406992', 'root_model': False, 'schema': {'computed_fields': [], 'fields': {'T': {'metadata': {'pydantic_js_updates': {'description': 'Forecast moment (use traffic with event_time ≤ T)'}}, 'schema': {'microseconds_precision': 'truncate', 'type': 'datetime'}, 'type': 'model-field'}, 'cur_dev_s': {'metadata': {'pydantic_js_updates': {'description': 'Hint: delay on the last already passed stop, known at T (seconds)'}}, 'schema': {'type': 'float'}, 'type': 'model-field'}, 'sample_id': {'metadata': {'pydantic_js_updates': {'description': 'Unique forecast point ID for submission'}}, 'schema': {'type': 'str'}, 'type': 'model-field'}, 'target_class': {'metadata': {'pydantic_js_updates': {'description': 'Reference class: early (&lt; −60 s) / ontime / late (&gt; +120 s)'}}, 'schema': {'default': None, 'schema': {'schema': {...}, 'type': 'nullable'}, 'type': 'default'}, 'type': 'model-field'}, 'target_delay_s': {'metadata': {'pydantic_js_updates': {'description': 'TARGET: actual delay at target stop, seconds (sign: + late, − early)'}}, 'schema': {'type': 'float'}, 'type': 'model-field'}, 'target_stop_id': {'metadata': {'pydantic_js_updates': {'description': 'Target stop arrival ID (= schedule.tt_action_item_id)'}}, 'schema': {'type': 'str'}, 'type': 'model-field'}, 'target_time_begin': {'metadata': {'pydantic_js_updates': {'description': 'Planned arrival at the target stop (window T+10…T+15 min)'}}, 'schema': {'microseconds_precision': 'truncate', 'type': 'datetime'}, 'type': 'model-field'}, 'tr_id': {'metadata': {'pydantic_js_updates': {'description': 'Vehicle ID'}}, 'schema': {'type': 'str'}, 'type': 'model-field'}}, 'model_name': 'LabelPoint', 'type': 'model-fields'}, 'type': 'model'}</dl>
 
 <dl><dt><strong>__pydantic_custom_init__</strong> = False</dl>
 
@@ -944,7 +944,7 @@ Data and other attributes defined here:<br>
     },
 ), definitions=[], cache_strings=True)</dl>
 
-<dl><dt><strong>__signature__</strong> = &lt;Signature (*, sample_id: str, tr_id: str, T: da...[src.schemas.dataset.DelayClass] = None) -&gt; None&gt;</dl>
+<dl><dt><strong>__signature__</strong> = &lt;Signature (*, sample_id: str, tr_id: str, T: da...chemas.dataset.DelayClass | None = None) -&gt; None&gt;</dl>
 
 <dl><dt><strong>model_config</strong> = {'extra': 'ignore'}</dl>
 
@@ -1347,7 +1347,7 @@ Data and other attributes inherited from <a href="pydantic.main.html#BaseModel">
 <td class="section-title" colspan=3>&nbsp;<br><a name="ScheduleStop">class <strong>ScheduleStop</strong></a>(<a href="pydantic.main.html#BaseModel">pydantic.main.BaseModel</a>)</td></tr>
     
 <tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
-<td class="decor title-decor" colspan=2><span class="code"><a href="#ScheduleStop">ScheduleStop</a>(*,&nbsp;tt_action_item_id:&nbsp;<a href="builtins.html#str">str</a>,&nbsp;tr_id:&nbsp;<a href="builtins.html#str">str</a>,&nbsp;time_begin:&nbsp;datetime.datetime,&nbsp;time_fact_begin:&nbsp;Optional[datetime.datetime]&nbsp;=&nbsp;None,&nbsp;order_date:&nbsp;Optional[<a href="builtins.html#str">str</a>]&nbsp;=&nbsp;None,&nbsp;manual_fill:&nbsp;Optional[bool]&nbsp;=&nbsp;None,&nbsp;geom:&nbsp;Optional[<a href="builtins.html#str">str</a>]&nbsp;=&nbsp;None,&nbsp;building_address:&nbsp;Optional[<a href="builtins.html#str">str</a>]&nbsp;=&nbsp;None)&nbsp;-&amp;gt;&nbsp;None<br>
+<td class="decor title-decor" colspan=2><span class="code"><a href="#ScheduleStop">ScheduleStop</a>(*,&nbsp;tt_action_item_id:&nbsp;<a href="builtins.html#str">str</a>,&nbsp;tr_id:&nbsp;<a href="builtins.html#str">str</a>,&nbsp;time_begin:&nbsp;datetime.datetime,&nbsp;time_fact_begin:&nbsp;datetime.datetime&nbsp;|&nbsp;None&nbsp;=&nbsp;None,&nbsp;order_date:&nbsp;<a href="builtins.html#str">str</a>&nbsp;|&nbsp;None&nbsp;=&nbsp;None,&nbsp;manual_fill:&nbsp;bool&nbsp;|&nbsp;None&nbsp;=&nbsp;None,&nbsp;geom:&nbsp;<a href="builtins.html#str">str</a>&nbsp;|&nbsp;None&nbsp;=&nbsp;None,&nbsp;building_address:&nbsp;<a href="builtins.html#str">str</a>&nbsp;|&nbsp;None&nbsp;=&nbsp;None)&nbsp;-&amp;gt;&nbsp;None<br>
 &nbsp;<br>
 One&nbsp;planned&nbsp;(and&nbsp;optionally&nbsp;factual)&nbsp;stop&nbsp;arrival&nbsp;from&nbsp;``schedule.csv``.<br>
 &nbsp;<br>
@@ -1373,7 +1373,7 @@ Data descriptors defined here:<br>
 Data and other attributes defined here:<br>
 <dl><dt><strong>__abstractmethods__</strong> = frozenset()</dl>
 
-<dl><dt><strong>__annotations__</strong> = {'building_address': 'Optional[str]', 'geom': 'Optional[str]', 'manual_fill': 'Optional[bool]', 'order_date': 'Optional[str]', 'time_begin': 'datetime', 'time_fact_begin': 'Optional[datetime]', 'tr_id': 'str', 'tt_action_item_id': 'str'}</dl>
+<dl><dt><strong>__annotations__</strong> = {'building_address': 'str | None', 'geom': 'str | None', 'manual_fill': 'bool | None', 'order_date': 'str | None', 'time_begin': 'datetime', 'time_fact_begin': 'datetime | None', 'tr_id': 'str', 'tt_action_item_id': 'str'}</dl>
 
 <dl><dt><strong>__class_vars__</strong> = set()</dl>
 
@@ -1383,7 +1383,7 @@ Data and other attributes defined here:<br>
 
 <dl><dt><strong>__pydantic_computed_fields__</strong> = {}</dl>
 
-<dl><dt><strong>__pydantic_core_schema__</strong> = {'cls': &lt;class 'src.schemas.dataset.ScheduleStop'&gt;, 'config': {'extra_fields_behavior': 'ignore', 'title': 'ScheduleStop'}, 'custom_init': False, 'metadata': {'pydantic_js_functions': [&lt;bound method BaseModel.__get_pydantic_json_schema__ of &lt;class 'src.schemas.dataset.ScheduleStop'&gt;&gt;]}, 'ref': 'src.schemas.dataset.ScheduleStop:522496950288', 'root_model': False, 'schema': {'computed_fields': [], 'fields': {'building_address': {'metadata': {'pydantic_js_updates': {'description': 'Human-readable stop address'}}, 'schema': {'default': None, 'schema': {'schema': {...}, 'type': 'nullable'}, 'type': 'default'}, 'type': 'model-field'}, 'geom': {'metadata': {'pydantic_js_updates': {'description': "WKT point of the stop, e.g. 'POINT (37.43 55.80)'"}}, 'schema': {'default': None, 'schema': {'schema': {...}, 'type': 'nullable'}, 'type': 'default'}, 'type': 'model-field'}, 'manual_fill': {'metadata': {'pydantic_js_updates': {'description': 'Flag indicating schedule entry was manually inputted/adjusted'}}, 'schema': {'default': None, 'schema': {'function': {...}, 'schema': {...}, 'type': 'function-before'}, 'type': 'default'}, 'type': 'model-field'}, 'order_date': {'metadata': {'pydantic_js_updates': {'description': 'Service day YYYY-MM-DD'}}, 'schema': {'default': None, 'schema': {'schema': {...}, 'type': 'nullable'}, 'type': 'default'}, 'type': 'model-field'}, 'time_begin': {'metadata': {'pydantic_js_updates': {'description': 'Planned arrival time'}}, 'schema': {'microseconds_precision': 'truncate', 'type': 'datetime'}, 'type': 'model-field'}, 'time_fact_begin': {'metadata': {'pydantic_js_updates': {'description': 'Actual arrival time (train/test only; absent in validate)'}}, 'schema': {'default': None, 'schema': {'function': {...}, 'schema': {...}, 'type': 'function-before'}, 'type': 'default'}, 'type': 'model-field'}, 'tr_id': {'metadata': {'pydantic_js_updates': {'description': 'Vehicle ID'}}, 'schema': {'type': 'str'}, 'type': 'model-field'}, 'tt_action_item_id': {'metadata': {'pydantic_js_updates': {'description': 'Stop-arrival ID (= target_stop_id)'}}, 'schema': {'type': 'str'}, 'type': 'model-field'}}, 'model_name': 'ScheduleStop', 'type': 'model-fields'}, 'type': 'model'}</dl>
+<dl><dt><strong>__pydantic_core_schema__</strong> = {'cls': &lt;class 'src.schemas.dataset.ScheduleStop'&gt;, 'config': {'extra_fields_behavior': 'ignore', 'title': 'ScheduleStop'}, 'custom_init': False, 'metadata': {'pydantic_js_functions': [&lt;bound method BaseModel.__get_pydantic_json_schema__ of &lt;class 'src.schemas.dataset.ScheduleStop'&gt;&gt;]}, 'ref': 'src.schemas.dataset.ScheduleStop:511633403920', 'root_model': False, 'schema': {'computed_fields': [], 'fields': {'building_address': {'metadata': {'pydantic_js_updates': {'description': 'Human-readable stop address'}}, 'schema': {'default': None, 'schema': {'schema': {...}, 'type': 'nullable'}, 'type': 'default'}, 'type': 'model-field'}, 'geom': {'metadata': {'pydantic_js_updates': {'description': "WKT point of the stop, e.g. 'POINT (37.43 55.80)'"}}, 'schema': {'default': None, 'schema': {'schema': {...}, 'type': 'nullable'}, 'type': 'default'}, 'type': 'model-field'}, 'manual_fill': {'metadata': {'pydantic_js_updates': {'description': 'Flag indicating schedule entry was manually inputted/adjusted'}}, 'schema': {'default': None, 'schema': {'function': {...}, 'schema': {...}, 'type': 'function-before'}, 'type': 'default'}, 'type': 'model-field'}, 'order_date': {'metadata': {'pydantic_js_updates': {'description': 'Service day YYYY-MM-DD'}}, 'schema': {'default': None, 'schema': {'schema': {...}, 'type': 'nullable'}, 'type': 'default'}, 'type': 'model-field'}, 'time_begin': {'metadata': {'pydantic_js_updates': {'description': 'Planned arrival time'}}, 'schema': {'microseconds_precision': 'truncate', 'type': 'datetime'}, 'type': 'model-field'}, 'time_fact_begin': {'metadata': {'pydantic_js_updates': {'description': 'Actual arrival time (train/test only; absent in validate)'}}, 'schema': {'default': None, 'schema': {'function': {...}, 'schema': {...}, 'type': 'function-before'}, 'type': 'default'}, 'type': 'model-field'}, 'tr_id': {'metadata': {'pydantic_js_updates': {'description': 'Vehicle ID'}}, 'schema': {'type': 'str'}, 'type': 'model-field'}, 'tt_action_item_id': {'metadata': {'pydantic_js_updates': {'description': 'Stop-arrival ID (= target_stop_id)'}}, 'schema': {'type': 'str'}, 'type': 'model-field'}}, 'model_name': 'ScheduleStop', 'type': 'model-fields'}, 'type': 'model'}</dl>
 
 <dl><dt><strong>__pydantic_custom_init__</strong> = False</dl>
 
@@ -1409,7 +1409,7 @@ Data and other attributes defined here:<br>
     },
 ), definitions=[], cache_strings=True)</dl>
 
-<dl><dt><strong>__signature__</strong> = &lt;Signature (*, tt_action_item_id: str, tr_id: st... building_address: Optional[str] = None) -&gt; None&gt;</dl>
+<dl><dt><strong>__signature__</strong> = &lt;Signature (*, tt_action_item_id: str, tr_id: st...ne, building_address: str | None = None) -&gt; None&gt;</dl>
 
 <dl><dt><strong>model_config</strong> = {'extra': 'ignore'}</dl>
 
@@ -1802,7 +1802,7 @@ Data and other attributes inherited from <a href="pydantic.main.html#BaseModel">
 <td class="section-title" colspan=3>&nbsp;<br><a name="SubmissionFile">class <strong>SubmissionFile</strong></a>(<a href="pydantic.main.html#BaseModel">pydantic.main.BaseModel</a>)</td></tr>
     
 <tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
-<td class="decor title-decor" colspan=2><span class="code"><a href="#SubmissionFile">SubmissionFile</a>(*,&nbsp;rows:&nbsp;Annotated[List[src.schemas.dataset.<a href="#SubmissionRow">SubmissionRow</a>],&nbsp;MinLen(min_length=1)])&nbsp;-&amp;gt;&nbsp;None<br>
+<td class="decor title-decor" colspan=2><span class="code"><a href="#SubmissionFile">SubmissionFile</a>(*,&nbsp;rows:&nbsp;Annotated[list[src.schemas.dataset.<a href="#SubmissionRow">SubmissionRow</a>],&nbsp;MinLen(min_length=1)])&nbsp;-&amp;gt;&nbsp;None<br>
 &nbsp;<br>
 Full&nbsp;submission&nbsp;payload&nbsp;ready&nbsp;for&nbsp;platform&nbsp;upload.<br>&nbsp;</span></td></tr>
 <tr><td>&nbsp;</td>
@@ -1824,7 +1824,7 @@ Data descriptors defined here:<br>
 Data and other attributes defined here:<br>
 <dl><dt><strong>__abstractmethods__</strong> = frozenset()</dl>
 
-<dl><dt><strong>__annotations__</strong> = {'rows': 'List[SubmissionRow]'}</dl>
+<dl><dt><strong>__annotations__</strong> = {'rows': 'list[SubmissionRow]'}</dl>
 
 <dl><dt><strong>__class_vars__</strong> = set()</dl>
 
@@ -1834,7 +1834,7 @@ Data and other attributes defined here:<br>
 
 <dl><dt><strong>__pydantic_computed_fields__</strong> = {}</dl>
 
-<dl><dt><strong>__pydantic_core_schema__</strong> = {'cls': &lt;class 'src.schemas.dataset.SubmissionFile'&gt;, 'config': {'title': 'SubmissionFile'}, 'custom_init': False, 'metadata': {'pydantic_js_functions': [&lt;bound method BaseModel.__get_pydantic_json_sche... of &lt;class 'src.schemas.dataset.SubmissionFile'&gt;&gt;]}, 'ref': 'src.schemas.dataset.SubmissionFile:522509485072', 'root_model': False, 'schema': {'computed_fields': [], 'fields': {'rows': {'metadata': {}, 'schema': {'items_schema': {'cls': &lt;class 'src.schemas.dataset.SubmissionRow'&gt;, 'config': {...}, 'custom_init': False, 'metadata': {...}, 'ref': 'src.schemas.dataset.SubmissionRow:522509484048', 'root_model': False, 'schema': {...}, 'type': 'model'}, 'min_length': 1, 'type': 'list'}, 'type': 'model-field'}}, 'model_name': 'SubmissionFile', 'type': 'model-fields'}, 'type': 'model'}</dl>
+<dl><dt><strong>__pydantic_core_schema__</strong> = {'cls': &lt;class 'src.schemas.dataset.SubmissionFile'&gt;, 'config': {'title': 'SubmissionFile'}, 'custom_init': False, 'metadata': {'pydantic_js_functions': [&lt;bound method BaseModel.__get_pydantic_json_sche... of &lt;class 'src.schemas.dataset.SubmissionFile'&gt;&gt;]}, 'ref': 'src.schemas.dataset.SubmissionFile:511633489936', 'root_model': False, 'schema': {'computed_fields': [], 'fields': {'rows': {'metadata': {}, 'schema': {'items_schema': {'cls': &lt;class 'src.schemas.dataset.SubmissionRow'&gt;, 'config': {...}, 'custom_init': False, 'metadata': {...}, 'ref': 'src.schemas.dataset.SubmissionRow:511633225744', 'root_model': False, 'schema': {...}, 'type': 'model'}, 'min_length': 1, 'type': 'list'}, 'type': 'model-field'}}, 'model_name': 'SubmissionFile', 'type': 'model-fields'}, 'type': 'model'}</dl>
 
 <dl><dt><strong>__pydantic_custom_init__</strong> = False</dl>
 
@@ -1842,7 +1842,7 @@ Data and other attributes defined here:<br>
 
 <dl><dt><strong>__pydantic_extra_info__</strong> = None</dl>
 
-<dl><dt><strong>__pydantic_fields__</strong> = {'rows': FieldInfo(annotation=List[SubmissionRow], required=True, metadata=[MinLen(min_length=1)])}</dl>
+<dl><dt><strong>__pydantic_fields__</strong> = {'rows': FieldInfo(annotation=list[SubmissionRow], required=True, metadata=[MinLen(min_length=1)])}</dl>
 
 <dl><dt><strong>__pydantic_generic_metadata__</strong> = {'args': (), 'origin': None, 'parameters': ()}</dl>
 
@@ -1860,7 +1860,7 @@ Data and other attributes defined here:<br>
     },
 ), definitions=[], cache_strings=True)</dl>
 
-<dl><dt><strong>__signature__</strong> = &lt;Signature (*, rows: Annotated[List[src.schemas....t.SubmissionRow], MinLen(min_length=1)]) -&gt; None&gt;</dl>
+<dl><dt><strong>__signature__</strong> = &lt;Signature (*, rows: Annotated[list[src.schemas....t.SubmissionRow], MinLen(min_length=1)]) -&gt; None&gt;</dl>
 
 <dl><dt><strong>model_config</strong> = {}</dl>
 
@@ -2245,7 +2245,7 @@ Data and other attributes inherited from <a href="pydantic.main.html#BaseModel">
 
 <dl><dt><strong>model_computed_fields</strong> = {}</dl>
 
-<dl><dt><strong>model_fields</strong> = {'rows': FieldInfo(annotation=List[SubmissionRow], required=True, metadata=[MinLen(min_length=1)])}</dl>
+<dl><dt><strong>model_fields</strong> = {'rows': FieldInfo(annotation=list[SubmissionRow], required=True, metadata=[MinLen(min_length=1)])}</dl>
 
 </td></tr></table> <p>
 <table class="section">
@@ -2281,7 +2281,7 @@ Data and other attributes defined here:<br>
 
 <dl><dt><strong>__pydantic_computed_fields__</strong> = {}</dl>
 
-<dl><dt><strong>__pydantic_core_schema__</strong> = {'cls': &lt;class 'src.schemas.dataset.SubmissionRow'&gt;, 'config': {'extra_fields_behavior': 'forbid', 'title': 'SubmissionRow'}, 'custom_init': False, 'metadata': {'pydantic_js_functions': [&lt;bound method BaseModel.__get_pydantic_json_schema__ of &lt;class 'src.schemas.dataset.SubmissionRow'&gt;&gt;]}, 'ref': 'src.schemas.dataset.SubmissionRow:522509484048', 'root_model': False, 'schema': {'computed_fields': [], 'fields': {'prediction': {'metadata': {'pydantic_js_updates': {'description': 'Predicted delay seconds (sign matters: + late, − early)'}}, 'schema': {'allow_inf_nan': False, 'type': 'float'}, 'type': 'model-field'}, 'sample_id': {'metadata': {'pydantic_js_updates': {'description': 'Must cover every validate/points sample_id'}}, 'schema': {'type': 'str'}, 'type': 'model-field'}}, 'model_name': 'SubmissionRow', 'type': 'model-fields'}, 'type': 'model'}</dl>
+<dl><dt><strong>__pydantic_core_schema__</strong> = {'cls': &lt;class 'src.schemas.dataset.SubmissionRow'&gt;, 'config': {'extra_fields_behavior': 'forbid', 'title': 'SubmissionRow'}, 'custom_init': False, 'metadata': {'pydantic_js_functions': [&lt;bound method BaseModel.__get_pydantic_json_schema__ of &lt;class 'src.schemas.dataset.SubmissionRow'&gt;&gt;]}, 'ref': 'src.schemas.dataset.SubmissionRow:511633225744', 'root_model': False, 'schema': {'computed_fields': [], 'fields': {'prediction': {'metadata': {'pydantic_js_updates': {'description': 'Predicted delay seconds (sign matters: + late, − early)'}}, 'schema': {'allow_inf_nan': False, 'type': 'float'}, 'type': 'model-field'}, 'sample_id': {'metadata': {'pydantic_js_updates': {'description': 'Must cover every validate/points sample_id'}}, 'schema': {'type': 'str'}, 'type': 'model-field'}}, 'model_name': 'SubmissionRow', 'type': 'model-fields'}, 'type': 'model'}</dl>
 
 <dl><dt><strong>__pydantic_custom_init__</strong> = False</dl>
 
@@ -2700,7 +2700,7 @@ Data and other attributes inherited from <a href="pydantic.main.html#BaseModel">
 <td class="section-title" colspan=3>&nbsp;<br><a name="TrafficPoint">class <strong>TrafficPoint</strong></a>(<a href="pydantic.main.html#BaseModel">pydantic.main.BaseModel</a>)</td></tr>
     
 <tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
-<td class="decor title-decor" colspan=2><span class="code"><a href="#TrafficPoint">TrafficPoint</a>(*,&nbsp;packet_id:&nbsp;Optional[<a href="builtins.html#str">str</a>]&nbsp;=&nbsp;None,&nbsp;tr_id:&nbsp;<a href="builtins.html#str">str</a>,&nbsp;unit_id:&nbsp;Optional[<a href="builtins.html#str">str</a>]&nbsp;=&nbsp;None,&nbsp;event_time:&nbsp;datetime.datetime,&nbsp;device_event_id:&nbsp;Optional[<a href="builtins.html#str">str</a>]&nbsp;=&nbsp;None,&nbsp;location_valid:&nbsp;bool&nbsp;=&nbsp;False,&nbsp;gps_time:&nbsp;Optional[datetime.datetime]&nbsp;=&nbsp;None,&nbsp;lon:&nbsp;Annotated[Optional[float],&nbsp;Ge(ge=-180.0),&nbsp;Le(le=180.0)]&nbsp;=&nbsp;None,&nbsp;lat:&nbsp;Annotated[Optional[float],&nbsp;Ge(ge=-90.0),&nbsp;Le(le=90.0)]&nbsp;=&nbsp;None,&nbsp;alt:&nbsp;Optional[float]&nbsp;=&nbsp;None,&nbsp;speed:&nbsp;Annotated[Optional[float],&nbsp;Ge(ge=0.0)]&nbsp;=&nbsp;None,&nbsp;heading:&nbsp;Annotated[Optional[float],&nbsp;Ge(ge=0.0),&nbsp;Le(le=360.0)]&nbsp;=&nbsp;None,&nbsp;receive_time:&nbsp;Optional[datetime.datetime]&nbsp;=&nbsp;None,&nbsp;is_hist_data:&nbsp;bool&nbsp;=&nbsp;False)&nbsp;-&amp;gt;&nbsp;None<br>
+<td class="decor title-decor" colspan=2><span class="code"><a href="#TrafficPoint">TrafficPoint</a>(*,&nbsp;packet_id:&nbsp;<a href="builtins.html#str">str</a>&nbsp;|&nbsp;None&nbsp;=&nbsp;None,&nbsp;tr_id:&nbsp;<a href="builtins.html#str">str</a>,&nbsp;unit_id:&nbsp;<a href="builtins.html#str">str</a>&nbsp;|&nbsp;None&nbsp;=&nbsp;None,&nbsp;event_time:&nbsp;datetime.datetime,&nbsp;device_event_id:&nbsp;<a href="builtins.html#str">str</a>&nbsp;|&nbsp;None&nbsp;=&nbsp;None,&nbsp;location_valid:&nbsp;bool&nbsp;=&nbsp;False,&nbsp;gps_time:&nbsp;datetime.datetime&nbsp;|&nbsp;None&nbsp;=&nbsp;None,&nbsp;lon:&nbsp;Annotated[float&nbsp;|&nbsp;None,&nbsp;Ge(ge=-180.0),&nbsp;Le(le=180.0)]&nbsp;=&nbsp;None,&nbsp;lat:&nbsp;Annotated[float&nbsp;|&nbsp;None,&nbsp;Ge(ge=-90.0),&nbsp;Le(le=90.0)]&nbsp;=&nbsp;None,&nbsp;alt:&nbsp;float&nbsp;|&nbsp;None&nbsp;=&nbsp;None,&nbsp;speed:&nbsp;Annotated[float&nbsp;|&nbsp;None,&nbsp;Ge(ge=0.0)]&nbsp;=&nbsp;None,&nbsp;heading:&nbsp;Annotated[float&nbsp;|&nbsp;None,&nbsp;Ge(ge=0.0),&nbsp;Le(le=360.0)]&nbsp;=&nbsp;None,&nbsp;receive_time:&nbsp;datetime.datetime&nbsp;|&nbsp;None&nbsp;=&nbsp;None,&nbsp;is_hist_data:&nbsp;bool&nbsp;=&nbsp;False)&nbsp;-&amp;gt;&nbsp;None<br>
 &nbsp;<br>
 One&nbsp;decoded&nbsp;NDTP&nbsp;navigation&nbsp;cell&nbsp;row&nbsp;from&nbsp;``*/traffic.csv``.<br>
 &nbsp;<br>
@@ -2721,7 +2721,7 @@ Data descriptors defined here:<br>
 Data and other attributes defined here:<br>
 <dl><dt><strong>__abstractmethods__</strong> = frozenset()</dl>
 
-<dl><dt><strong>__annotations__</strong> = {'alt': 'Optional[float]', 'device_event_id': 'Optional[str]', 'event_time': 'datetime', 'gps_time': 'Optional[datetime]', 'heading': 'Optional[float]', 'is_hist_data': 'bool', 'lat': 'Optional[float]', 'location_valid': 'bool', 'lon': 'Optional[float]', 'packet_id': 'Optional[str]', ...}</dl>
+<dl><dt><strong>__annotations__</strong> = {'alt': 'float | None', 'device_event_id': 'str | None', 'event_time': 'datetime', 'gps_time': 'datetime | None', 'heading': 'float | None', 'is_hist_data': 'bool', 'lat': 'float | None', 'location_valid': 'bool', 'lon': 'float | None', 'packet_id': 'str | None', ...}</dl>
 
 <dl><dt><strong>__class_vars__</strong> = set()</dl>
 
@@ -2731,7 +2731,7 @@ Data and other attributes defined here:<br>
 
 <dl><dt><strong>__pydantic_computed_fields__</strong> = {}</dl>
 
-<dl><dt><strong>__pydantic_core_schema__</strong> = {'cls': &lt;class 'src.schemas.dataset.TrafficPoint'&gt;, 'config': {'extra_fields_behavior': 'ignore', 'title': 'TrafficPoint'}, 'custom_init': False, 'metadata': {'pydantic_js_functions': [&lt;bound method BaseModel.__get_pydantic_json_schema__ of &lt;class 'src.schemas.dataset.TrafficPoint'&gt;&gt;]}, 'ref': 'src.schemas.dataset.TrafficPoint:522509171728', 'root_model': False, 'schema': {'computed_fields': [], 'fields': {'alt': {'metadata': {'pydantic_js_updates': {'description': 'Altitude, metres'}}, 'schema': {'default': None, 'schema': {'function': {...}, 'schema': {...}, 'type': 'function-before'}, 'type': 'default'}, 'type': 'model-field'}, 'device_event_id': {'metadata': {'pydantic_js_updates': {'description': 'On-board device event identifier'}}, 'schema': {'default': None, 'schema': {'schema': {...}, 'type': 'nullable'}, 'type': 'default'}, 'type': 'model-field'}, 'event_time': {'metadata': {'pydantic_js_updates': {'description': 'Telemetry timestamp'}}, 'schema': {'microseconds_precision': 'truncate', 'type': 'datetime'}, 'type': 'model-field'}, 'gps_time': {'metadata': {'pydantic_js_updates': {'description': 'Timestamp generated by on-board GPS receiver'}}, 'schema': {'default': None, 'schema': {'function': {...}, 'schema': {...}, 'type': 'function-before'}, 'type': 'default'}, 'type': 'model-field'}, 'heading': {'metadata': {'pydantic_js_updates': {'description': 'Course, degrees'}}, 'schema': {'default': None, 'schema': {'function': {...}, 'schema': {...}, 'type': 'function-before'}, 'type': 'default'}, 'type': 'model-field'}, 'is_hist_data': {'metadata': {'pydantic_js_updates': {'description': 'Historical / replayed packet flag'}}, 'schema': {'default': False, 'schema': {'function': {...}, 'schema': {...}, 'type': 'function-before'}, 'type': 'default'}, 'type': 'model-field'}, 'lat': {'metadata': {'pydantic_js_updates': {'description': 'Latitude in WGS84 degrees'}}, 'schema': {'default': None, 'schema': {'function': {...}, 'schema': {...}, 'type': 'function-before'}, 'type': 'default'}, 'type': 'model-field'}, 'location_valid': {'metadata': {'pydantic_js_updates': {'description': 'Whether lon/lat/speed are trustworthy'}}, 'schema': {'default': False, 'schema': {'function': {...}, 'schema': {...}, 'type': 'function-before'}, 'type': 'default'}, 'type': 'model-field'}, 'lon': {'metadata': {'pydantic_js_updates': {'description': 'Longitude in WGS84 degrees'}}, 'schema': {'default': None, 'schema': {'function': {...}, 'schema': {...}, 'type': 'function-before'}, 'type': 'default'}, 'type': 'model-field'}, 'packet_id': {'metadata': {'pydantic_js_updates': {'description': 'NDTP packet identifier'}}, 'schema': {'default': None, 'schema': {'schema': {...}, 'type': 'nullable'}, 'type': 'default'}, 'type': 'model-field'}, ...}, 'model_name': 'TrafficPoint', 'type': 'model-fields'}, 'type': 'model'}</dl>
+<dl><dt><strong>__pydantic_core_schema__</strong> = {'cls': &lt;class 'src.schemas.dataset.TrafficPoint'&gt;, 'config': {'extra_fields_behavior': 'ignore', 'title': 'TrafficPoint'}, 'custom_init': False, 'metadata': {'pydantic_js_functions': [&lt;bound method BaseModel.__get_pydantic_json_schema__ of &lt;class 'src.schemas.dataset.TrafficPoint'&gt;&gt;]}, 'ref': 'src.schemas.dataset.TrafficPoint:511633402896', 'root_model': False, 'schema': {'computed_fields': [], 'fields': {'alt': {'metadata': {'pydantic_js_updates': {'description': 'Altitude, metres'}}, 'schema': {'default': None, 'schema': {'function': {...}, 'schema': {...}, 'type': 'function-before'}, 'type': 'default'}, 'type': 'model-field'}, 'device_event_id': {'metadata': {'pydantic_js_updates': {'description': 'On-board device event identifier'}}, 'schema': {'default': None, 'schema': {'schema': {...}, 'type': 'nullable'}, 'type': 'default'}, 'type': 'model-field'}, 'event_time': {'metadata': {'pydantic_js_updates': {'description': 'Telemetry timestamp'}}, 'schema': {'microseconds_precision': 'truncate', 'type': 'datetime'}, 'type': 'model-field'}, 'gps_time': {'metadata': {'pydantic_js_updates': {'description': 'Timestamp generated by on-board GPS receiver'}}, 'schema': {'default': None, 'schema': {'function': {...}, 'schema': {...}, 'type': 'function-before'}, 'type': 'default'}, 'type': 'model-field'}, 'heading': {'metadata': {'pydantic_js_updates': {'description': 'Course, degrees'}}, 'schema': {'default': None, 'schema': {'function': {...}, 'schema': {...}, 'type': 'function-before'}, 'type': 'default'}, 'type': 'model-field'}, 'is_hist_data': {'metadata': {'pydantic_js_updates': {'description': 'Historical / replayed packet flag'}}, 'schema': {'default': False, 'schema': {'function': {...}, 'schema': {...}, 'type': 'function-before'}, 'type': 'default'}, 'type': 'model-field'}, 'lat': {'metadata': {'pydantic_js_updates': {'description': 'Latitude in WGS84 degrees'}}, 'schema': {'default': None, 'schema': {'function': {...}, 'schema': {...}, 'type': 'function-before'}, 'type': 'default'}, 'type': 'model-field'}, 'location_valid': {'metadata': {'pydantic_js_updates': {'description': 'Whether lon/lat/speed are trustworthy'}}, 'schema': {'default': False, 'schema': {'function': {...}, 'schema': {...}, 'type': 'function-before'}, 'type': 'default'}, 'type': 'model-field'}, 'lon': {'metadata': {'pydantic_js_updates': {'description': 'Longitude in WGS84 degrees'}}, 'schema': {'default': None, 'schema': {'function': {...}, 'schema': {...}, 'type': 'function-before'}, 'type': 'default'}, 'type': 'model-field'}, 'packet_id': {'metadata': {'pydantic_js_updates': {'description': 'NDTP packet identifier'}}, 'schema': {'default': None, 'schema': {'schema': {...}, 'type': 'nullable'}, 'type': 'default'}, 'type': 'model-field'}, ...}, 'model_name': 'TrafficPoint', 'type': 'model-fields'}, 'type': 'model'}</dl>
 
 <dl><dt><strong>__pydantic_custom_init__</strong> = False</dl>
 
@@ -2757,7 +2757,7 @@ Data and other attributes defined here:<br>
     },
 ), definitions=[], cache_strings=True)</dl>
 
-<dl><dt><strong>__signature__</strong> = &lt;Signature (*, packet_id: Optional[str] = None, ...ime] = None, is_hist_data: bool = False) -&gt; None&gt;</dl>
+<dl><dt><strong>__signature__</strong> = &lt;Signature (*, packet_id: str | None = None, tr_...None = None, is_hist_data: bool = False) -&gt; None&gt;</dl>
 
 <dl><dt><strong>model_config</strong> = {'extra': 'ignore'}</dl>
 
@@ -3144,12 +3144,5 @@ Data and other attributes inherited from <a href="pydantic.main.html#BaseModel">
 
 <dl><dt><strong>model_fields</strong> = {'alt': FieldInfo(annotation=Union[float, NoneType], req...se, default=None, description='Altitude, metres'), 'device_event_id': FieldInfo(annotation=Union[str, NoneType], requi..., description='On-board device event identifier'), 'event_time': FieldInfo(annotation=datetime, required=True, description='Telemetry timestamp'), 'gps_time': FieldInfo(annotation=Union[datetime, NoneType], ...n='Timestamp generated by on-board GPS receiver'), 'heading': FieldInfo(annotation=Union[float, NoneType], req...e, degrees', metadata=[Ge(ge=0.0), Le(le=360.0)]), 'is_hist_data': FieldInfo(annotation=bool, required=False, defau... description='Historical / replayed packet flag'), 'lat': FieldInfo(annotation=Union[float, NoneType], req...4 degrees', metadata=[Ge(ge=-90.0), Le(le=90.0)]), 'location_valid': FieldInfo(annotation=bool, required=False, defau...cription='Whether lon/lat/speed are trustworthy'), 'lon': FieldInfo(annotation=Union[float, NoneType], req...degrees', metadata=[Ge(ge=-180.0), Le(le=180.0)]), 'packet_id': FieldInfo(annotation=Union[str, NoneType], requi...fault=None, description='NDTP packet identifier'), ...}</dl>
 
-</td></tr></table></td></tr></table><p>
-<table class="section">
-<tr class="decor data-decor heading-text">
-<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Data</strong></td></tr>
-    
-<tr><td class="decor data-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
-<td class="singlecolumn"><strong>List</strong> = typing.List<br>
-<strong>Optional</strong> = typing.Optional</td></tr></table>
+</td></tr></table></td></tr></table>
 </body></html>

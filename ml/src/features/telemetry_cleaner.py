@@ -8,9 +8,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Optional, Union
 
-import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
@@ -29,7 +27,7 @@ MIN_BUS_SPEED_KMH = 0.0
 
 def clean_traffic_dataframe(
     df: pd.DataFrame,
-    bbox: Optional[dict] = None,
+    bbox: dict | None = None,
     max_speed: float = MAX_BUS_SPEED_KMH,
     min_speed: float = MIN_BUS_SPEED_KMH,
 ) -> pd.DataFrame:
@@ -99,8 +97,8 @@ def clean_traffic_dataframe(
 
 
 def load_and_clean_traffic(
-    file_path: Union[str, Path],
-    bbox: Optional[dict] = None,
+    file_path: str | Path,
+    bbox: dict | None = None,
 ) -> pd.DataFrame:
     """Loads a traffic.csv file and returns cleaned DataFrame."""
     path = Path(file_path)

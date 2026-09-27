@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -20,9 +20,9 @@ class ModelStatus(BaseModel):
         description="Whether optional DSS classifier is initialized (not required for MAE task)",
     )
     shap_ready: bool = Field(..., description="Whether TreeSHAP or surrogate XAI is available")
-    regressor_path: Optional[str] = Field(default=None, description="Path to delay regressor weights")
-    classifier_path: Optional[str] = Field(default=None, description="Path to optional classifier weights")
-    active_features: List[str] = Field(
+    regressor_path: str | None = Field(default=None, description="Path to delay regressor weights")
+    classifier_path: str | None = Field(default=None, description="Path to optional classifier weights")
+    active_features: list[str] = Field(
         default_factory=list,
         description="Ordered feature names expected by the active model",
     )
@@ -44,7 +44,7 @@ class HealthResponse(BaseModel):
     version: str = Field(..., description="ML service semantic version")
     uptime_sec: float = Field(..., description="Seconds since service start")
     models: ModelStatus = Field(..., description="ML models availability breakdown")
-    details: Optional[Dict[str, Any]] = Field(
+    details: dict[str, Any] | None = Field(
         default=None,
         description="Supplementary diagnostic metadata",
     )

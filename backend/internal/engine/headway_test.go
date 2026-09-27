@@ -45,3 +45,40 @@ func TestHeadwayCalculator(t *testing.T) {
 		t.Errorf("expected holding recommendation >= 60s, got %v", info1.RecommendedHoldSec)
 	}
 }
+
+func TestHeadwayCalculator_PreservesKnownHeadway(t *testing.T) {
+	calc := NewHeadwayCalculator(480.0) // 8 min plan
+
+	// 2 buses geographically close, but known headway is normal (e.g., passing in opposite directions)
+	v1 := models.Vehicle{
+		ID:             "bus_1",
+		RouteID:        "m3",
+		Latitude:       55.7500,
+		Longitude:      37.6000,
+		SpeedKmH:       20.0,
+		HeadwaySeconds: 480.0, // Normal headway
+	}
+	v2 := models.Vehicle{
+		ID:             "bus_2",
+		RouteID:        "m3",
+		Latitude:       55.7505,
+		Longitude:      37.6000,
+		SpeedKmH:       20.0,
+		HeadwaySeconds: 480.0,
+	}
+
+	res := calc.AssessFleetHeadways([]models.Vehicle{v1, v2})
+
+	info1, ok1 := res["bus_1"]
+	if !ok1 {
+		t.Fatalf("expected result for bus_1")
+	}
+
+	if info1.Status == "BUNCHING_RISK" {
+		t.Errorf("expected normal status when known HeadwaySeconds=480, got %s", info1.Status)
+	}
+	if info1.BunchingRisk > 0.3 {
+		t.Errorf("expected low bunching risk, got %v", info1.BunchingRisk)
+	}
+}
+

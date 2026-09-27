@@ -8,7 +8,7 @@ host system local timezone (e.g. MSK UTC+3 or UTC+7) or datetime representation.
 from __future__ import annotations
 
 import datetime
-from typing import Any, Union, overload
+from typing import Any, overload
 
 import numpy as np
 import pandas as pd
@@ -26,7 +26,7 @@ def to_epoch_s(ts: pd.DatetimeIndex) -> np.ndarray:
 
 @overload
 def to_epoch_s(
-    ts: Union[str, pd.Timestamp, datetime.datetime, datetime.date, np.datetime64, int, float]
+    ts: str | pd.Timestamp | datetime.datetime | datetime.date | np.datetime64 | float
 ) -> int:
     ...
 
@@ -114,7 +114,7 @@ def to_epoch_s(ts: Any) -> Any:
 
     if isinstance(ts, datetime.datetime):
         if ts.tzinfo is not None:
-            ts = ts.astimezone(datetime.timezone.utc).replace(tzinfo=None)
+            ts = ts.astimezone(datetime.UTC).replace(tzinfo=None)
         return int(pd.Timestamp(ts).to_datetime64().astype("datetime64[s]").astype("int64"))
 
     if isinstance(ts, datetime.date):

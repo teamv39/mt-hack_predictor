@@ -12,11 +12,10 @@ from __future__ import annotations
 import importlib
 import inspect
 import os
-from pathlib import Path
 import pkgutil
 import pydoc
 import sys
-from typing import Dict, List, Tuple
+from pathlib import Path
 
 # Ensure ml root is on sys.path
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -29,8 +28,7 @@ if str(ML_ROOT) not in sys.path:
 
 import src
 
-
-MODULE_CATEGORIES: Dict[str, Dict[str, str]] = {
+MODULE_CATEGORIES: dict[str, dict[str, str]] = {
     "src.api": {
         "title": "API & Serving Layer",
         "description": "FastAPI application, ASGI lifecycle management, REST routing, CORS, and HTTP request handling.",
@@ -54,7 +52,7 @@ MODULE_CATEGORIES: Dict[str, Dict[str, str]] = {
 }
 
 
-def discover_modules() -> List[str]:
+def discover_modules() -> list[str]:
     """Finds all modules and subpackages inside `src`."""
     modules = ["src"]
     for _, modname, _ in pkgutil.walk_packages(src.__path__, prefix="src."):
@@ -62,7 +60,7 @@ def discover_modules() -> List[str]:
     return sorted(modules)
 
 
-def extract_doc_summary(modname: str) -> Tuple[str, List[str]]:
+def extract_doc_summary(modname: str) -> tuple[str, list[str]]:
     """Extracts first line of docstring and top-level public symbols."""
     try:
         mod = importlib.import_module(modname)
@@ -86,11 +84,11 @@ def extract_doc_summary(modname: str) -> Tuple[str, List[str]]:
         return f"Import notice: {e}", []
 
 
-def build_index_html(modules: List[str], summaries: Dict[str, Tuple[str, List[str]]]) -> str:
+def build_index_html(modules: list[str], summaries: dict[str, tuple[str, list[str]]]) -> str:
     """Renders a self-contained, responsive HTML index portal."""
     
     # Group modules by category
-    categorized: Dict[str, List[str]] = {cat: [] for cat in MODULE_CATEGORIES}
+    categorized: dict[str, list[str]] = {cat: [] for cat in MODULE_CATEGORIES}
     categorized["root"] = []
     
     for m in modules:
@@ -123,7 +121,7 @@ def build_index_html(modules: List[str], summaries: Dict[str, Tuple[str, List[st
             """)
         sections_html.append(f"""
         <section class="category-section">
-            <h2 class="cat-title">📦 Root Package</h2>
+            <h2 class="cat-title">Root Package</h2>
             <p class="cat-desc">Top-level package definition and package-wide exports.</p>
             <div class="grid">{''.join(root_cards)}</div>
         </section>
@@ -400,7 +398,7 @@ def main() -> None:
     modules = discover_modules()
     print(f"Found {len(modules)} modules to document.")
     
-    summaries: Dict[str, Tuple[str, List[str]]] = {}
+    summaries: dict[str, tuple[str, list[str]]] = {}
     current_cwd = os.getcwd()
     
     try:
@@ -412,16 +410,16 @@ def main() -> None:
                 pydoc.writedoc(m)
                 doc_sum, syms = extract_doc_summary(m)
                 summaries[m] = (doc_sum, syms)
-                print(f"  ✓ {m} -> {m}.html")
+                print(f"  [OK] {m} -> {m}.html")
             except Exception as e:
-                print(f"  ✗ Failed to document {m}: {e}")
+                print(f"  [FAIL] Failed to document {m}: {e}")
                 summaries[m] = (f"Generation error: {e}", [])
                 
         # Generate styled index.html portal
         index_content = build_index_html(modules, summaries)
         index_file = OUTPUT_DIR / "index.html"
         index_file.write_text(index_content, encoding="utf-8")
-        print(f"  ✓ Portal index created: {index_file}")
+        print(f"  [OK] Portal index created: {index_file}")
         
     finally:
         os.chdir(current_cwd)

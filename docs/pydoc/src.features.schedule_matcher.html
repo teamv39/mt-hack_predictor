@@ -49,7 +49,7 @@ lookups&nbsp;for&nbsp;correlating&nbsp;telemetry&nbsp;points&nbsp;with&nbsp;sche
 <td class="section-title" colspan=3>&nbsp;<br><a name="PlanProgress">class <strong>PlanProgress</strong></a>(<a href="pydantic.main.html#BaseModel">pydantic.main.BaseModel</a>)</td></tr>
     
 <tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
-<td class="decor title-decor" colspan=2><span class="code"><a href="#PlanProgress">PlanProgress</a>(*,&nbsp;stops_remaining:&nbsp;int,&nbsp;plan_time_to_target_s:&nbsp;Optional[float]&nbsp;=&nbsp;None,&nbsp;time_since_last_stop_s:&nbsp;Optional[float]&nbsp;=&nbsp;None,&nbsp;plan_sec_per_stop:&nbsp;Optional[float]&nbsp;=&nbsp;None)&nbsp;-&amp;gt;&nbsp;None<br>
+<td class="decor title-decor" colspan=2><span class="code"><a href="#PlanProgress">PlanProgress</a>(*,&nbsp;stops_remaining:&nbsp;int,&nbsp;plan_time_to_target_s:&nbsp;float&nbsp;|&nbsp;None&nbsp;=&nbsp;None,&nbsp;time_since_last_stop_s:&nbsp;float&nbsp;|&nbsp;None&nbsp;=&nbsp;None,&nbsp;plan_sec_per_stop:&nbsp;float&nbsp;|&nbsp;None&nbsp;=&nbsp;None)&nbsp;-&amp;gt;&nbsp;None<br>
 &nbsp;<br>
 Route-progress&nbsp;features&nbsp;derived&nbsp;from&nbsp;planned&nbsp;schedule&nbsp;times.<br>&nbsp;</span></td></tr>
 <tr><td>&nbsp;</td>
@@ -71,7 +71,7 @@ Data descriptors defined here:<br>
 Data and other attributes defined here:<br>
 <dl><dt><strong>__abstractmethods__</strong> = frozenset()</dl>
 
-<dl><dt><strong>__annotations__</strong> = {'plan_sec_per_stop': 'Optional[float]', 'plan_time_to_target_s': 'Optional[float]', 'stops_remaining': 'int', 'time_since_last_stop_s': 'Optional[float]'}</dl>
+<dl><dt><strong>__annotations__</strong> = {'plan_sec_per_stop': 'float | None', 'plan_time_to_target_s': 'float | None', 'stops_remaining': 'int', 'time_since_last_stop_s': 'float | None'}</dl>
 
 <dl><dt><strong>__class_vars__</strong> = set()</dl>
 
@@ -81,7 +81,7 @@ Data and other attributes defined here:<br>
 
 <dl><dt><strong>__pydantic_computed_fields__</strong> = {}</dl>
 
-<dl><dt><strong>__pydantic_core_schema__</strong> = {'cls': &lt;class 'src.features.schedule_matcher.PlanProgress'&gt;, 'config': {'title': 'PlanProgress'}, 'custom_init': False, 'metadata': {'pydantic_js_functions': [&lt;bound method BaseModel.__get_pydantic_json_sche...ss 'src.features.schedule_matcher.PlanProgress'&gt;&gt;]}, 'ref': 'src.features.schedule_matcher.PlanProgress:522517968912', 'root_model': False, 'schema': {'computed_fields': [], 'fields': {'plan_sec_per_stop': {'metadata': {'pydantic_js_updates': {'description': 'plan_time_to_target_s / stops_remaining'}}, 'schema': {'default': None, 'schema': {'schema': {...}, 'type': 'nullable'}, 'type': 'default'}, 'type': 'model-field'}, 'plan_time_to_target_s': {'metadata': {'pydantic_js_updates': {'description': 'Plan time from last passed stop to target, seconds'}}, 'schema': {'default': None, 'schema': {'schema': {...}, 'type': 'nullable'}, 'type': 'default'}, 'type': 'model-field'}, 'stops_remaining': {'metadata': {'pydantic_js_updates': {'description': 'Planned stops remaining to target (T, target]'}}, 'schema': {'type': 'int'}, 'type': 'model-field'}, 'time_since_last_stop_s': {'metadata': {'pydantic_js_updates': {'description': 'Seconds since last passed stop'}}, 'schema': {'default': None, 'schema': {'schema': {...}, 'type': 'nullable'}, 'type': 'default'}, 'type': 'model-field'}}, 'model_name': 'PlanProgress', 'type': 'model-fields'}, 'type': 'model'}</dl>
+<dl><dt><strong>__pydantic_core_schema__</strong> = {'cls': &lt;class 'src.features.schedule_matcher.PlanProgress'&gt;, 'config': {'title': 'PlanProgress'}, 'custom_init': False, 'metadata': {'pydantic_js_functions': [&lt;bound method BaseModel.__get_pydantic_json_sche...ss 'src.features.schedule_matcher.PlanProgress'&gt;&gt;]}, 'ref': 'src.features.schedule_matcher.PlanProgress:511643547664', 'root_model': False, 'schema': {'computed_fields': [], 'fields': {'plan_sec_per_stop': {'metadata': {'pydantic_js_updates': {'description': 'plan_time_to_target_s / stops_remaining'}}, 'schema': {'default': None, 'schema': {'schema': {...}, 'type': 'nullable'}, 'type': 'default'}, 'type': 'model-field'}, 'plan_time_to_target_s': {'metadata': {'pydantic_js_updates': {'description': 'Plan time from last passed stop to target, seconds'}}, 'schema': {'default': None, 'schema': {'schema': {...}, 'type': 'nullable'}, 'type': 'default'}, 'type': 'model-field'}, 'stops_remaining': {'metadata': {'pydantic_js_updates': {'description': 'Planned stops remaining to target (T, target]'}}, 'schema': {'type': 'int'}, 'type': 'model-field'}, 'time_since_last_stop_s': {'metadata': {'pydantic_js_updates': {'description': 'Seconds since last passed stop'}}, 'schema': {'default': None, 'schema': {'schema': {...}, 'type': 'nullable'}, 'type': 'default'}, 'type': 'model-field'}}, 'model_name': 'PlanProgress', 'type': 'model-fields'}, 'type': 'model'}</dl>
 
 <dl><dt><strong>__pydantic_custom_init__</strong> = False</dl>
 
@@ -107,7 +107,7 @@ Data and other attributes defined here:<br>
     },
 ), definitions=[], cache_strings=True)</dl>
 
-<dl><dt><strong>__signature__</strong> = &lt;Signature (*, stops_remaining: int, plan_time_t...an_sec_per_stop: Optional[float] = None) -&gt; None&gt;</dl>
+<dl><dt><strong>__signature__</strong> = &lt;Signature (*, stops_remaining: int, plan_time_t... plan_sec_per_stop: float | None = None) -&gt; None&gt;</dl>
 
 <dl><dt><strong>model_config</strong> = {'frozen': True}</dl>
 
@@ -516,11 +516,11 @@ Expected&nbsp;columns:<br>
 -&nbsp;`geom`&nbsp;(WKT&nbsp;geometry)<br>
 -&nbsp;optional&nbsp;`building_address`</span></dd></dl>
 
-<dl><dt><a name="ScheduleIndex-distance_to_target_m"><strong>distance_to_target_m</strong></a>(self, bus_lat: 'Optional[float]', bus_lon: 'Optional[float]', tr_id: 'int', target_stop_id: 'int') -&gt; 'Optional[float]'</dt><dd><span class="code">Calculates&nbsp;distance&nbsp;in&nbsp;meters&nbsp;between&nbsp;bus&nbsp;and&nbsp;target&nbsp;stop.</span></dd></dl>
+<dl><dt><a name="ScheduleIndex-distance_to_target_m"><strong>distance_to_target_m</strong></a>(self, bus_lat: 'float | None', bus_lon: 'float | None', tr_id: 'int', target_stop_id: 'int') -&gt; 'float | None'</dt><dd><span class="code">Calculates&nbsp;distance&nbsp;in&nbsp;meters&nbsp;between&nbsp;bus&nbsp;and&nbsp;target&nbsp;stop.</span></dd></dl>
 
-<dl><dt><a name="ScheduleIndex-get_stop_coords"><strong>get_stop_coords</strong></a>(self, tr_id: 'int', target_stop_id: 'int') -&gt; 'Tuple[Optional[float], Optional[float]]'</dt><dd><span class="code">Returns&nbsp;(lat,&nbsp;lon)&nbsp;of&nbsp;the&nbsp;stop&nbsp;if&nbsp;present&nbsp;in&nbsp;index.</span></dd></dl>
+<dl><dt><a name="ScheduleIndex-get_stop_coords"><strong>get_stop_coords</strong></a>(self, tr_id: 'int', target_stop_id: 'int') -&gt; 'tuple[float | None, float | None]'</dt><dd><span class="code">Returns&nbsp;(lat,&nbsp;lon)&nbsp;of&nbsp;the&nbsp;stop&nbsp;if&nbsp;present&nbsp;in&nbsp;index.</span></dd></dl>
 
-<dl><dt><a name="ScheduleIndex-plan_progress"><strong>plan_progress</strong></a>(self, tr_id: 'int', t_epoch_sec: 'Union[int, Any]', target_time_epoch_sec: 'Union[int, Any]') -&gt; 'PlanProgress'</dt><dd><span class="code">Route-progress&nbsp;features&nbsp;from&nbsp;planned&nbsp;times&nbsp;only&nbsp;(legal&nbsp;at&nbsp;moment&nbsp;T).<br>
+<dl><dt><a name="ScheduleIndex-plan_progress"><strong>plan_progress</strong></a>(self, tr_id: 'int', t_epoch_sec: 'int | Any', target_time_epoch_sec: 'int | Any') -&gt; 'PlanProgress'</dt><dd><span class="code">Route-progress&nbsp;features&nbsp;from&nbsp;planned&nbsp;times&nbsp;only&nbsp;(legal&nbsp;at&nbsp;moment&nbsp;T).<br>
 &nbsp;<br>
 Returns&nbsp;<a href="#PlanProgress">PlanProgress</a>(stops_remaining,&nbsp;plan_time_to_target_s,<br>
 time_since_last_stop_s,&nbsp;plan_sec_per_stop):<br>
@@ -546,17 +546,7 @@ Data descriptors defined here:<br>
 <tr><td class="decor functions-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
 <td class="singlecolumn"><dl><dt><a name="-angle_diff_deg"><strong>angle_diff_deg</strong></a>(angle1: 'float', angle2: 'float') -&gt; 'float'</dt><dd><span class="code">Calculates&nbsp;minimal&nbsp;circular&nbsp;difference&nbsp;between&nbsp;two&nbsp;angles&nbsp;in&nbsp;degrees&nbsp;[0,&nbsp;180].</span></dd></dl>
  <dl><dt><a name="-haversine_distance_m"><strong>haversine_distance_m</strong></a>(lat1: 'float', lon1: 'float', lat2: 'float', lon2: 'float') -&gt; 'float'</dt><dd><span class="code">Calculates&nbsp;geodesic&nbsp;distance&nbsp;between&nbsp;two&nbsp;points&nbsp;in&nbsp;meters&nbsp;using&nbsp;Haversine&nbsp;formula.</span></dd></dl>
- <dl><dt><a name="-load_schedule_index"><strong>load_schedule_index</strong></a>(schedule_path: 'Union[str, Path]') -&gt; 'ScheduleIndex'</dt><dd><span class="code">Loads&nbsp;schedule&nbsp;CSV&nbsp;and&nbsp;constructs&nbsp;a&nbsp;<a href="#ScheduleIndex">ScheduleIndex</a>.</span></dd></dl>
- <dl><dt><a name="-parse_wkt_point"><strong>parse_wkt_point</strong></a>(wkt_str: 'Optional[str]') -&gt; 'Tuple[Optional[float], Optional[float]]'</dt><dd><span class="code">Parses&nbsp;'POINT&nbsp;(lon&nbsp;lat)'&nbsp;string&nbsp;into&nbsp;(lon,&nbsp;lat)&nbsp;floats.</span></dd></dl>
-</td></tr></table><p>
-<table class="section">
-<tr class="decor data-decor heading-text">
-<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Data</strong></td></tr>
-    
-<tr><td class="decor data-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
-<td class="singlecolumn"><strong>Dict</strong> = typing.Dict<br>
-<strong>List</strong> = typing.List<br>
-<strong>Optional</strong> = typing.Optional<br>
-<strong>Tuple</strong> = typing.Tuple<br>
-<strong>Union</strong> = typing.Union</td></tr></table>
+ <dl><dt><a name="-load_schedule_index"><strong>load_schedule_index</strong></a>(schedule_path: 'str | Path') -&gt; 'ScheduleIndex'</dt><dd><span class="code">Loads&nbsp;schedule&nbsp;CSV&nbsp;and&nbsp;constructs&nbsp;a&nbsp;<a href="#ScheduleIndex">ScheduleIndex</a>.</span></dd></dl>
+ <dl><dt><a name="-parse_wkt_point"><strong>parse_wkt_point</strong></a>(wkt_str: 'str | None') -&gt; 'tuple[float | None, float | None]'</dt><dd><span class="code">Parses&nbsp;'POINT&nbsp;(lon&nbsp;lat)'&nbsp;string&nbsp;into&nbsp;(lon,&nbsp;lat)&nbsp;floats.</span></dd></dl>
+</td></tr></table>
 </body></html>

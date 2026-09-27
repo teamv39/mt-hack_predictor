@@ -218,6 +218,15 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
     return "1043";
   });
 
+  useEffect(() => {
+    if (vehicleId) {
+      const clean = vehicleId.replace(/^P/, "");
+      if (FLEET_TERMINALS.some((u) => u.id === clean)) {
+        setCurrentUnitId(clean);
+      }
+    }
+  }, [vehicleId]);
+
   const activeUnit = useMemo(() => {
     return FLEET_TERMINALS.find((u) => u.id === currentUnitId) || FLEET_TERMINALS[0];
   }, [currentUnitId]);

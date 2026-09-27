@@ -1,6 +1,6 @@
 """API package for ML inference service."""
 
-from .server import app
 from .routes import router
+from .server import app
 
 __all__ = ["app", "router"]

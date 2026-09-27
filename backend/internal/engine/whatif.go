@@ -72,11 +72,15 @@ func SimulateWhatIf(req WhatIfRequest, vehicles []models.Vehicle) WhatIfResult {
 
 	// Extract current headways
 	headwaysBefore := make([]float64, 0, len(vehicles))
+	matchedTargetIdx := -1
 	for _, v := range vehicles {
 		if req.RouteID == "" || v.RouteID == req.RouteID || req.RouteID == "all" {
 			h := v.HeadwaySeconds
 			if h <= 0 {
 				h = 480.0
+			}
+			if req.TargetVehicleID != "" && (v.ID == req.TargetVehicleID || fmt.Sprintf("P%s", v.ID) == req.TargetVehicleID) {
+				matchedTargetIdx = len(headwaysBefore)
 			}
 			headwaysBefore = append(headwaysBefore, h)
 		}
@@ -114,11 +118,14 @@ func SimulateWhatIf(req WhatIfRequest, vehicles []models.Vehicle) WhatIfResult {
 		fallthrough
 	default:
 		// Target vehicle or first bunched vehicle gets holding buffer
-		targetIdx := 0
-		for i, h := range headwaysBefore {
-			if h < 180.0 {
-				targetIdx = i
-				break
+		targetIdx := matchedTargetIdx
+		if targetIdx < 0 || targetIdx >= len(headwaysAfter) {
+			targetIdx = 0
+			for i, h := range headwaysBefore {
+				if h < 180.0 {
+					targetIdx = i
+					break
+				}
 			}
 		}
 		// Holding shifts headway: following gap increases by holdSec, preceding decreases

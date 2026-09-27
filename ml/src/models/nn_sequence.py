@@ -30,12 +30,11 @@ import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 import pandas as pd
 import torch
-import torch.nn as nn
+from torch import nn
 from torch.utils.data import DataLoader, Dataset
 
 logging.basicConfig(
@@ -111,7 +110,7 @@ class SequenceSample:
     sequence: np.ndarray      # (SEQ_LEN, INPUT_SIZE)
     target_delay_s: float
     sample_id: str
-    catboost_pred: Optional[float] = None
+    catboost_pred: float | None = None
 
 
 class TelemetrySequenceDataset(Dataset):

@@ -7,10 +7,13 @@ signals are secondary DSS extras derived from optional headway features.
 from __future__ import annotations
 
 import math
-from typing import List, Optional
 
 from ..core.config import get_settings
-from ..features.extractor import FEATURE_HUMAN_TITLES, delay_to_class, feature_vector_to_dict
+from ..features.extractor import (
+    FEATURE_HUMAN_TITLES,
+    delay_to_class,
+    feature_vector_to_dict,
+)
 from ..schemas.features import FeatureVector
 from ..schemas.health import ModelStatus
 from ..schemas.prediction import (
@@ -70,7 +73,7 @@ class HeuristicFallbackPredictor(BasePredictor):
         factors = self._build_factors(feats, predicted_delay, risk_prob)
 
         hold_sec = 0
-        recommendation: Optional[Recommendation] = None
+        recommendation: Recommendation | None = None
         if risk_prob >= self.settings.holding_risk_threshold and feature.current_headway_sec is not None:
             gap = max(0.0, self.settings.headway_critical_threshold_sec - headway)
             hold_sec = int(
@@ -124,7 +127,7 @@ class HeuristicFallbackPredictor(BasePredictor):
         feats: dict,
         predicted_delay: float,
         risk_prob: float,
-    ) -> List[SHAPFactor]:
+    ) -> list[SHAPFactor]:
         raw_weights = []
 
         cur_dev = feats["cur_dev_s"]
@@ -203,7 +206,7 @@ class HeuristicFallbackPredictor(BasePredictor):
             for feat, title, w, score in top_k
         ]
 
-    def predict_batch(self, features: List[FeatureVector]) -> List[PredictionResponse]:
+    def predict_batch(self, features: list[FeatureVector]) -> list[PredictionResponse]:
         return [self.predict_single(f) for f in features]
 
     def get_status(self) -> ModelStatus:

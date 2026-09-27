@@ -56,7 +56,7 @@ Methods defined here:<br>
 
 <dl><dt><a name="HeuristicFallbackPredictor-get_status"><strong>get_status</strong></a>(self) -&gt; 'ModelStatus'</dt><dd><span class="code">Returns&nbsp;the&nbsp;operational&nbsp;status&nbsp;of&nbsp;the&nbsp;model.</span></dd></dl>
 
-<dl><dt><a name="HeuristicFallbackPredictor-predict_batch"><strong>predict_batch</strong></a>(self, features: 'List[FeatureVector]') -&gt; 'List[PredictionResponse]'</dt><dd><span class="code">Runs&nbsp;batch&nbsp;inference&nbsp;for&nbsp;multiple&nbsp;vehicle&nbsp;feature&nbsp;vectors.</span></dd></dl>
+<dl><dt><a name="HeuristicFallbackPredictor-predict_batch"><strong>predict_batch</strong></a>(self, features: 'list[FeatureVector]') -&gt; 'list[PredictionResponse]'</dt><dd><span class="code">Runs&nbsp;batch&nbsp;inference&nbsp;for&nbsp;multiple&nbsp;vehicle&nbsp;feature&nbsp;vectors.</span></dd></dl>
 
 <dl><dt><a name="HeuristicFallbackPredictor-predict_single"><strong>predict_single</strong></a>(self, feature: 'FeatureVector') -&gt; 'PredictionResponse'</dt><dd><span class="code">Runs&nbsp;inference&nbsp;for&nbsp;a&nbsp;single&nbsp;vehicle&nbsp;feature&nbsp;vector.</span></dd></dl>
 
@@ -80,7 +80,5 @@ Data descriptors inherited from <a href="src.models.base.html#BasePredictor">src
 <td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Data</strong></td></tr>
     
 <tr><td class="decor data-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
-<td class="singlecolumn"><strong>FEATURE_HUMAN_TITLES</strong> = {'avg_speed_window_kmh': 'Средняя скорость на окне до момента T', 'cumulative_delay_prev_stops': 'Накопленная задержка на предыдущих остановках', 'cur_dev_s': 'Текущее отклонение от графика (последняя пройденная остановка)', 'current_delay_sec': 'Текущее отставание от графика', 'current_headway_sec': 'Интервал до переднего борта (DSS)', 'day_of_week': 'День недели / пассажиропоток', 'delay_to_headway_ratio': 'Коэффициент Delay/Headway (DSS)', 'dist_to_target_m': 'Расстояние до целевой остановки', 'heading_std_3m': 'Разброс курса за 3-мин окно', 'historical_avg_speed': 'Средняя скорость на перегоне', ...}<br>
-<strong>List</strong> = typing.List<br>
-<strong>Optional</strong> = typing.Optional</td></tr></table>
+<td class="singlecolumn"><strong>FEATURE_HUMAN_TITLES</strong> = {'avg_speed_window_kmh': 'Средняя скорость на окне до момента T', 'cumulative_delay_prev_stops': 'Накопленная задержка на предыдущих остановках', 'cur_dev_s': 'Текущее отклонение от графика (последняя пройденная остановка)', 'current_delay_sec': 'Текущее отставание от графика', 'current_headway_sec': 'Интервал до переднего борта (DSS)', 'day_of_week': 'День недели / пассажиропоток', 'delay_to_headway_ratio': 'Коэффициент Delay/Headway (DSS)', 'dist_to_target_m': 'Расстояние до целевой остановки', 'heading_std_3m': 'Разброс курса за 3-мин окно', 'historical_avg_speed': 'Средняя скорость на перегоне', ...}</td></tr></table>
 </body></html>

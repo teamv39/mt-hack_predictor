@@ -7,7 +7,7 @@ while keeping optional DSS fields (headway / holding) for the live dashboard.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -26,27 +26,27 @@ class FeatureVector(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     # --- Official identity & forecast point ---------------------------------
-    sample_id: Optional[str] = Field(
+    sample_id: str | None = Field(
         default=None,
         description="Official sample_id from labels/points (required for submission)",
     )
-    tr_id: Optional[str] = Field(
+    tr_id: str | None = Field(
         default=None,
         description="Vehicle ID from the dataset (preferred official name)",
     )
-    vehicle_id: Optional[str] = Field(
+    vehicle_id: str | None = Field(
         default=None,
         description="Alias of tr_id for Go backend / dashboard compatibility",
     )
-    T: Optional[datetime] = Field(
+    T: datetime | None = Field(
         default=None,
         description="Forecast moment; only traffic with event_time ≤ T is allowed",
     )
-    target_stop_id: Optional[str] = Field(
+    target_stop_id: str | None = Field(
         default=None,
         description="Target stop arrival ID (= schedule.tt_action_item_id)",
     )
-    target_time_begin: Optional[datetime] = Field(
+    target_time_begin: datetime | None = Field(
         default=None,
         description="Planned arrival at the target stop (T+10…T+15 min window)",
     )
@@ -57,7 +57,7 @@ class FeatureVector(BaseModel):
             "Official baseline feature (sample_submission = cur_dev_s)."
         ),
     )
-    horizon_sec: Optional[float] = Field(
+    horizon_sec: float | None = Field(
         default=None,
         ge=0.0,
         description="target_time_begin − T in seconds (typically 600–900)",
@@ -68,59 +68,59 @@ class FeatureVector(BaseModel):
     day_of_week: int = Field(..., ge=0, le=6, description="Weekday of T (0=Monday … 6=Sunday)")
 
     # --- Telemetry snapshot / window aggregates (event_time ≤ T only) -------
-    speed_kmh: Optional[float] = Field(
+    speed_kmh: float | None = Field(
         default=None,
         ge=0.0,
         description="Last valid instantaneous speed at T, km/h",
     )
-    heading: Optional[float] = Field(
+    heading: float | None = Field(
         default=None,
         ge=0.0,
         le=360.0,
         description="Last valid course at T, degrees",
     )
-    latitude: Optional[float] = Field(
+    latitude: float | None = Field(
         default=None, ge=-90.0, le=90.0, description="Last valid GPS latitude, degrees"
     )
-    longitude: Optional[float] = Field(
+    longitude: float | None = Field(
         default=None, ge=-180.0, le=180.0, description="Last valid GPS longitude, degrees"
     )
-    alt: Optional[float] = Field(default=None, description="Last valid altitude, metres")
-    location_valid: Optional[bool] = Field(
+    alt: float | None = Field(default=None, description="Last valid altitude, metres")
+    location_valid: bool | None = Field(
         default=None,
         description="Whether the latest GPS fix used for features is valid",
     )
-    avg_speed_window_kmh: Optional[float] = Field(
+    avg_speed_window_kmh: float | None = Field(
         default=None,
         ge=0.0,
         description="Mean valid speed over a trailing window before T, km/h",
     )
-    stop_ratio_window: Optional[float] = Field(
+    stop_ratio_window: float | None = Field(
         default=None,
         ge=0.0,
         le=1.0,
         description="Share of near-zero speed samples in the trailing window",
     )
-    n_traffic_points_window: Optional[int] = Field(
+    n_traffic_points_window: int | None = Field(
         default=None,
         ge=0,
         description="Count of traffic rows with event_time ≤ T used for aggregates",
     )
 
     # --- Backend / DSS compatibility (not in official CSV features) ---------
-    route_id: Optional[str] = Field(
+    route_id: str | None = Field(
         default=None,
         description="Route code if known (not present in official CSV schema)",
     )
-    current_delay_sec: Optional[float] = Field(
+    current_delay_sec: float | None = Field(
         default=None,
         description="Alias of cur_dev_s for legacy callers; filled from cur_dev_s if omitted",
     )
-    current_headway_sec: Optional[float] = Field(
+    current_headway_sec: float | None = Field(
         default=None,
         description="Headway to preceding vehicle (DSS only; not in official labels)",
     )
-    historical_avg_speed: Optional[float] = Field(
+    historical_avg_speed: float | None = Field(
         default=None,
         ge=0.0,
         description="Legacy segment average speed; falls back to avg_speed_window_kmh",
@@ -135,16 +135,16 @@ class FeatureVector(BaseModel):
         le=3.0,
         description="Optional weather degradation multiplier (1.0 = normal)",
     )
-    next_stop_id: Optional[str] = Field(
+    next_stop_id: str | None = Field(
         default=None,
         description="Next stop id for DSS holding UI (often equals target_stop_id)",
     )
-    next_stop_name: Optional[str] = Field(
+    next_stop_name: str | None = Field(
         default=None,
         description="Human-readable next/target stop name (from schedule.building_address)",
     )
     # Backward-compatible alias used by older callers
-    bearing: Optional[float] = Field(
+    bearing: float | None = Field(
         default=None,
         ge=0.0,
         le=360.0,
@@ -152,29 +152,29 @@ class FeatureVector(BaseModel):
     )
 
     # --- Competition features (extended telemetry & route progress) --------
-    speed_mean_5m: Optional[float] = Field(default=None, ge=0.0, description="Mean speed over 5-min trailing window, km/h")
-    speed_mean_10m: Optional[float] = Field(default=None, ge=0.0, description="Mean speed over 10-min trailing window, km/h")
-    speed_std_3m: Optional[float] = Field(default=None, ge=0.0, description="Std dev of speed over 3-min window, km/h")
-    speed_min_3m: Optional[float] = Field(default=None, ge=0.0, description="Min speed over 3-min window, km/h")
-    speed_max_3m: Optional[float] = Field(default=None, ge=0.0, description="Max speed over 3-min window, km/h")
-    speed_trend: Optional[float] = Field(default=None, description="Speed change proxy: avg3m - avg10m, km/h")
-    idle_time_5m: Optional[float] = Field(default=None, ge=0.0, description="Estimated idle seconds in 5-min window")
-    telemetry_age_s: Optional[float] = Field(default=None, ge=0.0, description="Seconds since last telemetry fix at moment T")
-    points_count_5m: Optional[int] = Field(default=None, ge=0, description="Count of traffic points in 5-min window")
-    heading_std_3m: Optional[float] = Field(default=None, ge=0.0, description="Circular std of heading over 3-min window")
-    dist_to_target_m: Optional[float] = Field(default=None, ge=0.0, description="Haversine distance to target stop, metres")
-    speed_needed_kmh: Optional[float] = Field(default=None, ge=0.0, description="Required avg speed to reach target on time")
-    stops_remaining: Optional[int] = Field(default=None, ge=0, description="Planned stops between T and target")
-    plan_time_to_target_s: Optional[float] = Field(default=None, ge=0.0, description="Plan time from last passed stop to target, seconds")
-    time_since_last_stop_s: Optional[float] = Field(default=None, ge=0.0, description="Seconds since planned departure of last passed stop")
-    plan_sec_per_stop: Optional[float] = Field(default=None, ge=0.0, description="plan_time_to_target_s / stops_remaining")
+    speed_mean_5m: float | None = Field(default=None, ge=0.0, description="Mean speed over 5-min trailing window, km/h")
+    speed_mean_10m: float | None = Field(default=None, ge=0.0, description="Mean speed over 10-min trailing window, km/h")
+    speed_std_3m: float | None = Field(default=None, ge=0.0, description="Std dev of speed over 3-min window, km/h")
+    speed_min_3m: float | None = Field(default=None, ge=0.0, description="Min speed over 3-min window, km/h")
+    speed_max_3m: float | None = Field(default=None, ge=0.0, description="Max speed over 3-min window, km/h")
+    speed_trend: float | None = Field(default=None, description="Speed change proxy: avg3m - avg10m, km/h")
+    idle_time_5m: float | None = Field(default=None, ge=0.0, description="Estimated idle seconds in 5-min window")
+    telemetry_age_s: float | None = Field(default=None, ge=0.0, description="Seconds since last telemetry fix at moment T")
+    points_count_5m: int | None = Field(default=None, ge=0, description="Count of traffic points in 5-min window")
+    heading_std_3m: float | None = Field(default=None, ge=0.0, description="Circular std of heading over 3-min window")
+    dist_to_target_m: float | None = Field(default=None, ge=0.0, description="Haversine distance to target stop, metres")
+    speed_needed_kmh: float | None = Field(default=None, ge=0.0, description="Required avg speed to reach target on time")
+    stops_remaining: int | None = Field(default=None, ge=0, description="Planned stops between T and target")
+    plan_time_to_target_s: float | None = Field(default=None, ge=0.0, description="Plan time from last passed stop to target, seconds")
+    time_since_last_stop_s: float | None = Field(default=None, ge=0.0, description="Seconds since planned departure of last passed stop")
+    plan_sec_per_stop: float | None = Field(default=None, ge=0.0, description="plan_time_to_target_s / stops_remaining")
 
     # --- Tracker & Matcher aliases from Go backend -------------------------
-    avg_speed_5m: Optional[float] = Field(default=None, ge=0.0, description="Alias of speed_mean_5m from Go tracker")
-    avg_speed_10m: Optional[float] = Field(default=None, ge=0.0, description="Alias of speed_mean_10m from Go tracker")
-    stop_ratio_5m: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="Alias of stop_ratio_window from Go tracker")
-    distance_meters: Optional[float] = Field(default=None, ge=0.0, description="Alias of dist_to_target_m from Go matcher")
-    horizon_seconds: Optional[float] = Field(default=None, ge=0.0, description="Alias of horizon_sec from Go matcher")
+    avg_speed_5m: float | None = Field(default=None, ge=0.0, description="Alias of speed_mean_5m from Go tracker")
+    avg_speed_10m: float | None = Field(default=None, ge=0.0, description="Alias of speed_mean_10m from Go tracker")
+    stop_ratio_5m: float | None = Field(default=None, ge=0.0, le=1.0, description="Alias of stop_ratio_window from Go tracker")
+    distance_meters: float | None = Field(default=None, ge=0.0, description="Alias of dist_to_target_m from Go matcher")
+    horizon_seconds: float | None = Field(default=None, ge=0.0, description="Alias of horizon_sec from Go matcher")
 
     @model_validator(mode="before")
     @classmethod
@@ -266,7 +266,7 @@ class FeatureVector(BaseModel):
         return payload
 
     @model_validator(mode="after")
-    def _require_vehicle_identity(self) -> "FeatureVector":
+    def _require_vehicle_identity(self) -> FeatureVector:
         if not self.tr_id and not self.vehicle_id:
             raise ValueError("Either tr_id or vehicle_id must be provided")
         if self.tr_id and not self.vehicle_id:
@@ -310,7 +310,7 @@ class FeatureVector(BaseModel):
 class BatchFeatureRequest(BaseModel):
     """Batch prediction request for multiple vehicles / forecast points."""
 
-    vehicles: List[FeatureVector] = Field(
+    vehicles: list[FeatureVector] = Field(
         ...,
         min_length=1,
         description="List of feature vectors for simultaneous prediction",
