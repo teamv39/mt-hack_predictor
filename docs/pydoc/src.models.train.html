@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Python: module src.models.train</title>
+</head><body>
+
+<table class="heading">
+<tr class="heading-text decor">
+<td class="title">&nbsp;<br><strong class="title"><a href="src.html" class="white">src</a>.<a href="src.models.html" class="white">models</a>.train</strong></td>
+<td class="extra"><a href=".">index</a><br><a href="file:/Users/tamara/Documents/tpu/xakaton%20transport/mt-hack_predictor/ml/src/models/train.py">/Users/tamara/Documents/tpu/xakaton transport/mt-hack_predictor/ml/src/models/train.py</a></td></tr></table>
+    <p><span class="code">DEMO-ONLY:&nbsp;synthetic&nbsp;m3_scenario.json&nbsp;pipeline&nbsp;for&nbsp;legacy&nbsp;DSS&nbsp;bunching&nbsp;classifier<br>
+and&nbsp;fallback&nbsp;delay&nbsp;regressor.&nbsp;Production&nbsp;training&nbsp;on&nbsp;the&nbsp;official&nbsp;competition&nbsp;dataset<br>
+is&nbsp;src/models/train_competition.py.<br>
+&nbsp;<br>
+Trains&nbsp;on&nbsp;synthetic&nbsp;scenario&nbsp;frames,&nbsp;applies&nbsp;TimeSeriesSplit&nbsp;validation,&nbsp;and<br>
+exports&nbsp;legacy&nbsp;13-feature&nbsp;models&nbsp;(catboost_delay_regressor.cbm&nbsp;and<br>
+catboost_bunching_classifier.cbm)&nbsp;used&nbsp;by&nbsp;live&nbsp;DSS&nbsp;and&nbsp;fallback&nbsp;chains.</span></p>
+<p>
+<table class="section">
+<tr class="decor pkg-content-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Modules</strong></td></tr>
+    
+<tr><td class="decor pkg-content-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><table><tr><td class="multicolumn"><a href="json.html">json</a><br>
+</td><td class="multicolumn"><a href="numpy.html">numpy</a><br>
+</td><td class="multicolumn"><a href="pandas.html">pandas</a><br>
+</td><td class="multicolumn"></td></tr></table></td></tr></table><p>
+<table class="section">
+<tr class="decor functions-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Functions</strong></td></tr>
+    
+<tr><td class="decor functions-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><dl><dt><a name="-engineer_training_features"><strong>engineer_training_features</strong></a>(df: 'pd.DataFrame') -&gt; 'pd.DataFrame'</dt><dd><span class="code">Enriches&nbsp;DataFrame&nbsp;with&nbsp;cyclical&nbsp;and&nbsp;relative&nbsp;features.</span></dd></dl>
+ <dl><dt><a name="-generate_augmented_training_set"><strong>generate_augmented_training_set</strong></a>(base_df: 'pd.DataFrame', target_samples: 'int' = 2000) -&gt; 'pd.DataFrame'</dt><dd><span class="code">Synthesizes&nbsp;signed-delay&nbsp;training&nbsp;rows&nbsp;consistent&nbsp;with&nbsp;official&nbsp;stats.<br>
+&nbsp;<br>
+Real&nbsp;labels:&nbsp;median&nbsp;delay&nbsp;~25&nbsp;s,&nbsp;max&nbsp;~11&nbsp;min,&nbsp;early&nbsp;arrivals&nbsp;allowed.</span></dd></dl>
+ <dl><dt><a name="-load_dataset_from_scenario"><strong>load_dataset_from_scenario</strong></a>(scenario_path: 'Path') -&gt; 'pd.DataFrame'</dt><dd><span class="code">Parses&nbsp;demo&nbsp;scenario&nbsp;JSON&nbsp;into&nbsp;training&nbsp;rows&nbsp;and&nbsp;augments.</span></dd></dl>
+ <dl><dt><a name="-train_and_export_models"><strong>train_and_export_models</strong></a>(scenario_path: 'Path', output_dir: 'Path', iterations: 'int' = 200) -&gt; 'None'</dt><dd><span class="code">Runs&nbsp;TimeSeriesSplit&nbsp;validation&nbsp;and&nbsp;exports&nbsp;final&nbsp;.cbm&nbsp;weights.</span></dd></dl>
+</td></tr></table><p>
+<table class="section">
+<tr class="decor data-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Data</strong></td></tr>
+    
+<tr><td class="decor data-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><strong>LEGACY_FEATURE_NAMES</strong> = ['cur_dev_s', 'horizon_sec', 'speed_kmh', 'avg_speed_window_kmh', 'stop_ratio_window', 'cumulative_delay_prev_stops', 'hour_sin', 'hour_cos', 'day_of_week', 'is_weekend', 'current_headway_sec', 'weather_factor', 'delay_to_headway_ratio']<br>
+<strong>logger</strong> = &lt;Logger ml_trainer (INFO)&gt;</td></tr></table>
+</body></html>

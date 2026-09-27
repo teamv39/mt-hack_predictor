@@ -1,0 +1,1669 @@
+import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
+import * as maplibregl from "maplibre-gl";
+import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
+import {
+  Play,
+  Pause,
+  SkipBack,
+  ChevronRight,
+  ChevronLeft,
+  Plus,
+  Minus,
+  Crosshair,
+  Layers,
+  AlertTriangle,
+  CheckCircle2,
+  Radio,
+  Eye,
+  Route,
+  Navigation,
+  Bus,
+  MapPin,
+  Flame,
+  Activity,
+} from "lucide-react";
+import { Vehicle, AlertItem, RouteData } from "../mock/telemetry";
+import { normalizeRouteId } from "../hooks/useTelemetry";
+import * as turf from "@turf/turf";
+
+// Explicitly register MapLibre WebWorker URL for Vite
+if (typeof window !== "undefined") {
+  maplibregl.setWorkerUrl(maplibreWorkerUrl);
+}
+
+// Self-hosted autonomous vector tile server endpoints
+const TILESERVER_LIGHT = "/tiles/styles/transport/style.json";
+const TILESERVER_DARK = "/tiles/styles/transport-dark/style.json";
+
+// CartoDB Positron (Light) & Dark Matter (Dark) resilient fallbacks
+const CARTO_LIGHT_STYLE: maplibregl.StyleSpecification = {
+  version: 8,
+  sources: {
+    "carto-raster": {
+      type: "raster",
+      tiles: [
+        "https://a.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}@2x.png",
+        "https://b.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}@2x.png",
+        "https://c.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}@2x.png",
+        "https://d.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}@2x.png",
+      ],
+      tileSize: 256,
+      attribution: "© OpenStreetMap contributors, © CARTO",
+    },
+  },
+  layers: [
+    {
+      id: "carto-raster-layer",
+      type: "raster",
+      source: "carto-raster",
+      minzoom: 0,
+      maxzoom: 20,
+    },
+  ],
+};
+
+const CARTO_DARK_STYLE: maplibregl.StyleSpecification = {
+  version: 8,
+  sources: {
+    "carto-raster": {
+      type: "raster",
+      tiles: [
+        "https://a.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}@2x.png",
+        "https://b.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}@2x.png",
+        "https://c.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}@2x.png",
+        "https://d.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}@2x.png",
+      ],
+      tileSize: 256,
+      attribution: "© OpenStreetMap contributors, © CARTO",
+    },
+  },
+  layers: [
+    {
+      id: "carto-raster-layer",
+      type: "raster",
+      source: "carto-raster",
+      minzoom: 0,
+      maxzoom: 20,
+    },
+  ],
+};
+
+const HORIZONS = ["Сейчас", "+15 мин", "+30 мин", "+45 мин"];
+
+interface MapViewProps {
+  routes: RouteData[];
+  vehicles: Vehicle[];
+  alert?: AlertItem | null;
+  selectedVehicleId?: string;
+  onSelectVehicle: (id: string) => void;
+  flyToTarget?: { lat: number; lon: number; zoom?: number } | null;
+  timeStep: string;
+  onTimeStepChange: (step: string) => void;
+  camera?: any;
+  isDarkMode: boolean;
+}
+
+export const MapView: React.FC<MapViewProps> = ({
+  routes,
+  vehicles,
+  alert,
+  selectedVehicleId,
+  onSelectVehicle,
+  flyToTarget,
+  timeStep,
+  onTimeStepChange,
+  isDarkMode,
+}) => {
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapInstanceRef = useRef<maplibregl.Map | null>(null);
+  const isFirstRenderRef = useRef(true);
+  const onSelectVehicleRef = useRef(onSelectVehicle);
+  useEffect(() => {
+    onSelectVehicleRef.current = onSelectVehicle;
+  }, [onSelectVehicle]);
+
+  const vehicleMarkersRef = useRef<{ [id: string]: maplibregl.Marker }>({});
+  const stopMarkersRef = useRef<maplibregl.Marker[]>([]);
+  const headwayMarkerRef = useRef<maplibregl.Marker | null>(null);
+  const isTileServerAvailableRef = useRef<boolean>(true);
+
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [isTileServerAvailable, setIsTileServerAvailable] = useState<boolean>(true);
+  const [visibleRouteIds, setVisibleRouteIds] = useState<string[]>(() =>
+    routes.map((r) => normalizeRouteId(r.routeId))
+  );
+
+  // Layer visibility toggles
+  const [layers, setLayers] = useState({
+    vehicles: true,
+    stops: true,
+    congestion: true,
+    headway: true,
+    routes: true,
+  });
+  const [isLayerMenuOpen, setIsLayerMenuOpen] = useState(false);
+
+  const primaryRoute = useMemo(
+    () => routes.find((r) => normalizeRouteId(r.routeId) === "м3") || routes[0],
+    [routes]
+  );
+
+  const isHoldingApplied = alert?.recommendation?.applied ?? false;
+
+  // 1. Vehicle positions — interpolate along route geometry when advancing timeline
+  const displayedVehicles = useMemo(() => {
+    if (timeStep === "Сейчас") return vehicles;
+
+    const horizonFrac: Record<
+      string,
+      { frac1042: number; frac1043: number; holdingFrac1043: number; stepOffset: number }
+    > = {
+      "+15 мин": { frac1042: 0.72, frac1043: 0.38, holdingFrac1043: 0.22, stepOffset: 0.15 },
+      "+30 мин": { frac1042: 0.92, frac1043: 0.62, holdingFrac1043: 0.45, stepOffset: 0.3 },
+      "+45 мин": { frac1042: 1.0, frac1043: 0.82, holdingFrac1043: 0.68, stepOffset: 0.45 },
+    };
+    const h = horizonFrac[timeStep];
+    if (!h) return vehicles;
+
+    // Helper to interpolate along any route's geometry
+    const interpolateAlongRoute = (
+      routeGeom: [number, number][],
+      targetFrac: number
+    ): [number, number] => {
+      if (routeGeom.length < 2) return [37.684, 55.772];
+      const routeLine: GeoJSON.Feature<GeoJSON.LineString> = {
+        type: "Feature",
+        properties: {},
+        geometry: { type: "LineString", coordinates: routeGeom },
+      };
+      const totalLen = turf.length(routeLine, { units: "kilometers" });
+      const clampedFrac = Math.max(0.01, Math.min(0.99, targetFrac));
+      return turf.along(routeLine, clampedFrac * totalLen, { units: "kilometers" })
+        .geometry.coordinates as [number, number];
+    };
+
+    return vehicles.map((veh) => {
+      const is1042 = veh.id.includes("1042");
+      const is1043 = veh.id.includes("1043");
+
+      if (is1042 && primaryRoute) {
+        const [lon, lat] = interpolateAlongRoute(primaryRoute.routeGeometry, h.frac1042);
+        const speedKmh = timeStep === "+15 мин" ? 16 : timeStep === "+30 мин" ? 28 : 22;
+        return {
+          ...veh,
+          latitude: lat,
+          longitude: lon,
+          speedKmh,
+          currentStop: "Бакунинская ул., 84",
+          nextStop: "м. Семёновская",
+        };
+      }
+
+      if (is1043 && primaryRoute) {
+        const frac = isHoldingApplied ? h.holdingFrac1043 : h.frac1043;
+        const [lon, lat] = interpolateAlongRoute(primaryRoute.routeGeometry, frac);
+        const speedKmh = isHoldingApplied
+          ? timeStep === "+15 мин"
+            ? 26
+            : timeStep === "+30 мин"
+            ? 29
+            : 25
+          : timeStep === "+15 мин"
+          ? 12
+          : timeStep === "+30 мин"
+          ? 14
+          : 25;
+        const status: Vehicle["status"] = isHoldingApplied ? "NORMAL" : "BUNCHING_RISK";
+        return {
+          ...veh,
+          latitude: lat,
+          longitude: lon,
+          speedKmh,
+          status,
+          currentStop: isHoldingApplied ? "м. Бауманская (Holding)" : "Бакунинская ул.",
+          nextStop: "м. Электрозаводская",
+        };
+      }
+
+      // Smooth progression for vehicles on other routes
+      const vRoute = routes.find((r) => normalizeRouteId(r.routeId) === normalizeRouteId(veh.routeId));
+      if (vRoute && vRoute.routeGeometry.length >= 2) {
+        const hash = Array.from(veh.id).reduce((acc, c) => acc + c.charCodeAt(0), 0);
+        const baseFrac = ((hash % 7) + 1) / 10;
+        const shiftedFrac = (baseFrac + h.stepOffset) % 0.95;
+        const [lon, lat] = interpolateAlongRoute(vRoute.routeGeometry, shiftedFrac);
+        return { ...veh, latitude: lat, longitude: lon };
+      }
+
+      return veh;
+    });
+  }, [vehicles, timeStep, isHoldingApplied, primaryRoute, routes]);
+
+  // 2. Timeline auto-play timer
+  useEffect(() => {
+    if (!isPlaying) return;
+    const interval = setInterval(() => {
+      const idx = HORIZONS.indexOf(timeStep);
+      const nextIdx = (idx + 1) % HORIZONS.length;
+      onTimeStepChange(HORIZONS[nextIdx]);
+    }, 3500);
+    return () => clearInterval(interval);
+  }, [isPlaying, timeStep, onTimeStepChange]);
+
+  // Function to initialize situational vector overlay layers on MapLibre
+  const setupSituationalLayers = useCallback(
+    (map: maplibregl.Map) => {
+      // A. Route polylines for all routes
+      routes.forEach((r) => {
+        const normId = normalizeRouteId(r.routeId);
+        const srcId = `route-${normId}`;
+        if (!map.getSource(srcId) && r.routeGeometry.length >= 2) {
+          map.addSource(srcId, {
+            type: "geojson",
+            data: {
+              type: "Feature",
+              properties: { name: r.name, routeId: normId },
+              geometry: { type: "LineString", coordinates: r.routeGeometry },
+            },
+          });
+          map.addLayer({
+            id: `${srcId}-casing`,
+            type: "line",
+            source: srcId,
+            layout: { "line-cap": "round", "line-join": "round" },
+            paint: {
+              "line-color": isDarkMode ? "#09090b" : "#ffffff",
+              "line-width": 6,
+              "line-opacity": 0.65,
+            },
+          });
+          map.addLayer({
+            id: `${srcId}-line`,
+            type: "line",
+            source: srcId,
+            layout: { "line-cap": "round", "line-join": "round" },
+            paint: {
+              "line-color": r.color,
+              "line-width": 3.5,
+              "line-opacity": 0.95,
+            },
+          });
+        }
+      });
+
+      // B. Congestion zones — primary (м3 Бауманская) and secondary (м7 Николоямская)
+      if (!map.getSource("congestion-zones")) {
+        const primaryR = routes.find((r) => normalizeRouteId(r.routeId) === "м3");
+        const segM3 = primaryR?.congestionSegment || [
+          [37.6791, 55.7724],
+          [37.697, 55.7785],
+          [37.7082, 55.7818],
+        ];
+
+        const buf = 0.004;
+        const amberCoordsM3 = [
+          [segM3[0][0] - buf, segM3[0][1] - buf * 0.6],
+          [segM3[0][0] - buf * 0.5, segM3[0][1] + buf * 0.8],
+          [segM3[segM3.length - 1][0] + buf, segM3[segM3.length - 1][1] + buf * 0.6],
+          [segM3[segM3.length - 1][0] + buf * 0.5, segM3[segM3.length - 1][1] - buf * 0.8],
+          [segM3[0][0] - buf, segM3[0][1] - buf * 0.6],
+        ];
+        const redCoordsM3 = [
+          [segM3[0][0] - buf * 0.4, segM3[0][1] - buf * 0.3],
+          [segM3[0][0] - buf * 0.2, segM3[0][1] + buf * 0.5],
+          [segM3[segM3.length - 1][0] + buf * 0.4, segM3[segM3.length - 1][1] + buf * 0.3],
+          [segM3[segM3.length - 1][0] + buf * 0.2, segM3[segM3.length - 1][1] - buf * 0.5],
+          [segM3[0][0] - buf * 0.4, segM3[0][1] - buf * 0.3],
+        ];
+
+        // M7 Congestion Zone (Николоямская)
+        const amberCoordsM7 = [
+          [37.653, 55.753],
+          [37.655, 55.756],
+          [37.671, 55.748],
+          [37.669, 55.745],
+          [37.653, 55.753],
+        ];
+
+        map.addSource("congestion-zones", {
+          type: "geojson",
+          data: {
+            type: "FeatureCollection",
+            features: [
+              {
+                type: "Feature",
+                properties: { level: "amber", title: "Затор Бауманская — Электрозаводская" },
+                geometry: { type: "Polygon", coordinates: [amberCoordsM3] },
+              },
+              {
+                type: "Feature",
+                properties: { level: "red", title: "Критический затор Бауманская" },
+                geometry: { type: "Polygon", coordinates: [redCoordsM3] },
+              },
+              {
+                type: "Feature",
+                properties: { level: "amber", title: "Затор Николоямская — Таганская" },
+                geometry: { type: "Polygon", coordinates: [amberCoordsM7] },
+              },
+            ],
+          },
+        });
+
+        map.addLayer({
+          id: "congestion-amber-fill",
+          type: "fill",
+          source: "congestion-zones",
+          filter: ["==", "level", "amber"],
+          paint: {
+            "fill-color": "#fbbf24",
+            "fill-opacity": isDarkMode ? 0.24 : 0.18,
+          },
+        });
+        map.addLayer({
+          id: "congestion-amber-line",
+          type: "line",
+          source: "congestion-zones",
+          filter: ["==", "level", "amber"],
+          paint: {
+            "line-color": "#d97706",
+            "line-width": 1.5,
+            "line-dasharray": [4, 4],
+          },
+        });
+        map.addLayer({
+          id: "congestion-red-fill",
+          type: "fill",
+          source: "congestion-zones",
+          filter: ["==", "level", "red"],
+          paint: {
+            "fill-color": "#ef4444",
+            "fill-opacity": isDarkMode ? 0.32 : 0.22,
+          },
+        });
+        map.addLayer({
+          id: "congestion-red-line",
+          type: "line",
+          source: "congestion-zones",
+          filter: ["==", "level", "red"],
+          paint: {
+            "line-color": "#dc2626",
+            "line-width": 1.8,
+            "line-dasharray": [3, 3],
+          },
+        });
+      }
+
+      // C. Headway connector line source
+      if (!map.getSource("headway-connector")) {
+        map.addSource("headway-connector", {
+          type: "geojson",
+          data: { type: "FeatureCollection", features: [] },
+        });
+        map.addLayer({
+          id: "headway-connector-line",
+          type: "line",
+          source: "headway-connector",
+          paint: {
+            "line-color": ["get", "color"],
+            "line-width": 3.5,
+            "line-dasharray": [4, 4],
+            "line-opacity": 0.95,
+          },
+        });
+      }
+    },
+    [isDarkMode, routes]
+  );
+
+  const getStyleForTheme = useCallback(
+    (dark: boolean, useLocalTiles: boolean): string | maplibregl.StyleSpecification => {
+      if (useLocalTiles) {
+        return dark ? TILESERVER_DARK : TILESERVER_LIGHT;
+      }
+      return dark ? CARTO_DARK_STYLE : CARTO_LIGHT_STYLE;
+    },
+    []
+  );
+
+  // 3. Initialize MapLibre GL Map with auto-probe and fallback
+  useEffect(() => {
+    if (!mapContainerRef.current || mapInstanceRef.current) return;
+
+    let isDestroyed = false;
+    let fallbackTriggered = false;
+
+    const initMapWithCheck = async () => {
+      let localOk = false;
+      try {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 2000);
+        const res = await fetch(TILESERVER_LIGHT, { signal: ctrl.signal });
+        clearTimeout(tid);
+        if (res.ok) {
+          const contentType = res.headers.get("content-type") || "";
+          if (contentType.includes("json")) {
+            localOk = true;
+          }
+        }
+      } catch {
+        localOk = false;
+      }
+
+      if (isDestroyed || !mapContainerRef.current) return;
+
+      isTileServerAvailableRef.current = localOk;
+      setIsTileServerAvailable(localOk);
+
+      const initialCenter: [number, number] = [37.684, 55.772];
+      const initialZoom = 13;
+      const targetStyle = getStyleForTheme(isDarkMode, localOk);
+
+      const map = new maplibregl.Map({
+        container: mapContainerRef.current,
+        style: targetStyle,
+        center: initialCenter,
+        zoom: initialZoom,
+        minZoom: 10,
+        maxZoom: 18,
+        maxBounds: [
+          [36.8, 55.1],
+          [38.2, 56.1],
+        ],
+        attributionControl: false,
+        renderWorldCopies: false,
+        transformRequest: (url: string) => {
+          if (!isTileServerAvailableRef.current) {
+            return { url };
+          }
+          try {
+            const parsed = new URL(url, window.location.origin);
+            const pathname = parsed.pathname;
+
+            // 1. If URL already points to /tiles/... (relative or absolute on any port/host)
+            if (pathname.startsWith("/tiles/")) {
+              return { url: `${pathname}${parsed.search}` };
+            }
+
+            // 2. If URL points to TileServer sub-resources (/data/..., /fonts/..., /styles/..., /sprites/...)
+            if (/^\/(?:data|fonts|styles|sprites)\//.test(pathname)) {
+              return { url: `/tiles${pathname}${parsed.search}` };
+            }
+          } catch {
+            if (url.startsWith("/tiles/")) return { url };
+            if (/^\/(?:data|fonts|styles|sprites)\//.test(url)) return { url: `/tiles${url}` };
+          }
+          return { url };
+        },
+      });
+
+      let consecutiveFatalErrors = 0;
+
+      // Runtime error watchdog: only trigger fallback on true server outage, NOT on normal 404s for missing boundary tiles
+      map.on("error", (e) => {
+        const errEvt = e as { status?: number; error?: { message?: string; status?: number } };
+        const errMsg = errEvt?.error?.message || "";
+        const status = errEvt?.status || errEvt?.error?.status;
+
+        // Normal 404s for boundary/out-of-range tiles or missing fonts should NOT trigger fallback
+        if (status === 404) {
+          return;
+        }
+
+        console.warn("[MapLibre] Resource error:", errMsg, "Status:", status);
+
+        const isFatalOutage =
+          status === 503 ||
+          errMsg.includes("tileserver_offline") ||
+          errMsg.includes("ECONNREFUSED") ||
+          errMsg.includes("Failed to fetch");
+
+        if (isFatalOutage) {
+          consecutiveFatalErrors++;
+        }
+
+        if (
+          !fallbackTriggered &&
+          isTileServerAvailableRef.current &&
+          (consecutiveFatalErrors >= 5 || (errMsg.includes("style") && isFatalOutage))
+        ) {
+          fallbackTriggered = true;
+          isTileServerAvailableRef.current = false;
+          setIsTileServerAvailable(false);
+          console.warn("[MapLibre] Local TileServer unavailable, activating CartoDB fallback...");
+          map.setStyle(getStyleForTheme(isDarkMode, false));
+        }
+      });
+
+      map.on("load", () => {
+        setupSituationalLayers(map);
+        map.resize();
+      });
+
+      map.on("style.load", () => {
+        setupSituationalLayers(map);
+      });
+
+      mapInstanceRef.current = map;
+      setTimeout(() => map.resize(), 200);
+    };
+
+    const handleResize = () => mapInstanceRef.current?.resize();
+    window.addEventListener("resize", handleResize);
+
+    initMapWithCheck();
+
+    return () => {
+      isDestroyed = true;
+      window.removeEventListener("resize", handleResize);
+      Object.values(vehicleMarkersRef.current).forEach((m) => m.remove());
+      vehicleMarkersRef.current = {};
+      stopMarkersRef.current.forEach((m) => m.remove());
+      stopMarkersRef.current = [];
+      if (headwayMarkerRef.current) {
+        headwayMarkerRef.current.remove();
+        headwayMarkerRef.current = null;
+      }
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Update style on isDarkMode toggle (skip first mount)
+  useEffect(() => {
+    if (isFirstRenderRef.current) {
+      isFirstRenderRef.current = false;
+      return;
+    }
+
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    const targetStyle = getStyleForTheme(isDarkMode, isTileServerAvailableRef.current);
+    map.setStyle(targetStyle);
+
+    map.once("style.load", () => {
+      setupSituationalLayers(map);
+    });
+  }, [isDarkMode, getStyleForTheme, setupSituationalLayers]);
+
+  // 4. Render Stop Points Markers with clear hierarchy (Key/Metro vs Intermediate Stops)
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    stopMarkersRef.current.forEach((m) => m.remove());
+    stopMarkersRef.current = [];
+
+    if (!layers.stops) return;
+
+    routes.forEach((r) => {
+      const normRoute = normalizeRouteId(r.routeId);
+      if (!visibleRouteIds.includes(normRoute)) return;
+
+      r.stops.forEach((stop) => {
+        const isHoldingStop = stop.name.includes("Бауманская") && normRoute === "м3";
+        const isMetroStop =
+          stop.name.startsWith("м.") ||
+          stop.name.includes("вокзал") ||
+          stop.name.includes("Сокольники") ||
+          stop.name.includes("Лубянка");
+
+        const el = document.createElement("div");
+        el.className = `stop-marker-${stop.id}`;
+
+        if (isHoldingStop) {
+          // Special Prominent Holding Zone Marker for Dispatcher
+          el.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; cursor: pointer; pointer-events: auto;">
+              <div style="
+                display: flex; align-items: center; gap: 5px;
+                background: ${isHoldingApplied ? "#064e3b" : "#7f1d1d"};
+                color: #ffffff;
+                font-size: 11px;
+                font-weight: 800;
+                padding: 3px 8px;
+                border-radius: 8px;
+                border: 2px solid ${isHoldingApplied ? "#10b981" : "#ef4444"};
+                box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+                white-space: nowrap;
+                animation: pulse-ring 2.5s infinite;
+              ">
+                <span>${isHoldingApplied ? "✅ Holding активен" : "🛑 Зона Holding"}</span>
+                <span style="opacity: 0.85;">· м. Бауманская</span>
+              </div>
+              <div style="
+                width: 12px; height: 12px; border-radius: 50%;
+                background: ${isHoldingApplied ? "#10b981" : "#ef4444"};
+                border: 2.5px solid #ffffff; margin-top: 2px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+              "></div>
+            </div>
+          `;
+        } else if (isMetroStop) {
+          // Metro / Major Station: neat badge with authentic Metro 'M' icon
+          const cleanStationName = stop.name.replace(/^м\.\s*/, "");
+          el.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; cursor: pointer; pointer-events: auto;">
+              <div style="
+                display: flex; align-items: center; gap: 4px;
+                background: ${isDarkMode ? "rgba(24, 24, 27, 0.94)" : "rgba(255, 255, 255, 0.96)"};
+                color: ${isDarkMode ? "#f4f4f5" : "#18181b"};
+                border: 1px solid ${isDarkMode ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"};
+                font-size: 10px;
+                font-weight: 700;
+                padding: 2px 6px;
+                border-radius: 6px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+                white-space: nowrap;
+              ">
+                <span style="display: inline-flex; align-items: center; justify-content: center; width: 13px; height: 13px; border-radius: 3px; background: #ef4444; color: #fff; font-size: 9px; font-weight: 900;">М</span>
+                <span>${cleanStationName}</span>
+              </div>
+              <div style="
+                width: 8px; height: 8px; border-radius: 50%;
+                background: ${stop.color};
+                border: 1.5px solid ${isDarkMode ? "#18181b" : "#ffffff"};
+                margin-top: 2px;
+              "></div>
+            </div>
+          `;
+        } else {
+          // Intermediate Regular Stop: compact circular dot that reveals name on hover
+          el.innerHTML = `
+            <div class="stop-dot-wrapper" style="position: relative; display: flex; align-items: center; justify-content: center; cursor: pointer; pointer-events: auto; padding: 4px;">
+              <div style="
+                width: 9px;
+                height: 9px;
+                border-radius: 50%;
+                background: ${stop.color};
+                border: 2px solid ${isDarkMode ? "#18181b" : "#ffffff"};
+                box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+                transition: transform 0.15s ease;
+              "></div>
+              <div class="stop-dot-label" style="
+                position: absolute;
+                bottom: calc(100% + 4px);
+                left: 50%;
+                transform: translateX(-50%);
+                display: none;
+                background: ${isDarkMode ? "#18181b" : "#ffffff"};
+                color: ${isDarkMode ? "#f4f4f5" : "#18181b"};
+                border: 1px solid ${isDarkMode ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"};
+                padding: 2px 7px;
+                border-radius: 5px;
+                font-size: 10px;
+                font-weight: 700;
+                white-space: nowrap;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                z-index: 50;
+              ">
+                ${stop.name}
+              </div>
+            </div>
+          `;
+          el.onmouseenter = () => {
+            const lbl = el.querySelector(".stop-dot-label") as HTMLElement;
+            if (lbl) lbl.style.display = "block";
+          };
+          el.onmouseleave = () => {
+            const lbl = el.querySelector(".stop-dot-label") as HTMLElement;
+            if (lbl) lbl.style.display = "none";
+          };
+        }
+
+        const marker = new maplibregl.Marker({ element: el, anchor: "bottom" })
+          .setLngLat([stop.lon, stop.lat])
+          .addTo(map);
+
+        stopMarkersRef.current.push(marker);
+      });
+    });
+  }, [isDarkMode, routes, visibleRouteIds, isHoldingApplied, layers.stops]);
+
+  // 5. Draw and Update Vehicle Markers and Headway Connector dynamically
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    if (!layers.vehicles) {
+      Object.values(vehicleMarkersRef.current).forEach((m) => m.remove());
+      vehicleMarkersRef.current = {};
+      return;
+    }
+
+    const activeIds = new Set(displayedVehicles.map((v) => v.id));
+
+    // Remove obsolete markers
+    Object.keys(vehicleMarkersRef.current).forEach((id) => {
+      if (!activeIds.has(id)) {
+        vehicleMarkersRef.current[id].remove();
+        delete vehicleMarkersRef.current[id];
+      }
+    });
+
+    displayedVehicles.forEach((veh) => {
+      const normRoute = normalizeRouteId(veh.routeId);
+
+      // Skip vehicles on hidden routes
+      if (!visibleRouteIds.includes(normRoute)) {
+        if (vehicleMarkersRef.current[veh.id]) {
+          vehicleMarkersRef.current[veh.id].remove();
+          delete vehicleMarkersRef.current[veh.id];
+        }
+        return;
+      }
+
+      const routeObj = routes.find((r) => normalizeRouteId(r.routeId) === normRoute);
+      const routeColor = routeObj?.color || "#3b82f6";
+      const isSelected = veh.id === selectedVehicleId;
+      const isBunching = veh.status === "BUNCHING_RISK";
+      const isDelayed = veh.status === "DELAYED";
+      const cleanId = veh.id.replace(/^P/, "");
+
+      let marker = vehicleMarkersRef.current[veh.id];
+
+      if (!marker) {
+        const el = document.createElement("div");
+        el.className = `bus-marker-${veh.id}`;
+        el.style.cursor = "pointer";
+        el.onclick = () => onSelectVehicleRef.current(veh.id);
+
+        marker = new maplibregl.Marker({
+          element: el,
+          anchor: "center",
+        })
+          .setLngLat([veh.longitude, veh.latitude])
+          .addTo(map);
+
+        vehicleMarkersRef.current[veh.id] = marker;
+      } else {
+        marker.setLngLat([veh.longitude, veh.latitude]);
+      }
+
+      // Update inner HTML of vehicle marker
+      const el = marker.getElement();
+      el.innerHTML = `
+        <div class="relative flex flex-col items-center cursor-pointer group" style="transform: translateZ(0);">
+          <!-- Selected or Bunching Pulse Halo -->
+          ${
+            isBunching || isSelected
+              ? `
+            <div style="
+              position: absolute;
+              top: 50%; left: 50%;
+              transform: translate(-50%, -50%);
+              width: ${isSelected ? "66px" : "54px"};
+              height: ${isSelected ? "66px" : "54px"};
+              border-radius: 50%;
+              background: ${isBunching ? "rgba(239, 68, 68, 0.35)" : "rgba(56, 189, 248, 0.35)"};
+              animation: pulse-ring 2s infinite;
+              pointer-events: none;
+            "></div>
+          `
+              : ""
+          }
+
+          <!-- Upper Pill Badge: Route Badge + Number + Speed / Status -->
+          <div style="
+            position: relative;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: ${isDarkMode ? "rgba(24, 24, 27, 0.95)" : "rgba(255, 255, 255, 0.95)"};
+            color: ${isDarkMode ? "#ffffff" : "#0f172a"};
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 7px 3px 4px;
+            border-radius: 8px;
+            border: ${
+              isSelected
+                ? "2px solid #38bdf8"
+                : isBunching
+                ? "2px solid #ef4444"
+                : isDelayed
+                ? "1.5px solid #f59e0b"
+                : isDarkMode
+                ? "1px solid rgba(255,255,255,0.22)"
+                : "1px solid rgba(0,0,0,0.18)"
+            };
+            box-shadow: 0 4px 14px rgba(0,0,0,${isDarkMode ? "0.55" : "0.22"});
+            white-space: nowrap;
+            transition: transform 0.15s ease;
+          ">
+            <!-- Route Pill inside Badge -->
+            <span style="
+              background: ${routeColor};
+              color: #ffffff;
+              font-size: 10px;
+              font-weight: 900;
+              padding: 1px 5px;
+              border-radius: 5px;
+              letter-spacing: -0.2px;
+            ">${normRoute}</span>
+
+            <!-- Vehicle ID -->
+            <span style="font-weight: 800; font-size: 11px; letter-spacing: -0.2px;">№${cleanId}</span>
+
+            <!-- Status / Speed Indicator -->
+            ${
+              isBunching
+                ? `
+              <span style="display: flex; align-items: center; gap: 3px; background: rgba(239, 68, 68, 0.2); color: #ef4444; padding: 1px 5px; border-radius: 4px; font-size: 10px; font-weight: 800;">
+                ⚠️ Риск
+              </span>
+            `
+                : isDelayed
+                ? `
+              <span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 1px 5px; border-radius: 4px; font-size: 10px; font-weight: 800;">
+                +${Math.round(veh.delaySeconds / 60)}м
+              </span>
+            `
+                : `
+              <span style="color: ${isDarkMode ? "#a1a1aa" : "#64748b"}; font-size: 10px; font-weight: 600;">
+                ${veh.speedKmh} км/ч
+              </span>
+            `
+            }
+          </div>
+
+          <!-- Direction Pin & Vehicle Circle -->
+          <div style="
+            position: relative;
+            margin-top: 2px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: ${isBunching ? "#dc2626" : isDelayed ? "#d97706" : routeColor};
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+          ">
+            <!-- Arrow pointing in heading direction -->
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="transform: rotate(${
+              veh.heading || 0
+            }deg); transform-origin: center;">
+              <path d="M12 2L4 20l8-4 8 4L12 2z" />
+            </svg>
+          </div>
+
+          <!-- Hover Tooltip Card -->
+          <div class="veh-tooltip" style="
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            background: ${isDarkMode ? "#18181b" : "#ffffff"};
+            color: ${isDarkMode ? "#f4f4f5" : "#18181b"};
+            border: 1px solid ${isDarkMode ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"};
+            border-radius: 8px;
+            padding: 6px 10px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+            font-size: 11px;
+            white-space: nowrap;
+            z-index: 100;
+            pointer-events: none;
+          ">
+            <div style="font-weight: 800; margin-bottom: 2px;">${veh.model} · ${veh.plateNumber}</div>
+            <div style="color: ${isDarkMode ? "#a1a1aa" : "#64748b"}; font-size: 10px;">След: ${veh.nextStop}</div>
+            <div style="color: ${
+              isBunching ? "#ef4444" : isDelayed ? "#f59e0b" : "#10b981"
+            }; font-weight: 700; margin-top: 2px;">
+              ${
+                isBunching
+                  ? "⚠️ Прогноз схлопывания через 4 ост."
+                  : isDelayed
+                  ? `⏱ Отставание ${Math.round(veh.delaySeconds / 60)} мин`
+                  : "✅ Движение строго по графику"
+              }
+            </div>
+          </div>
+        </div>
+      `;
+
+      el.onmouseenter = () => {
+        const tip = el.querySelector(".veh-tooltip") as HTMLElement;
+        if (tip) tip.style.display = "block";
+      };
+      el.onmouseleave = () => {
+        const tip = el.querySelector(".veh-tooltip") as HTMLElement;
+        if (tip) tip.style.display = "none";
+      };
+    });
+
+    // 6. Headway Connector between trailing bus and leading bus
+    const trailingVeh = displayedVehicles.find((v) => v.id.includes("1043"));
+    const leadingVeh = displayedVehicles.find((v) => v.id.includes("1042"));
+    const headwaySource = map.getSource("headway-connector") as maplibregl.GeoJSONSource | undefined;
+
+    const isHeadwayVisible =
+      layers.headway &&
+      visibleRouteIds.includes("м3") &&
+      trailingVeh &&
+      leadingVeh;
+
+    if (isHeadwayVisible && trailingVeh && leadingVeh) {
+      const isCritical =
+        timeStep === "+15 мин"
+          ? !isHoldingApplied
+          : !isHoldingApplied && (trailingVeh.status === "BUNCHING_RISK" || leadingVeh.status === "BUNCHING_RISK");
+      const connectorColor = isCritical ? "#ef4444" : "#10b981";
+
+      if (headwaySource) {
+        headwaySource.setData({
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              properties: { color: connectorColor },
+              geometry: {
+                type: "LineString",
+                coordinates: [
+                  [trailingVeh.longitude, trailingVeh.latitude],
+                  [leadingVeh.longitude, leadingVeh.latitude],
+                ],
+              },
+            },
+          ],
+        });
+      }
+
+      // Midpoint interval tag
+      const midLat = (trailingVeh.latitude + leadingVeh.latitude) / 2;
+      const midLon = (trailingVeh.longitude + leadingVeh.longitude) / 2;
+
+      let intervalText = isHoldingApplied
+        ? "Δ 3.5 мин • Выравнивание (Holding активен)"
+        : "Δ 1.4 мин • Схлопывание (Пачкование)";
+      if (timeStep === "+15 мин") {
+        intervalText = isHoldingApplied
+          ? "Δ 7.5 мин • Такт стабилизирован (Holding)"
+          : "Δ 1.2 мин • Схлопывание (Пачкование)";
+      } else if (timeStep === "+30 мин") {
+        intervalText = isHoldingApplied ? "Δ 8.0 мин • Штатный такт" : "Δ 1.5 мин • Пачкование";
+      } else if (timeStep === "+45 мин") {
+        intervalText = isHoldingApplied ? "Δ 8.5 мин • График в норме" : "Δ 1.8 мин • Нарушение такта";
+      }
+
+      if (!headwayMarkerRef.current) {
+        const badgeEl = document.createElement("div");
+        badgeEl.className = "headway-badge";
+        headwayMarkerRef.current = new maplibregl.Marker({
+          element: badgeEl,
+          anchor: "center",
+        })
+          .setLngLat([midLon, midLat])
+          .addTo(map);
+      } else {
+        headwayMarkerRef.current.setLngLat([midLon, midLat]);
+      }
+
+      const el = headwayMarkerRef.current.getElement();
+      el.title = "Нажмите для фокусировки и управления инцидентом в Инспекторе";
+      el.onclick = () => {
+        if (trailingVeh) {
+          onSelectVehicleRef.current(trailingVeh.id);
+        }
+      };
+      el.innerHTML = `
+        <div style="
+          background: ${isCritical ? "#dc2626" : "#059669"};
+          color: #ffffff;
+          font-size: 10px;
+          font-weight: 800;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          padding: 3px 9px;
+          border-radius: 9999px;
+          border: 1.5px solid #ffffff;
+          box-shadow: 0 2px 12px ${isCritical ? "rgba(220, 38, 38, 0.55)" : "rgba(5, 150, 105, 0.45)"};
+          white-space: nowrap;
+          cursor: pointer;
+          transition: transform 0.15s ease;
+        " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+          ${intervalText}
+        </div>
+      `;
+    } else {
+      if (headwaySource) {
+        headwaySource.setData({
+          type: "FeatureCollection",
+          features: [],
+        });
+      }
+      if (headwayMarkerRef.current) {
+        headwayMarkerRef.current.remove();
+        headwayMarkerRef.current = null;
+      }
+    }
+  }, [
+    displayedVehicles,
+    selectedVehicleId,
+    isDarkMode,
+    timeStep,
+    isHoldingApplied,
+    visibleRouteIds,
+    layers.vehicles,
+    layers.headway,
+    routes,
+  ]);
+
+  // FlyTo handler
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (map && flyToTarget) {
+      map.flyTo({
+        center: [flyToTarget.lon, flyToTarget.lat],
+        zoom: flyToTarget.zoom || 14,
+        duration: 1200,
+      });
+    }
+  }, [flyToTarget]);
+
+  // Track click handler for smooth seeking
+  const handleTrackClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const ratio = Math.max(0, Math.min(1, clickX / rect.width));
+    const stepIdx = Math.round(ratio * (HORIZONS.length - 1));
+    onTimeStepChange(HORIZONS[stepIdx]);
+  };
+
+  const handleNextStep = () => {
+    const idx = HORIZONS.indexOf(timeStep);
+    const nextIdx = Math.min(HORIZONS.length - 1, idx + 1);
+    onTimeStepChange(HORIZONS[nextIdx]);
+  };
+
+  const handlePrevStep = () => {
+    const idx = HORIZONS.indexOf(timeStep);
+    const prevIdx = Math.max(0, idx - 1);
+    onTimeStepChange(HORIZONS[prevIdx]);
+  };
+
+  // Route layer & Congestion visibility toggle
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    routes.forEach((r) => {
+      const normId = normalizeRouteId(r.routeId);
+      const srcId = `route-${normId}`;
+      const isVis = layers.routes && visibleRouteIds.includes(normId);
+      const vis = isVis ? "visible" : "none";
+      [`${srcId}-casing`, `${srcId}-line`].forEach((layerId) => {
+        try {
+          if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", vis);
+        } catch {
+          /* */
+        }
+      });
+    });
+
+    const congVis = layers.congestion ? "visible" : "none";
+    [
+      "congestion-amber-fill",
+      "congestion-amber-line",
+      "congestion-red-fill",
+      "congestion-red-line",
+    ].forEach((layerId) => {
+      try {
+        if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", congVis);
+      } catch {
+        /* */
+      }
+    });
+  }, [visibleRouteIds, routes, layers.routes, layers.congestion]);
+
+  // Quick camera presets
+  const handleFocusRoute = (routeId: string) => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    const r = routes.find((x) => normalizeRouteId(x.routeId) === routeId);
+    if (r && r.routeGeometry.length > 0) {
+      const bounds = r.routeGeometry.reduce(
+        (b, coord) => b.extend(coord),
+        new maplibregl.LngLatBounds(r.routeGeometry[0], r.routeGeometry[0])
+      );
+      map.fitBounds(bounds, { padding: 80, duration: 1000 });
+      if (!visibleRouteIds.includes(routeId)) {
+        setVisibleRouteIds((prev) => [...prev, routeId]);
+      }
+    }
+  };
+
+  const handleFocusNetwork = () => {
+    mapInstanceRef.current?.flyTo({
+      center: [37.675, 55.765],
+      zoom: 12.2,
+      pitch: 0,
+      duration: 1000,
+    });
+  };
+
+  // Solo route display
+  const handleSoloRoute = (routeId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (visibleRouteIds.length === 1 && visibleRouteIds[0] === routeId) {
+      // Toggle back to all
+      setVisibleRouteIds(routes.map((r) => normalizeRouteId(r.routeId)));
+    } else {
+      setVisibleRouteIds([routeId]);
+      handleFocusRoute(routeId);
+    }
+  };
+
+  const handleToggleAllRoutes = () => {
+    if (visibleRouteIds.length === routes.length) {
+      setVisibleRouteIds([]);
+    } else {
+      setVisibleRouteIds(routes.map((r) => normalizeRouteId(r.routeId)));
+    }
+  };
+
+  const handleFilterRisksOnly = () => {
+    // Only routes with active alerts / bunching (м3, м7, т88)
+    setVisibleRouteIds(["м3", "м7", "т88"]);
+  };
+
+  return (
+    <div className="relative w-full h-full flex-1 overflow-hidden select-none">
+      {/* 1. MapLibre GL Map Viewport */}
+      <div ref={mapContainerRef} className="absolute inset-0 w-full h-full z-0" />
+
+      {/* 2. Top Situational HUD Bar */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 pointer-events-auto flex items-center gap-2">
+        <div
+          className={`flex items-center gap-3 px-3.5 py-1.5 rounded-xl border backdrop-blur-xl shadow-xl text-xs font-semibold ${
+            isDarkMode
+              ? "border-white/10 bg-[#18181b]/90 text-zinc-200 shadow-black/25"
+              : "border-zinc-200 bg-white/95 text-zinc-800 shadow-zinc-300/40"
+          }`}
+        >
+          <div className="flex items-center gap-1.5 text-emerald-500 dark:text-emerald-400 font-bold">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse"></span>
+            <span>Выпуск: {displayedVehicles.length}/{vehicles.length} ТС (100%)</span>
+          </div>
+          <span className="text-zinc-300 dark:text-zinc-600">|</span>
+          <div className="flex items-center gap-1.5 text-rose-500 dark:text-rose-400 font-bold">
+            <AlertTriangle size={13} />
+            <span>Пачкование: 1 (м3)</span>
+          </div>
+          <span className="text-zinc-300 dark:text-zinc-600">|</span>
+          <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-300 font-bold">
+            <Flame size={13} />
+            <span>Заторы: 2 зоны</span>
+          </div>
+          <span className="text-zinc-300 dark:text-zinc-600">|</span>
+          <div className="flex items-center gap-1.5 text-sky-600 dark:text-sky-400 font-bold">
+            <Activity size={13} />
+            <span>Такт: 96.2%</span>
+          </div>
+        </div>
+
+        {/* Quick Camera Presets */}
+        <div
+          className={`flex items-center gap-1 p-1 rounded-xl border backdrop-blur-xl shadow-xl text-[11px] font-bold ${
+            isDarkMode
+              ? "border-white/10 bg-[#18181b]/90 shadow-black/25"
+              : "border-zinc-200 bg-white/95 shadow-zinc-300/40"
+          }`}
+        >
+          <button
+            onClick={() => handleFocusRoute("м3")}
+            className="px-2 py-0.5 rounded-lg text-emerald-600 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 transition-all cursor-pointer"
+            title="Фокус на перегоне м3 Бауманская"
+          >
+            м3 Бауманская
+          </button>
+          <button
+            onClick={() => handleFocusRoute("м7")}
+            className="px-2 py-0.5 rounded-lg text-orange-600 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-950/60 transition-all cursor-pointer"
+            title="Фокус на маршруте м7 Таганская"
+          >
+            м7 Таганская
+          </button>
+          <button
+            onClick={() => handleFocusRoute("т88")}
+            className="px-2 py-0.5 rounded-lg text-purple-600 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950/60 transition-all cursor-pointer"
+            title="Фокус на маршруте т88 Басманная"
+          >
+            т88 Басманная
+          </button>
+          <button
+            onClick={handleFocusNetwork}
+            className="px-2 py-0.5 rounded-lg text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all cursor-pointer"
+            title="Обзор всей маршрутной сети"
+          >
+            Обзор
+          </button>
+        </div>
+      </div>
+
+      {/* 3. Floating Map Tools (Right side of left panel) */}
+      <div
+        className={`absolute top-5 left-[365px] z-20 flex flex-col gap-1 p-1.5 rounded-xl border shadow-xl pointer-events-auto backdrop-blur-xl transition-all ${
+          isDarkMode
+            ? "border-white/10 bg-[#18181b]/95 text-zinc-200 shadow-black/25"
+            : "border-zinc-200 bg-white/95 text-zinc-700 shadow-zinc-300/40"
+        }`}
+      >
+        <button
+          onClick={() => mapInstanceRef.current?.zoomIn()}
+          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white"
+          title="Приблизить"
+        >
+          <Plus size={15} />
+        </button>
+        <button
+          onClick={() => mapInstanceRef.current?.zoomOut()}
+          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white"
+          title="Отдалить"
+        >
+          <Minus size={15} />
+        </button>
+        <div className="h-px my-0.5 bg-zinc-200 dark:bg-zinc-700" />
+        <button
+          onClick={() =>
+            mapInstanceRef.current?.flyTo({
+              center: [37.684, 55.772],
+              zoom: 13,
+              duration: 1000,
+            })
+          }
+          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white"
+          title="Центрировать на перегоне"
+        >
+          <Crosshair size={14} />
+        </button>
+        <button
+          onClick={() => {
+            const map = mapInstanceRef.current;
+            if (map) {
+              const currentPitch = map.getPitch();
+              map.easeTo({ pitch: currentPitch > 20 ? 0 : 45, duration: 800 });
+            }
+          }}
+          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white"
+          title="Переключить перспективу 2D/2.5D"
+        >
+          <Layers size={14} />
+        </button>
+        <button
+          onClick={() => setIsLayerMenuOpen(!isLayerMenuOpen)}
+          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
+            isLayerMenuOpen
+              ? "bg-sky-500/20 text-sky-600 dark:text-sky-300"
+              : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white"
+          }`}
+          title="Слои отображения карты"
+        >
+          <Navigation size={13} />
+        </button>
+      </div>
+
+      {/* Layer Visibility Menu */}
+      {isLayerMenuOpen && (
+        <div className="absolute top-5 left-[415px] z-20 pointer-events-auto">
+          <div
+            className={`rounded-xl border backdrop-blur-xl shadow-2xl p-2 min-w-[160px] flex flex-col gap-1 text-xs ${
+              isDarkMode
+                ? "border-white/10 bg-[#18181b]/95 text-zinc-200"
+                : "border-zinc-200 bg-white/95 text-zinc-800 shadow-zinc-300/50"
+            }`}
+          >
+            <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider px-2 py-0.5">
+              Слои карты
+            </div>
+            <button
+              onClick={() => setLayers((p) => ({ ...p, vehicles: !p.vehicles }))}
+              className="flex items-center justify-between px-2 py-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+            >
+              <span className="flex items-center gap-2">
+                <Bus size={13} className="text-emerald-500" /> Борта (ТС)
+              </span>
+              <span className="text-[10px] font-bold text-zinc-500">
+                {layers.vehicles ? "Вкл" : "Откл"}
+              </span>
+            </button>
+            <button
+              onClick={() => setLayers((p) => ({ ...p, stops: !p.stops }))}
+              className="flex items-center justify-between px-2 py-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+            >
+              <span className="flex items-center gap-2">
+                <MapPin size={13} className="text-sky-500" /> Остановки
+              </span>
+              <span className="text-[10px] font-bold text-zinc-500">
+                {layers.stops ? "Вкл" : "Откл"}
+              </span>
+            </button>
+            <button
+              onClick={() => setLayers((p) => ({ ...p, congestion: !p.congestion }))}
+              className="flex items-center justify-between px-2 py-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+            >
+              <span className="flex items-center gap-2">
+                <Flame size={13} className="text-amber-500" /> Зоны заторов
+              </span>
+              <span className="text-[10px] font-bold text-zinc-500">
+                {layers.congestion ? "Вкл" : "Откл"}
+              </span>
+            </button>
+            <button
+              onClick={() => setLayers((p) => ({ ...p, headway: !p.headway }))}
+              className="flex items-center justify-between px-2 py-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+            >
+              <span className="flex items-center gap-2">
+                <Activity size={13} className="text-rose-500" /> Интервалы
+              </span>
+              <span className="text-[10px] font-bold text-zinc-500">
+                {layers.headway ? "Вкл" : "Откл"}
+              </span>
+            </button>
+            <button
+              onClick={() => setLayers((p) => ({ ...p, routes: !p.routes }))}
+              className="flex items-center justify-between px-2 py-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+            >
+              <span className="flex items-center gap-2">
+                <Route size={13} className="text-indigo-500" /> Трассы линий
+              </span>
+              <span className="text-[10px] font-bold text-zinc-500">
+                {layers.routes ? "Вкл" : "Откл"}
+              </span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 4. Route Filter Panel */}
+      <div className="absolute top-[220px] left-[365px] z-20 pointer-events-auto">
+        <div
+          className={`rounded-xl border backdrop-blur-xl shadow-xl p-2.5 min-w-[170px] ${
+            isDarkMode
+              ? "border-white/10 bg-[#18181b]/95 shadow-black/25 text-zinc-100"
+              : "border-zinc-200 bg-white/95 shadow-zinc-300/40 text-zinc-800"
+          }`}
+        >
+          <div className="flex items-center justify-between mb-2 px-1">
+            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+              Маршруты
+            </span>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={handleToggleAllRoutes}
+                className="text-[9px] px-1.5 py-0.5 rounded bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold transition-all cursor-pointer"
+                title="Переключить все маршруты"
+              >
+                {visibleRouteIds.length === routes.length ? "Скрыть" : "Все"}
+              </button>
+              <button
+                onClick={handleFilterRisksOnly}
+                className="text-[9px] px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 dark:bg-rose-950/80 dark:text-rose-300 dark:hover:bg-rose-900 dark:border-rose-800/40 font-bold transition-all cursor-pointer"
+                title="Показать только проблемные маршруты"
+              >
+                Риски
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            {routes.map((r) => {
+              const normId = normalizeRouteId(r.routeId);
+              const count = vehicles.filter(
+                (v) => normalizeRouteId(v.routeId) === normId
+              ).length;
+              const isVis = visibleRouteIds.includes(normId);
+
+              return (
+                <div
+                  key={normId}
+                  onClick={() =>
+                    setVisibleRouteIds((prev) =>
+                      prev.includes(normId)
+                        ? prev.filter((id) => id !== normId)
+                        : [...prev, normId]
+                    )
+                  }
+                  className={`group flex items-center justify-between px-2 py-1.5 rounded-lg text-left text-[11px] font-semibold transition-all cursor-pointer ${
+                    isVis
+                      ? "text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/80"
+                      : "text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100/50 dark:hover:bg-zinc-800/40 opacity-40"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span
+                      style={{
+                        background: r.color,
+                        width: 12,
+                        height: 4,
+                        borderRadius: 2,
+                        opacity: isVis ? 1 : 0.3,
+                      }}
+                    />
+                    <span>{normId}</span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-zinc-500 dark:text-zinc-400 text-[10px] font-mono">
+                      {count} ТС
+                    </span>
+                    <button
+                      onClick={(e) => handleSoloRoute(normId, e)}
+                      className="opacity-0 group-hover:opacity-100 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all cursor-pointer"
+                      title={`Показать только маршрут ${normId}`}
+                    >
+                      <Eye size={12} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* 5. Floating Bottom Center Horizon Scrubber Capsule */}
+      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 pointer-events-auto flex flex-col items-center gap-1.5">
+        {/* ML Horizon Mode Indicator Badge */}
+        {timeStep === "+15 мин" ? (
+          <div
+            className={`px-3 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5 shadow-lg border backdrop-blur-md transition-all ${
+              isHoldingApplied
+                ? "bg-emerald-950/80 text-emerald-300 border-emerald-800/60"
+                : "bg-rose-950/80 text-rose-300 border-rose-800/60 animate-pulse"
+            }`}
+          >
+            {isHoldingApplied ? <CheckCircle2 size={13} /> : <AlertTriangle size={13} />}
+            <span>
+              {isHoldingApplied
+                ? "ГОРИЗОНТ T+15 мин: ИНТЕРВАЛ СТАБИЛИЗИРОВАН (HOLDING ПРИМЕНЕН)"
+                : "ГОРИЗОНТ ПРЕДИКТА ML T+15 мин: ПРОГНОЗ СХЛОПЫВАНИЯ ИНТЕРВАЛА"}
+            </span>
+          </div>
+        ) : timeStep === "Сейчас" ? (
+          <div className="px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1.5 shadow border backdrop-blur-md bg-[#18181b]/95 text-zinc-300 border-white/10">
+            <Radio size={11} className="text-emerald-500 shrink-0" />
+            <span>ОНЛАЙН ТЕЛЕМЕТРИЯ NDTP • ТЕКУЩИЙ МОМЕНТ</span>
+          </div>
+        ) : (
+          <div className="px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 shadow border backdrop-blur-md bg-[#18181b]/95 text-zinc-400 border-white/10">
+            <span>ПРОГНОЗНЫЙ ГОРИЗОНТ ДВИЖЕНИЯ {timeStep}</span>
+          </div>
+        )}
+
+        <div className="rounded-2xl border border-white/10 shadow-2xl shadow-black/35 px-4 py-2.5 flex items-center gap-3 w-[460px] max-w-[calc(100vw-750px)] backdrop-blur-xl bg-[#18181b]/95 text-zinc-200 transition-colors">
+          {/* Play/Pause Button */}
+          <button
+            onClick={() => setIsPlaying(!isPlaying)}
+            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm shrink-0 cursor-pointer ${
+              isPlaying
+                ? isDarkMode
+                  ? "bg-zinc-700 text-white"
+                  : "bg-zinc-800 text-white"
+                : isDarkMode
+                ? "bg-zinc-800 hover:bg-zinc-700 text-white"
+                : "bg-zinc-900 hover:bg-zinc-800 text-white"
+            }`}
+            title={isPlaying ? "Остановить анимацию" : "Запустить просмотр во времени"}
+          >
+            {isPlaying ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
+          </button>
+
+          {/* Rewind */}
+          <button
+            onClick={() => onTimeStepChange("Сейчас")}
+            className={`transition-colors shrink-0 cursor-pointer ${
+              timeStep === "Сейчас"
+                ? "text-zinc-200 font-bold"
+                : "text-zinc-400 hover:text-zinc-200"
+            }`}
+            title="К текущему моменту (Сейчас)"
+          >
+            <SkipBack size={15} />
+          </button>
+
+          {/* Step Back */}
+          <button
+            onClick={handlePrevStep}
+            className="text-zinc-400 hover:text-zinc-200 transition-colors shrink-0 cursor-pointer"
+            title="Предыдущий горизонт"
+          >
+            <ChevronLeft size={16} />
+          </button>
+
+          {/* Time Steps and Track */}
+          <div className="flex-1 flex flex-col gap-1.5 px-1">
+            {/* Slider track with active thumb - CLICKABLE */}
+            <div
+              onClick={handleTrackClick}
+              className={`relative w-full h-2 rounded-full flex items-center cursor-pointer ${
+                isDarkMode ? "bg-zinc-700/80" : "bg-zinc-200"
+              }`}
+            >
+              <div
+                className="h-full bg-zinc-400 dark:bg-zinc-500 rounded-full transition-all"
+                style={{
+                  width:
+                    timeStep === "Сейчас"
+                      ? "8%"
+                      : timeStep === "+15 мин"
+                      ? "42%"
+                      : timeStep === "+30 мин"
+                      ? "75%"
+                      : "100%",
+                }}
+              />
+              <div
+                className={`absolute w-3.5 h-3.5 rounded-full border-2 border-zinc-400 dark:border-zinc-300 shadow-md transition-all ${
+                  isDarkMode ? "bg-zinc-900" : "bg-white"
+                }`}
+                style={{
+                  left:
+                    timeStep === "Сейчас"
+                      ? "8%"
+                      : timeStep === "+15 мин"
+                      ? "42%"
+                      : timeStep === "+30 мин"
+                      ? "75%"
+                      : "100%",
+                  transform: "translateX(-50%)",
+                }}
+              />
+            </div>
+
+            {/* Step buttons row */}
+            <div className="flex justify-between items-center text-[10px] font-semibold">
+              <button
+                onClick={() => onTimeStepChange("Сейчас")}
+                className={`cursor-pointer transition-colors ${
+                  timeStep === "Сейчас"
+                    ? isDarkMode
+                      ? "text-zinc-100 font-extrabold"
+                      : "text-zinc-900 font-extrabold"
+                    : isDarkMode
+                    ? "text-zinc-400 hover:text-zinc-200"
+                    : "text-zinc-500 hover:text-zinc-800"
+                }`}
+              >
+                Сейчас
+              </button>
+
+              <button
+                onClick={() => onTimeStepChange("+15 мин")}
+                className={`px-1.5 py-0.5 rounded cursor-pointer transition-all ${
+                  timeStep === "+15 мин"
+                    ? isDarkMode
+                      ? "bg-amber-950/50 text-amber-300 font-extrabold border border-amber-600/50"
+                      : "bg-amber-50 text-amber-900 font-extrabold border border-amber-300"
+                    : isDarkMode
+                    ? "text-zinc-400 hover:text-zinc-200"
+                    : "text-zinc-500 hover:text-zinc-800"
+                }`}
+              >
+                +15м (ML)
+              </button>
+
+              <button
+                onClick={() => onTimeStepChange("+30 мин")}
+                className={`cursor-pointer transition-colors ${
+                  timeStep === "+30 мин"
+                    ? isDarkMode
+                      ? "text-white font-extrabold"
+                      : "text-zinc-900 font-extrabold"
+                    : isDarkMode
+                    ? "text-zinc-400 hover:text-zinc-200"
+                    : "text-zinc-500 hover:text-zinc-800"
+                }`}
+              >
+                +30м
+              </button>
+
+              <button
+                onClick={() => onTimeStepChange("+45 мин")}
+                className={`cursor-pointer transition-colors ${
+                  timeStep === "+45 мин"
+                    ? isDarkMode
+                      ? "text-white font-extrabold"
+                      : "text-zinc-900 font-extrabold"
+                    : isDarkMode
+                    ? "text-zinc-400 hover:text-zinc-200"
+                    : "text-zinc-500 hover:text-zinc-800"
+                }`}
+              >
+                +45м
+              </button>
+            </div>
+          </div>
+
+          {/* Next Arrow */}
+          <button
+            onClick={handleNextStep}
+            className="text-zinc-400 hover:text-zinc-200 transition-colors shrink-0 cursor-pointer"
+            title="Следующий горизонт"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </div>
+
+        {/* Subtle source attribution */}
+        <div
+          className={`text-[9px] text-center font-medium ${
+            isDarkMode ? "text-zinc-500" : "text-zinc-400"
+          }`}
+        >
+          {isTileServerAvailable
+            ? "Автономная векторная карта Москвы (TileServer GL • Planetiler) • СППР Мосгортранс"
+            : "Резервная карта CartoDB Positron (TileServer GL offline) • СППР Мосгортранс"}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default MapView;

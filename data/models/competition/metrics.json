@@ -1,0 +1,158 @@
+{
+  "n_train": 4434,
+  "n_test": 353,
+  "n_validate": 151,
+  "feature_cols": [
+    "cur_dev_s",
+    "horizon_sec",
+    "speed_kmh",
+    "avg_speed_window_kmh",
+    "speed_mean_5m",
+    "speed_mean_10m",
+    "speed_std_3m",
+    "speed_min_3m",
+    "speed_max_3m",
+    "speed_trend",
+    "stop_ratio_window",
+    "idle_time_5m",
+    "telemetry_age_s",
+    "points_count_5m",
+    "heading_std_3m",
+    "dist_to_target_m",
+    "speed_needed_kmh",
+    "stops_remaining",
+    "plan_time_to_target_s",
+    "time_since_last_stop_s",
+    "plan_sec_per_stop",
+    "hour_of_day",
+    "hour_sin",
+    "hour_cos"
+  ],
+  "mae_zero_train": 97.16847090663059,
+  "mae_cur_dev_train": 93.03247631935048,
+  "mae_global_median_train": 94.30514208389715,
+  "mae_vehicle_median_train": 87.7595850248083,
+  "mae_zero_test_holdout": 103.33711048158641,
+  "mae_cur_dev_test_holdout": 93.35977337110482,
+  "mae_global_median_test_holdout": 100.87252124645893,
+  "mae_vehicle_median_test_holdout": 95.59773371104816,
+  "sweep": [
+    {
+      "loss": "Huber:delta=60",
+      "depth": 8,
+      "lr": 0.08,
+      "iterations": 2000,
+      "cv_mae": 53.51199606202997,
+      "cv_std": 1.4105678605793455
+    },
+    {
+      "loss": "Huber:delta=60",
+      "depth": 8,
+      "lr": 0.05,
+      "iterations": 2000,
+      "cv_mae": 53.016265036065036,
+      "cv_std": 1.3290059454483862
+    },
+    {
+      "loss": "Huber:delta=60",
+      "depth": 6,
+      "lr": 0.08,
+      "iterations": 2000,
+      "cv_mae": 54.64244640049443,
+      "cv_std": 1.3358723791407854
+    },
+    {
+      "loss": "Huber:delta=200",
+      "depth": 8,
+      "lr": 0.08,
+      "iterations": 2000,
+      "cv_mae": 53.67230286305683,
+      "cv_std": 1.69457577451238
+    },
+    {
+      "loss": "RMSE",
+      "depth": 8,
+      "lr": 0.08,
+      "iterations": 2000,
+      "cv_mae": 53.748422201658435,
+      "cv_std": 2.0514801020279503
+    },
+    {
+      "loss": "MAE",
+      "depth": 8,
+      "lr": 0.08,
+      "iterations": 2000,
+      "cv_mae": 56.6186030976467,
+      "cv_std": 1.753485254115168
+    },
+    {
+      "loss": "Huber:delta=60",
+      "depth": 8,
+      "lr": 0.08,
+      "iterations": 4000,
+      "cv_mae": 53.46465409152088,
+      "cv_std": 1.4542488073162774
+    }
+  ],
+  "best_config": {
+    "loss": "Huber:delta=60",
+    "depth": 8,
+    "lr": 0.05,
+    "iterations": 2000,
+    "cv_mae": 53.016265036065036,
+    "cv_std": 1.3290059454483862
+  },
+  "seed_cv_maes": [
+    53.35133357607983,
+    53.462547149906435,
+    53.016265036065036,
+    53.5771327077583,
+    53.713740243842174
+  ],
+  "holdout_test_mae": 53.18775674617276,
+  "holdout_test_baseline_mae": 93.35977337110482,
+  "feature_importance": {
+    "cur_dev_s": 28.872659702897078,
+    "plan_sec_per_stop": 10.281635056832407,
+    "hour_sin": 6.2999216939371605,
+    "points_count_5m": 5.6420565820051785,
+    "hour_cos": 5.617645534967212,
+    "dist_to_target_m": 3.7853867704945476,
+    "speed_needed_kmh": 3.7448521885433905,
+    "heading_std_3m": 3.6663962598007425,
+    "stops_remaining": 3.521183186869263,
+    "speed_mean_10m": 3.489153677374176,
+    "speed_trend": 2.9645899267673945,
+    "hour_of_day": 2.6095432659107907,
+    "speed_std_3m": 2.5610181923601814,
+    "avg_speed_window_kmh": 2.3024448479123034,
+    "speed_mean_5m": 2.201800903341357,
+    "idle_time_5m": 1.9954312126772993,
+    "horizon_sec": 1.8621480416107483,
+    "speed_kmh": 1.7949986859067153,
+    "stop_ratio_window": 1.6750477774695356,
+    "time_since_last_stop_s": 1.5019858149278646,
+    "speed_max_3m": 1.3106166946664075,
+    "telemetry_age_s": 1.3041845906536345,
+    "speed_min_3m": 0.6237765990513583,
+    "plan_time_to_target_s": 0.37152279302328534
+  },
+  "ablation_cv_mae_delta": {
+    "cur_dev_s": -11.798,
+    "plan_sec_per_stop": -1.537,
+    "hour_sin": -0.656,
+    "points_count_5m": -2.394,
+    "speed_max_3m": -0.159,
+    "telemetry_age_s": 0.11,
+    "speed_min_3m": -0.198,
+    "plan_time_to_target_s": -0.162
+  },
+  "prod13_holdout_test_mae": 73.17012952736499,
+  "validate_pred_stats": {
+    "mean": 66.15970836566483,
+    "std": 122.37773640729115,
+    "min": -233.277145610626,
+    "max": 390.278770741922,
+    "n_negative": 42
+  }
+}

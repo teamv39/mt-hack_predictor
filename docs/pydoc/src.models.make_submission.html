@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Python: module src.models.make_submission</title>
+</head><body>
+
+<table class="heading">
+<tr class="heading-text decor">
+<td class="title">&nbsp;<br><strong class="title"><a href="src.html" class="white">src</a>.<a href="src.models.html" class="white">models</a>.make_submission</strong></td>
+<td class="extra"><a href=".">index</a><br><a href="file:/Users/tamara/Documents/tpu/xakaton%20transport/mt-hack_predictor/ml/src/models/make_submission.py">/Users/tamara/Documents/tpu/xakaton transport/mt-hack_predictor/ml/src/models/make_submission.py</a></td></tr></table>
+    <p><span class="code">Generate&nbsp;final&nbsp;competition&nbsp;submission&nbsp;CSV&nbsp;from&nbsp;a&nbsp;trained&nbsp;CatBoost&nbsp;model.<br>
+&nbsp;<br>
+Loads&nbsp;data/models/competition/catboost_competition.cbm&nbsp;+&nbsp;feature_list.json,<br>
+predicts&nbsp;on&nbsp;validate&nbsp;features,&nbsp;and&nbsp;writes&nbsp;a&nbsp;strictly-formatted&nbsp;submission.csv<br>
+(semicolon&nbsp;delimiter,&nbsp;UTF-8,&nbsp;header,&nbsp;151&nbsp;rows,&nbsp;same&nbsp;order&nbsp;as&nbsp;points.csv).<br>
+&nbsp;<br>
+Run&nbsp;from&nbsp;ml/:&nbsp;&nbsp;.venv/bin/python&nbsp;src/models/make_submission.py</span></p>
+<p>
+<table class="section">
+<tr class="decor pkg-content-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Modules</strong></td></tr>
+    
+<tr><td class="decor pkg-content-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><table><tr><td class="multicolumn"><a href="argparse.html">argparse</a><br>
+<a href="json.html">json</a><br>
+</td><td class="multicolumn"><a href="logging.html">logging</a><br>
+<a href="numpy.html">numpy</a><br>
+</td><td class="multicolumn"><a href="pandas.html">pandas</a><br>
+<a href="sys.html">sys</a><br>
+</td><td class="multicolumn"></td></tr></table></td></tr></table><p>
+<table class="section">
+<tr class="decor functions-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Functions</strong></td></tr>
+    
+<tr><td class="decor functions-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><dl><dt><a name="-load_model_and_features"><strong>load_model_and_features</strong></a>(model_dir: 'Path') -&gt; 'tuple[CatBoostRegressor, list[str]]'</dt></dl>
+ <dl><dt><a name="-main"><strong>main</strong></a>(argv: 'list[str] | None' = None) -&gt; 'int'</dt></dl>
+ <dl><dt><a name="-parse_args"><strong>parse_args</strong></a>(argv: 'list[str] | None' = None) -&gt; 'argparse.Namespace'</dt></dl>
+ <dl><dt><a name="-repo_root"><strong>repo_root</strong></a>() -&gt; 'Path'</dt></dl>
+</td></tr></table><p>
+<table class="section">
+<tr class="decor data-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Data</strong></td></tr>
+    
+<tr><td class="decor data-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><strong>logger</strong> = &lt;Logger make_submission (INFO)&gt;</td></tr></table>
+</body></html>

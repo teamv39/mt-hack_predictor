@@ -66,26 +66,35 @@ htmlcov/
 catboost_info/
 **/catboost_info/
 
-# Datasets & Large Archives (competition data, emulator images)
-dataset/
+# Datasets & Large Archives (emulator images and archives >100MB)
 *.tar
 *.tar.gz
 *.zip
 *.7z
+*.osm.pbf
+*.mbtiles
+map-service/data/*.osm.pbf
+map-service/data/*.mbtiles
+!map-service/data/moscow_transport.mbtiles
+map-service/data/sources/
+map-service/data/tmp/
+map-service/data/*.tsv.gz
 
 # Data & Models (ignore large files, keep samples)
 data/raw/*
 !data/raw/.gitkeep
 data/processed/*
 !data/processed/.gitkeep
-data/models/*
+data/models/**
 !data/models/.gitkeep
-dataset
+!data/models/competition/
+!data/models/competition/*.json
 *.parquet
 *.h5
 *.pkl
 *.joblib
 *.onnx
+data/submissions/*_debug.csv
 
 # Environment variables
 .env

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Python: module src.features.time_utils</title>
+</head><body>
+
+<table class="heading">
+<tr class="heading-text decor">
+<td class="title">&nbsp;<br><strong class="title"><a href="src.html" class="white">src</a>.<a href="src.features.html" class="white">features</a>.time_utils</strong></td>
+<td class="extra"><a href=".">index</a><br><a href="file:/Users/tamara/Documents/tpu/xakaton%20transport/mt-hack_predictor/ml/src/features/time_utils.py">/Users/tamara/Documents/tpu/xakaton transport/mt-hack_predictor/ml/src/features/time_utils.py</a></td></tr></table>
+    <p><span class="code">Time&nbsp;and&nbsp;timestamp&nbsp;conversion&nbsp;utilities&nbsp;for&nbsp;Moscow&nbsp;Transport&nbsp;ML&nbsp;pipeline.<br>
+&nbsp;<br>
+Strictly&nbsp;enforces&nbsp;the&nbsp;'naive&nbsp;=&nbsp;UTC'&nbsp;convention&nbsp;across&nbsp;the&nbsp;entire&nbsp;feature<br>
+engineering&nbsp;pipeline,&nbsp;ensuring&nbsp;consistent&nbsp;Unix&nbsp;epoch&nbsp;seconds&nbsp;regardless&nbsp;of<br>
+host&nbsp;system&nbsp;local&nbsp;timezone&nbsp;(e.g.&nbsp;MSK&nbsp;UTC+3&nbsp;or&nbsp;UTC+7)&nbsp;or&nbsp;datetime&nbsp;representation.</span></p>
+<p>
+<table class="section">
+<tr class="decor pkg-content-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Modules</strong></td></tr>
+    
+<tr><td class="decor pkg-content-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><table><tr><td class="multicolumn"><a href="datetime.html">datetime</a><br>
+</td><td class="multicolumn"><a href="numpy.html">numpy</a><br>
+</td><td class="multicolumn"><a href="pandas.html">pandas</a><br>
+</td><td class="multicolumn"></td></tr></table></td></tr></table><p>
+<table class="section">
+<tr class="decor functions-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Functions</strong></td></tr>
+    
+<tr><td class="decor functions-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><dl><dt><a name="-to_epoch_s"><strong>to_epoch_s</strong></a>(ts: 'Any') -&gt; 'Any'</dt><dd><span class="code">Converts&nbsp;naive&nbsp;or&nbsp;timezone-aware&nbsp;timestamps&nbsp;to&nbsp;Unix&nbsp;epoch&nbsp;seconds.<br>
+&nbsp;<br>
+'naive&nbsp;=&nbsp;UTC'&nbsp;Contract:<br>
+-----------------------<br>
+In&nbsp;the&nbsp;competition&nbsp;dataset&nbsp;and&nbsp;real-time&nbsp;telemetry&nbsp;feeds,&nbsp;timestamps&nbsp;are<br>
+often&nbsp;serialized&nbsp;without&nbsp;explicit&nbsp;timezone&nbsp;offsets&nbsp;(e.g.&nbsp;'2026-01-06&nbsp;12:00:00').<br>
+Standard&nbsp;Python&nbsp;``datetime.timestamp()``&nbsp;or&nbsp;``Timestamp.timestamp()``&nbsp;treats<br>
+naive&nbsp;datetimes&nbsp;as&nbsp;*local&nbsp;system&nbsp;time*,&nbsp;which&nbsp;introduces&nbsp;critical&nbsp;3-hour&nbsp;(MSK)<br>
+or&nbsp;7-hour&nbsp;offsets&nbsp;depending&nbsp;on&nbsp;the&nbsp;developer&nbsp;or&nbsp;container&nbsp;host&nbsp;timezone.<br>
+&nbsp;<br>
+This&nbsp;function&nbsp;strictly&nbsp;adheres&nbsp;to:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;pd.to_datetime(ts).astype("datetime64[s]").astype("int64")<br>
+where&nbsp;naive&nbsp;timestamps&nbsp;are&nbsp;treated&nbsp;as&nbsp;UTC,&nbsp;guaranteeing&nbsp;deterministic&nbsp;epoch<br>
+seconds&nbsp;across&nbsp;all&nbsp;environments.&nbsp;If&nbsp;a&nbsp;timestamp&nbsp;is&nbsp;timezone-aware,&nbsp;it&nbsp;is<br>
+first&nbsp;normalized&nbsp;to&nbsp;UTC&nbsp;before&nbsp;converting&nbsp;to&nbsp;epoch&nbsp;seconds.<br>
+&nbsp;<br>
+Supports:<br>
+-&nbsp;Scalar&nbsp;timestamps:&nbsp;str,&nbsp;pd.Timestamp,&nbsp;datetime.datetime,&nbsp;datetime.date,<br>
+&nbsp;&nbsp;np.datetime64,&nbsp;int,&nbsp;float&nbsp;-&gt;&nbsp;returns&nbsp;int.<br>
+-&nbsp;Vectorized&nbsp;collections:&nbsp;pd.Series&nbsp;(returns&nbsp;int64&nbsp;Series),&nbsp;pd.DatetimeIndex&nbsp;/<br>
+&nbsp;&nbsp;np.ndarray&nbsp;/&nbsp;list&nbsp;/&nbsp;tuple&nbsp;(returns&nbsp;int64&nbsp;np.ndarray).<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;ts:&nbsp;Naive&nbsp;or&nbsp;timezone-aware&nbsp;timestamp,&nbsp;or&nbsp;a&nbsp;vectorized&nbsp;collection&nbsp;of&nbsp;timestamps.<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;int&nbsp;Unix&nbsp;epoch&nbsp;seconds&nbsp;for&nbsp;scalars,&nbsp;pd.Series&nbsp;for&nbsp;Series,&nbsp;or&nbsp;np.ndarray&nbsp;for&nbsp;arrays/indices.<br>
+&nbsp;<br>
+Raises:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;TypeError:&nbsp;If&nbsp;input&nbsp;is&nbsp;a&nbsp;boolean&nbsp;or&nbsp;unsupported&nbsp;type.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;ValueError:&nbsp;If&nbsp;a&nbsp;string&nbsp;cannot&nbsp;be&nbsp;parsed&nbsp;as&nbsp;a&nbsp;datetime.</span></dd></dl>
+</td></tr></table><p>
+<table class="section">
+<tr class="decor data-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Data</strong></td></tr>
+    
+<tr><td class="decor data-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><strong>Union</strong> = typing.Union</td></tr></table>
+</body></html>

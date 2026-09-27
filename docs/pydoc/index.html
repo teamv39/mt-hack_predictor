@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MT-Hackathon ML Service · PyDoc Documentation</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --surface-color: #1e293b;
+            --border-color: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-red: #ef4444;
+            --accent-red-hover: #dc2626;
+            --accent-blue: #38bdf8;
+            --badge-bg: #334155;
+            --badge-text: #cbd5e1;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            line-height: 1.5;
+            padding: 2rem 1.5rem;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        header {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 2rem;
+            margin-bottom: 2.5rem;
+        }
+        .header-badge {
+            display: inline-block;
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-red);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 9999px;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.75rem;
+        }
+        h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.25rem;
+        }
+        .quick-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        .quick-nav a {
+            color: var(--accent-blue);
+            text-decoration: none;
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.15s ease;
+        }
+        .quick-nav a:hover {
+            background: var(--border-color);
+            border-color: var(--accent-blue);
+        }
+        .interactive-box {
+            background: rgba(56, 189, 248, 0.08);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: #e2e8f0;
+        }
+        .interactive-box code {
+            background: #090d16;
+            color: #38bdf8;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+        .category-section {
+            margin-bottom: 3rem;
+        }
+        .cat-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 0.25rem;
+        }
+        .cat-desc {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 1.25rem;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 1.25rem;
+        }
+        .card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.25rem;
+            transition: border-color 0.2s ease, transform 0.2s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        .card:hover {
+            border-color: #475569;
+            transform: translateY(-2px);
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.6rem;
+        }
+        .mod-link {
+            color: var(--accent-blue);
+            font-size: 1.05rem;
+            font-weight: 600;
+            text-decoration: none;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+        }
+        .mod-link:hover {
+            text-decoration: underline;
+        }
+        .tag {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            padding: 0.15rem 0.45rem;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .pkg-tag {
+            background: #1e3a5f;
+            color: #60a5fa;
+            border: 1px solid #2563eb;
+        }
+        .mod-tag {
+            background: #334155;
+            color: #cbd5e1;
+        }
+        .mod-desc {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            flex-grow: 1;
+        }
+        .sym-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+        }
+        .badge {
+            font-size: 0.75rem;
+            background: var(--badge-bg);
+            color: var(--badge-text);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+        }
+        footer {
+            border-top: 1px solid var(--border-color);
+            padding-top: 1.5rem;
+            margin-top: 3rem;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+        footer a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <span class="header-badge">Хакатон Московского Транспорта · Трек №3</span>
+            <h1>Справочник модулей ML-сервиса (PyDoc)</h1>
+            <p class="subtitle">
+                Автоматически сгенерированная техническая документация исходного кода (Python 3.12, CatBoost, FastAPI, Pydantic v2).
+            </p>
+            <div class="quick-nav">
+                <a href="#src.api">🔌 API & Routes</a>
+                <a href="#src.models">🧠 Models & SHAP</a>
+                <a href="#src.features">⚙️ Features & Telemetry</a>
+                <a href="#src.schemas">📋 Schemas (Pydantic)</a>
+                <a href="#src.core">🔧 Core & Config</a>
+                <a href="../../README.md">📘 Главный README</a>
+                <a href="../api_contracts.md">🔌 Контракты API</a>
+                <a href="../ml_performance.md">⚡ Сведения о производительности</a>
+            </div>
+            <div class="interactive-box">
+                💡 <strong>Интерактивный просмотр через консоль:</strong> Чтобы запустить встроенный локальный сервер документации PyDoc, выполните команду:
+                <br>
+                <code>uv run python -m pydoc -p 8088</code> затем откройте <strong>http://localhost:8088/src.html</strong>
+            </div>
+        </header>
+
+        <main>
+            
+        <section class="category-section">
+            <h2 class="cat-title">📦 Root Package</h2>
+            <p class="cat-desc">Top-level package definition and package-wide exports.</p>
+            <div class="grid">
+            <div class="card">
+                <div class="card-header">
+                    <a class="mod-link" href="src.html">src</a>
+                    <span class="tag">package root</span>
+                </div>
+                <p class="mod-desc">MT-Hackathon Track 3: Machine Learning & Real-time Inference Service.</p>
+                <div class="sym-list"></div>
+            </div>
+            </div>
+        </section>
+        
+        <section class="category-section">
+            <h2 class="cat-title">🔌 API & Serving Layer</h2>
+            <p class="cat-desc">FastAPI application, ASGI lifecycle management, REST routing, CORS, and HTTP request handling.</p>
+            <div class="grid">
+            <div class="card">
+                <div class="card-header">
+                    <a class="mod-link" href="src.api.html">src.api</a>
+                    <span class="tag pkg-tag">package</span>
+                </div>
+                <p class="mod-desc">API package for ML inference service.</p>
+                <div class="sym-list"><span class="badge">app</span><span class="badge">router</span></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <a class="mod-link" href="src.api.routes.html">src.api.routes</a>
+                    <span class="tag mod-tag">module</span>
+                </div>
+                <p class="mod-desc">API route definitions for prediction and diagnostics.</p>
+                <div class="sym-list"><span class="badge">get_model_info</span><span class="badge">health_check</span><span class="badge">predict_batch</span><span class="badge">predict_single</span><span class="badge">reload_models</span></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <a class="mod-link" href="src.api.server.html">src.api.server</a>
+                    <span class="tag mod-tag">module</span>
+                </div>
+                <p class="mod-desc">FastAPI application entrypoint for ML inference service.</p>
+                <div class="sym-list"><span class="badge">global_exception_handler</span><span class="badge">lifespan</span></div>
+            </div>
+            </div>
+        </section>
+        
+        <section class="category-section">
+            <h2 class="cat-title">🧠 ML Models & Explainability</h2>
+            <p class="cat-desc">CatBoost delay regressor (signed target_delay_s), bunching classifier, TreeSHAP feature attribution, ModelManager cascade, and fallback predictors.</p>
+            <div class="grid">
+            <div class="card">
+                <div class="card-header">
+                    <a class="mod-link" href="src.models.html">src.models</a>
+                    <span class="tag pkg-tag">package</span>
+                </div>
+                <p class="mod-desc">Model predictors and management interfaces.</p>
+                <div class="sym-list"><span class="badge">BasePredictor</span><span class="badge">HeuristicFallbackPredictor</span><span class="badge">CatBoostPredictor</span><span class="badge">ModelManager</span><span class="badge">get_model_manager</span></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <a class="mod-link" href="src.models.base.html">src.models.base</a>
+                    <span class="tag mod-tag">module</span>
+                </div>
+                <p class="mod-desc">Abstract base class for ML predictors.</p>
+                <div class="sym-list"><span class="badge">BasePredictor</span></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <a class="mod-link" href="src.models.catboost_model.html">src.models.catboost_model</a>
+                    <span class="tag mod-tag">module</span>
+                </div>
+                <p class="mod-desc">CatBoost ML predictor with native TreeSHAP explainability.</p>
+                <div class="sym-list"><span class="badge">CatBoostPredictor</span></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <a class="mod-link" href="src.models.fallback.html">src.models.fallback</a>
+                    <span class="tag mod-tag">module</span>
+                </div>
+                <p class="mod-desc">Heuristic fallback predictor when pre-trained model weights are not present.</p>
+                <div class="sym-list"><span class="badge">HeuristicFallbackPredictor</span></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <a class="mod-link" href="src.models.make_submission.html">src.models.make_submission</a>
+                    <span class="tag mod-tag">module</span>
+                </div>
+                <p class="mod-desc">Generate final competition submission CSV from a trained CatBoost model.</p>
+                <div class="sym-list"><span class="badge">load_model_and_features</span><span class="badge">main</span><span class="badge">parse_args</span><span class="badge">repo_root</span></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <a class="mod-link" href="src.models.manager.html">src.models.manager</a>
+                    <span class="tag mod-tag">module</span>
+                </div>
+                <p class="mod-desc">Model manager responsible for loading, hot-reloading, and serving predictors.</p>
+                <div class="sym-list"><span class="badge">ModelManager</span><span class="badge">get_model_manager</span></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <a class="mod-link" href="src.models.train.html">src.models.train</a>
+                    <span class="tag mod-tag">module</span>
+                </div>
+                <p class="mod-desc">DEMO-ONLY: synthetic m3_scenario.json pipeline for legacy DSS bunching classifier</p>
+                <div class="sym-list"><span class="badge">engineer_training_features</span><span class="badge">generate_augmented_training_set</span><span class="badge">load_dataset_from_scenario</span><span class="badge">train_and_export_models</span></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <a class="mod-link" href="src.models.train_competition.html">src.models.train_competition</a>
+                    <span class="tag mod-tag">module</span>
+                </div>
+                <p class="mod-desc">Competition training pipeline: CatBoost delay regressor on official dataset.</p>
+                <div class="sym-list"><span class="badge">baseline_report</span><span class="badge">kfold_mae</span><span class="badge">load_snapshot</span><span class="badge">main</span><span class="badge">make_model</span><span class="badge">repo_root</span></div>
+            </div>
+            </div>
+        </section>
+        
+        <section class="category-section">
+            <h2 class="cat-title">⚙️ Feature Engineering & Processing</h2>
+            <p class="cat-desc">Real-time telemetry cleaners, geospatial schedule matching, headway calculations, and train feature extractors.</p>
+            <div class="grid">
+            <div class="card">
+                <div class="card-header">
+                    <a class="mod-link" href="src.features.html">src.features</a>
+                    <span class="tag pkg-tag">package</span>
+                </div>
+                <p class="mod-desc">Feature extraction and engineering tools for Moscow Transport Delay Predictor.</p>
+                <div class="sym-list"><span class="badge">MODEL_FEATURE_NAMES</span><span class="badge">LEGACY_FEATURE_NAMES</span><span class="badge">COMPAT_FEATURE_NAMES</span><span class="badge">FEATURE_HUMAN_TITLES</span><span class="badge">feature_vector_to_dict</span><span class="badge">feature_vectors_to_dataframe</span></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <a class="mod-link" href="src.features.baseline_pipeline.html">src.features.baseline_pipeline</a>
+                    <span class="tag mod-tag">module</span>
+                </div>
+                <p class="mod-desc">DEMO-ONLY: uses synthetic data/sample/m3_scenario.json. Production pipeline is src/features/build_features.py. Kept for demo/test pipelines.</p>
+                <div class="sym-list"><span class="badge">build_features</span><span class="badge">load_scenario_as_df</span><span class="badge">run_baseline_training</span></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <a class="mod-link" href="src.features.build_features.html">src.features.build_features</a>
+                    <span class="tag mod-tag">module</span>
+                </div>
+                <p class="mod-desc">Feature Pipeline for Moscow Transport Delay Predictor.</p>
+                <div class="sym-list"><span class="badge">TelemetryVehicleIndex</span><span class="badge">extract_features_for_sample</span><span class="badge">main</span><span class="badge">process_dataset_split</span></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <a class="mod-link" href="src.features.extractor.html">src.features.extractor</a>
+                    <span class="tag mod-tag">module</span>
+                </div>
+                <p class="mod-desc">Feature extraction utilities for tabular delay models.</p>
+                <div class="sym-list"><span class="badge">delay_to_class</span><span class="badge">feature_vector_to_dict</span><span class="badge">feature_vectors_to_dataframe</span></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <a class="mod-link" href="src.features.make_baseline_sub.html">src.features.make_baseline_sub</a>
+                    <span class="tag mod-tag">module</span>
+                </div>
+                <p class="mod-desc">Baseline submission generator for Moscow Transport Hackathon.</p>
+                <div class="sym-list"><span class="badge">generate_baseline_submission</span><span class="badge">main</span></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <a class="mod-link" href="src.features.schedule_matcher.html">src.features.schedule_matcher</a>
+                    <span class="tag mod-tag">module</span>
+                </div>
+                <p class="mod-desc">Schedule matching and spatial distance utilities for bus stops.</p>
+                <div class="sym-list"><span class="badge">PlanProgress</span><span class="badge">ScheduleIndex</span><span class="badge">angle_diff_deg</span><span class="badge">haversine_distance_m</span><span class="badge">load_schedule_index</span><span class="badge">parse_wkt_point</span></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <a class="mod-link" href="src.features.telemetry_cleaner.html">src.features.telemetry_cleaner</a>
+                    <span class="tag mod-tag">module</span>
+                </div>
+                <p class="mod-desc">Telemetry data cleaning and filtering module for Moscow Transport dataset.</p>
+                <div class="sym-list"><span class="badge">clean_traffic_dataframe</span><span class="badge">load_and_clean_traffic</span></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <a class="mod-link" href="src.features.time_utils.html">src.features.time_utils</a>
+                    <span class="tag mod-tag">module</span>
+                </div>
+                <p class="mod-desc">Time and timestamp conversion utilities for Moscow Transport ML pipeline.</p>
+                <div class="sym-list"><span class="badge">to_epoch_s</span></div>
+            </div>
+            </div>
+        </section>
+        
+        <section class="category-section">
+            <h2 class="cat-title">📋 Pydantic v2 Data Schemas</h2>
+            <p class="cat-desc">Strict validation models for input feature vectors, batch requests, prediction responses, SHAP factors, and official dataset rows.</p>
+            <div class="grid">
+            <div class="card">
+                <div class="card-header">
+                    <a class="mod-link" href="src.schemas.html">src.schemas</a>
+                    <span class="tag pkg-tag">package</span>
+                </div>
+                <p class="mod-desc">Pydantic schemas for ML Service (inference + official dataset rows).</p>
+                <div class="sym-list"><span class="badge">FeatureVector</span><span class="badge">BatchFeatureRequest</span><span class="badge">PredictionResponse</span><span class="badge">BatchPredictionResponse</span><span class="badge">SHAPFactor</span><span class="badge">Severity</span></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <a class="mod-link" href="src.schemas.dataset.html">src.schemas.dataset</a>
+                    <span class="tag mod-tag">module</span>
+                </div>
+                <p class="mod-desc">Pydantic schemas mirroring the official hackathon dataset CSV layout.</p>
+                <div class="sym-list"><span class="badge">DelayClass</span><span class="badge">ForecastPoint</span><span class="badge">LabelPoint</span><span class="badge">ScheduleStop</span><span class="badge">SubmissionFile</span><span class="badge">SubmissionRow</span></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <a class="mod-link" href="src.schemas.features.html">src.schemas.features</a>
+                    <span class="tag mod-tag">module</span>
+                </div>
+                <p class="mod-desc">Input schemas for ML inference feature vectors.</p>
+                <div class="sym-list"><span class="badge">BatchFeatureRequest</span><span class="badge">FeatureVector</span></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <a class="mod-link" href="src.schemas.health.html">src.schemas.health</a>
+                    <span class="tag mod-tag">module</span>
+                </div>
+                <p class="mod-desc">Health check and model status schemas.</p>
+                <div class="sym-list"><span class="badge">HealthResponse</span><span class="badge">ModelStatus</span></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <a class="mod-link" href="src.schemas.prediction.html">src.schemas.prediction</a>
+                    <span class="tag mod-tag">module</span>
+                </div>
+                <p class="mod-desc">Prediction response schemas, delay classes, and optional DSS extras.</p>
+                <div class="sym-list"><span class="badge">BatchPredictionResponse</span><span class="badge">DelayClass</span><span class="badge">PredictionResponse</span><span class="badge">Recommendation</span><span class="badge">SHAPFactor</span><span class="badge">Severity</span></div>
+            </div>
+            </div>
+        </section>
+        
+        <section class="category-section">
+            <h2 class="cat-title">🔧 Core & Configuration</h2>
+            <p class="cat-desc">Application settings (SettingsConfigDict), environment variable bindings, and structured logging.</p>
+            <div class="grid">
+            <div class="card">
+                <div class="card-header">
+                    <a class="mod-link" href="src.core.html">src.core</a>
+                    <span class="tag pkg-tag">package</span>
+                </div>
+                <p class="mod-desc">Core application configuration and logging.</p>
+                <div class="sym-list"><span class="badge">Settings</span><span class="badge">get_settings</span></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <a class="mod-link" href="src.core.config.html">src.core.config</a>
+                    <span class="tag mod-tag">module</span>
+                </div>
+                <p class="mod-desc">Configuration settings for the ML Inference Service.</p>
+                <div class="sym-list"><span class="badge">Settings</span></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <a class="mod-link" href="src.core.logging.html">src.core.logging</a>
+                    <span class="tag mod-tag">module</span>
+                </div>
+                <p class="mod-desc">Structured logging configuration for ML Service.</p>
+                <div class="sym-list"><span class="badge">setup_logger</span></div>
+            </div>
+            </div>
+        </section>
+        
+        </main>
+
+        <footer>
+            <p>Предиктор задержек и интервалов движения общественного транспорта · Команда MT-Hackathon</p>
+            <p>Сгенерировано автоматически с помощью Python <code>pydoc</code> · Версия пакета <code>0.3.0</code></p>
+        </footer>
+    </div>
+</body>
+</html>

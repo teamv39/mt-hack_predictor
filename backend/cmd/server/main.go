@@ -1,16 +1,28 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/mt-hack-predictor/backend/internal/api"
+	"github.com/mt-hack-predictor/backend/internal/engine"
 	"github.com/mt-hack-predictor/backend/internal/feeder"
+	"github.com/mt-hack-predictor/backend/internal/fleet"
+	"github.com/mt-hack-predictor/backend/internal/mlclient"
 	"github.com/mt-hack-predictor/backend/internal/models"
+	"github.com/mt-hack-predictor/backend/internal/ndtp"
+	"github.com/mt-hack-predictor/backend/internal/schedule"
+	"github.com/mt-hack-predictor/backend/internal/telemetry"
 	"github.com/mt-hack-predictor/backend/internal/ws"
 )
 
@@ -20,43 +32,222 @@ type SimulationControlRequest struct {
 }
 
 type TelemetryWSMessage struct {
-	Type      string               `json:"type"` // "TELEMETRY_UPDATE"
-	Status    models.SystemStatus  `json:"status"`
-	Vehicles  []models.Vehicle     `json:"vehicles"`
-	Alert     *models.Alert        `json:"alert,omitempty"`
-	Timestamp string               `json:"timestamp"`
+	Type      string              `json:"type"` // "TELEMETRY_UPDATE"
+	Status    models.SystemStatus `json:"status"`
+	Vehicles  []models.Vehicle    `json:"vehicles"`
+	Alert     *models.Alert       `json:"alert,omitempty"`
+	Timestamp string              `json:"timestamp"`
+}
+
+func computePunctuality(vehicles []models.Vehicle) float64 {
+	if len(vehicles) == 0 {
+		return 100.0
+	}
+	onTime := 0
+	for _, v := range vehicles {
+		if v.Status == "ON_TIME" || v.Status == "REGULATING" {
+			onTime++
+		}
+	}
+	return (float64(onTime) / float64(len(vehicles))) * 100.0
 }
 
 func main() {
-	// Initialize Feeder
+	// Root context for background servers
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// 1. Initialize Fleet Manager (In-Memory Telemetry Cache)
+	fleetMgr := fleet.NewManager()
+
+	// 2. Initialize Telemetry Tracker (Sliding window dynamics)
+	tracker := telemetry.NewTracker(15 * time.Minute)
+
+	// 3. Initialize Schedule Matcher (Spatial & Timetable lookup)
+	schedMatcher := schedule.NewMatcher()
+	schedCandidates := []string{
+		"dataset/validate/schedule_plan.csv",
+		"dataset/train/schedule.csv",
+		"../dataset/validate/schedule_plan.csv",
+		"../../dataset/validate/schedule_plan.csv",
+		"/app/dataset/validate/schedule_plan.csv",
+	}
+	for _, p := range schedCandidates {
+		if n, err := schedMatcher.LoadFromCSV(p); err == nil && n > 0 {
+			log.Printf("✅ Loaded %d timetable stops into ScheduleMatcher from %s", n, p)
+			break
+		}
+	}
+
+	// 4. Initialize Headway & Alert Engines
+	headwayCalc := engine.NewHeadwayCalculator(480.0) // 8 min nominal headway
+	alertMgr := engine.NewAlertManager()
+
+	// 5. Initialize ML Client (HTTP connection to Python FastAPI)
+	mlURL := os.Getenv("ML_SERVICE_URL")
+	if mlURL == "" {
+		mlURL = "http://localhost:8000"
+	}
+	mlCli := mlclient.New(mlURL)
+	log.Printf("🤖 Connected to ML service at %s", mlURL)
+
+	// 6. Initialize NDTP Emulator Controller (:18080)
+	ndtpEmuURL := os.Getenv("NDTP_EMULATOR_URL")
+	if ndtpEmuURL == "" {
+		ndtpEmuURL = "http://ndtp-emu:18080"
+	}
+	ndtpCli := ndtp.NewEmulatorClient(ndtpEmuURL)
+
+	// 7. Initialize NDTP Ingestion Server (:9201)
+	ndtpPort := os.Getenv("NDTP_PORT")
+	if ndtpPort == "" {
+		ndtpPort = ":9201"
+	}
+	if !strings.HasPrefix(ndtpPort, ":") {
+		ndtpPort = ":" + ndtpPort
+	}
+
+	ndtpSrv := ndtp.NewServer(ndtpPort, func(nav ndtp.NavCell) {
+		v := fleetMgr.UpsertNav(nav)
+
+		// 1. Record point in telemetry tracker
+		tracker.AddPoint(v.ID, telemetry.Point{
+			Timestamp: v.Timestamp,
+			Latitude:  nav.Latitude,
+			Longitude: nav.Longitude,
+			SpeedKmh:  nav.SpeedKmh,
+			Bearing:   nav.Course,
+		})
+
+		// 2. Match with timetable schedule
+		match := schedMatcher.MatchVehicle(v.ID, nav.Latitude, nav.Longitude, v.Timestamp)
+		if match.Matched {
+			fleetMgr.UpdateStopInfo(v.ID, match.StopID, match.StopName, match.CurDevSeconds)
+			v.NextStopID = match.StopID
+			v.NextStopName = match.StopName
+			v.DelaySeconds = match.CurDevSeconds
+		}
+
+		// 3. Compute derived rolling telemetry features
+		feat := tracker.ComputeFeatures(v.ID, v.Timestamp)
+
+		// 4. Dynamic fleet headway assessment
+		allLive := fleetMgr.List()
+		headwayMap := headwayCalc.AssessFleetHeadways(allLive)
+		hwInfo, hasHw := headwayMap[v.ID]
+		headwaySec := 480.0
+		if hasHw {
+			headwaySec = hwInfo.HeadwaySec
+		}
+
+		// 5. Asynchronous ML prediction & DSS Alert evaluation
+		go func(veh models.Vehicle, feat telemetry.Features, match schedule.MatchResult, hwSec float64, hw engine.HeadwayInfo) {
+			predCtx, predCancel := context.WithTimeout(context.Background(), 250*time.Millisecond)
+			defer predCancel()
+
+			pred := mlCli.PredictEnriched(predCtx, veh, match.CurDevSeconds, feat.AvgSpeed3m, hwSec, mlclient.EnrichedFeatures{
+				CurDevSec:      match.CurDevSeconds,
+				AvgSpeed:       feat.AvgSpeed3m,
+				HeadwaySec:     hwSec,
+				AvgSpeed3m:     feat.AvgSpeed3m,
+				AvgSpeed5m:     feat.AvgSpeed5m,
+				AvgSpeed10m:    feat.AvgSpeed10m,
+				IdleTime5m:     feat.IdleTime5m,
+				StopRatio5m:    feat.StopRatio5m,
+				SpeedTrend:     feat.SpeedTrend,
+				TelemetryAgeS:  feat.TelemetryAgeS,
+				PointsCount:    feat.PointsCount,
+				DistanceMeters: match.DistanceMeters,
+				HorizonSeconds: match.HorizonSeconds,
+				StopID:         match.StopID,
+				StopName:       match.StopName,
+			})
+
+			fleetMgr.SetPrediction(veh.ID, pred.PredictedDelaySec, pred.BunchingRiskProbability, hwSec)
+
+			// Convert SHAP factors
+			shapFactors := make([]models.SHAPFactor, 0, len(pred.Factors))
+			for _, f := range pred.Factors {
+				shapFactors = append(shapFactors, models.SHAPFactor{
+					Feature:     f.Feature,
+					Title:       f.Title,
+					Weight:      f.Weight,
+					ImpactScore: f.ImpactScore,
+				})
+			}
+
+			// Update alert state in DSS AlertManager
+			veh.DelaySeconds = pred.PredictedDelaySec
+			alertMgr.UpsertVehicleAlert(veh, hw, shapFactors, match.HorizonSeconds)
+		}(*v, feat, match, headwaySec, hwInfo)
+	})
+
+	go func() {
+		if err := ndtpSrv.Start(ctx); err != nil {
+			log.Printf("⚠️ NDTP Server stopped: %v", err)
+		}
+	}()
+
+	// 7. Initialize Feeder (Mock / Replay Scenario)
 	f, err := feeder.LoadScenario(
 		"data/sample/m3_scenario.json",
 		"../../data/sample/m3_scenario.json",
 		"../data/sample/m3_scenario.json",
 	)
 	if err != nil {
-		log.Fatalf("❌ Failed to load m3 scenario: %v", err)
+		log.Printf("⚠️ Scenario file not found, running with NDTP only: %v", err)
+	} else {
+		log.Println("✅ Loaded m3 route scenario successfully")
 	}
-	log.Println("✅ Loaded m3 route scenario successfully")
 
-	// Initialize WebSocket Hub
+	// 8. Initialize WebSocket Hub
 	hub := ws.NewHub()
 	go hub.Run()
 
-	// Broadcast loop
+	// 9. Broadcast loop (1 Hz)
 	go func() {
 		for {
-			speed := f.GetSpeed()
+			speed := 1.0
+			if f != nil {
+				speed = f.GetSpeed()
+			}
 			interval := time.Duration(float64(time.Second) / speed)
 			time.Sleep(interval)
 
-			f.AdvanceTick()
-			vehicles, alert, status := f.GetState()
+			var vehicles []models.Vehicle
+			var alert *models.Alert
+			var status models.SystemStatus
+
+			if f != nil {
+				f.AdvanceTick()
+				vehicles, alert, status = f.GetState()
+			}
+
+			// Merge live NDTP units with scenario vehicles
+			allVehicles := fleetMgr.MergeDemo(vehicles)
+
+			// Merge live DSS alerts
+			liveAlerts := alertMgr.GetAll()
+			if len(liveAlerts) > 0 {
+				alert = &liveAlerts[0]
+			}
+
+			status.ActiveVehiclesCount = len(allVehicles)
+			status.ActiveAlertsCount = len(liveAlerts)
+			if f != nil {
+				_, scAlert, _ := f.GetState()
+				if scAlert != nil && len(liveAlerts) == 0 {
+					alert = scAlert
+					status.ActiveAlertsCount++
+				}
+			}
+			status.PreventedIncidents = alertMgr.PreventedCount()
+			status.PunctualityRate = computePunctuality(allVehicles)
 
 			msg := TelemetryWSMessage{
 				Type:      "TELEMETRY_UPDATE",
 				Status:    status,
-				Vehicles:  vehicles,
+				Vehicles:  allVehicles,
 				Alert:     alert,
 				Timestamp: time.Now().Format(time.RFC3339),
 			}
@@ -86,13 +277,38 @@ func main() {
 		MaxAge:           300,
 	}))
 
+	// Mount Swagger UI & OpenAPI Specification
+	api.RegisterSwagger(r)
+
 	// Healthcheck
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{
+		running, accepts, packets, conns := ndtpSrv.Stats()
+		mlOk, mlFb := mlCli.Stats()
+		liveAlerts := alertMgr.GetAll()
+
+		json.NewEncoder(w).Encode(map[string]any{
 			"status":    "healthy",
 			"timestamp": time.Now().Format(time.RFC3339),
-			"version":   "0.1.0",
+			"version":   "0.3.0",
+			"ndtp": map[string]any{
+				"running":      running,
+				"active_conns": conns,
+				"accepts":      accepts,
+				"packets":      packets,
+				"port":         ndtpPort,
+			},
+			"ml_client": map[string]any{
+				"ok_requests":       mlOk,
+				"fallback_requests": mlFb,
+				"url":               mlURL,
+			},
+			"engine": map[string]any{
+				"schedule_stops":      schedMatcher.StopsCount(),
+				"active_alerts":       len(liveAlerts),
+				"prevented_incidents": alertMgr.PreventedCount(),
+				"tracked_vehicles":    fleetMgr.Count(),
+			},
 		})
 	})
 
@@ -104,29 +320,59 @@ func main() {
 		// Route metadata & geometry
 		r.Get("/route", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(f.GetRoute())
+			if f != nil {
+				json.NewEncoder(w).Encode(f.GetRoute())
+			} else {
+				json.NewEncoder(w).Encode(map[string]string{"route_id": "m3"})
+			}
 		})
 
 		// System status
 		r.Get("/status", func(w http.ResponseWriter, r *http.Request) {
-			_, _, status := f.GetState()
+			var status models.SystemStatus
+			var demoVehicles []models.Vehicle
+			if f != nil {
+				vehicles, _, st := f.GetState()
+				demoVehicles = vehicles
+				status = st
+			}
+			allVehicles := fleetMgr.MergeDemo(demoVehicles)
+			liveAlerts := alertMgr.GetAll()
+
+			status.ActiveVehiclesCount = len(allVehicles)
+			status.ActiveAlertsCount = len(liveAlerts)
+			if f != nil {
+				_, scAlert, _ := f.GetState()
+				if scAlert != nil {
+					status.ActiveAlertsCount++
+				}
+			}
+			status.PreventedIncidents = alertMgr.PreventedCount()
+			status.PunctualityRate = computePunctuality(allVehicles)
+
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(status)
 		})
 
-		// Vehicles list
+		// Vehicles list (demo + live NDTP)
 		r.Get("/vehicles", func(w http.ResponseWriter, r *http.Request) {
-			vehicles, _, _ := f.GetState()
+			var demoVehicles []models.Vehicle
+			if f != nil {
+				demoVehicles, _, _ = f.GetState()
+			}
+			allVehicles := fleetMgr.MergeDemo(demoVehicles)
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(vehicles)
+			json.NewEncoder(w).Encode(allVehicles)
 		})
 
 		// Alerts list
 		r.Get("/alerts", func(w http.ResponseWriter, r *http.Request) {
-			_, alert, _ := f.GetState()
-			alerts := []models.Alert{}
-			if alert != nil {
-				alerts = append(alerts, *alert)
+			alerts := alertMgr.GetAll()
+			if f != nil {
+				_, alert, _ := f.GetState()
+				if alert != nil {
+					alerts = append(alerts, *alert)
+				}
 			}
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(alerts)
@@ -135,14 +381,39 @@ func main() {
 		// Apply holding recommendation
 		r.Post("/recommendations/{id}/apply", func(w http.ResponseWriter, r *http.Request) {
 			recID := chi.URLParam(r, "id")
-			f.ApplyHolding(true)
+
+			targetVeh, holdSec, applied := alertMgr.ApplyRecommendation(recID)
+			if applied {
+				fleetMgr.ApplyHolding(targetVeh, holdSec)
+				log.Printf("🎯 Applied Holding via DSS: vehicle=%s, duration=%d sec", targetVeh, holdSec)
+			}
+
+			if f != nil {
+				f.ApplyHolding(true)
+			}
 
 			// Immediate broadcast of updated state
-			vehicles, alert, status := f.GetState()
+			var demoVehicles []models.Vehicle
+			var alert *models.Alert
+			var status models.SystemStatus
+			if f != nil {
+				demoVehicles, alert, status = f.GetState()
+			}
+			allVehicles := fleetMgr.MergeDemo(demoVehicles)
+			liveAlerts := alertMgr.GetAll()
+			if len(liveAlerts) > 0 {
+				alert = &liveAlerts[0]
+			}
+
+			status.ActiveVehiclesCount = len(allVehicles)
+			status.ActiveAlertsCount = len(liveAlerts)
+			status.PreventedIncidents = alertMgr.PreventedCount()
+			status.PunctualityRate = computePunctuality(allVehicles)
+
 			msg := TelemetryWSMessage{
 				Type:      "HOLDING_APPLIED",
 				Status:    status,
-				Vehicles:  vehicles,
+				Vehicles:  allVehicles,
 				Alert:     alert,
 				Timestamp: time.Now().Format(time.RFC3339),
 			}
@@ -155,7 +426,9 @@ func main() {
 				"status":         "applied",
 				"recommendation": recID,
 				"holding_active": true,
-				"dispatched_to":  "АСУ-РДС / Бортовой терминал борта №1043",
+				"target_vehicle": targetVeh,
+				"duration_sec":   holdSec,
+				"dispatched_to":  fmt.Sprintf("АСУ-РДС / Бортовой терминал борта №%s", targetVeh),
 				"timestamp":      time.Now().Format(time.RFC3339),
 			})
 		})
@@ -168,31 +441,151 @@ func main() {
 				return
 			}
 
-			switch req.Action {
-			case "play":
-				f.SetPlaying(true)
-			case "pause":
-				f.SetPlaying(false)
-			case "speed":
-				if req.Speed > 0 {
-					f.SetSpeed(req.Speed)
+			if f != nil {
+				switch req.Action {
+				case "play":
+					f.SetPlaying(true)
+				case "pause":
+					f.SetPlaying(false)
+				case "speed":
+					if req.Speed > 0 {
+						f.SetSpeed(req.Speed)
+					}
+				case "reset":
+					f.Reset()
 				}
-			case "reset":
-				f.Reset()
 			}
 
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]any{
-				"status": "updated",
+			json.NewEncoder(w).Encode(map[string]string{
+				"status": "ok",
 				"action": req.Action,
-				"speed":  f.GetSpeed(),
 			})
+		})
+
+		// Start official NDTP emulator stream (:18080 -> :9201)
+		r.Post("/simulation/ndtp/start", func(w http.ResponseWriter, r *http.Request) {
+			ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+			defer cancel()
+
+			targetHost := os.Getenv("NDTP_HOST_FOR_EMULATOR")
+			if targetHost == "" {
+				targetHost = "backend"
+			}
+
+			err := ndtpCli.StartEmulation(ctx, targetHost, 9201, []int64{1166336, 122658, 131672}, 3000)
+			if err != nil {
+				// Retry with localhost if running locally
+				err = ndtpCli.StartEmulation(ctx, "localhost", 9201, []int64{1166336, 122658, 131672}, 3000)
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			if err != nil {
+				w.WriteHeader(http.StatusServiceUnavailable)
+				json.NewEncoder(w).Encode(map[string]any{
+					"status": "error",
+					"error":  err.Error(),
+					"hint":   "Ensure ndtp-emu container is running on port 18080",
+				})
+				return
+			}
+			json.NewEncoder(w).Encode(map[string]any{
+				"status":       "started",
+				"emulator_url": ndtpEmuURL,
+				"target_host":  targetHost,
+				"target_port":  9201,
+				"units":        []int64{1166336, 122658, 131672},
+				"stream_rate":  "3s",
+			})
+		})
+
+		// Stop official NDTP emulator stream
+		r.Post("/simulation/ndtp/stop", func(w http.ResponseWriter, r *http.Request) {
+			ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+			defer cancel()
+
+			err := ndtpCli.StopEmulation(ctx, "backend", 9201)
+			w.Header().Set("Content-Type", "application/json")
+			if err != nil {
+				w.WriteHeader(http.StatusServiceUnavailable)
+				json.NewEncoder(w).Encode(map[string]any{"status": "error", "error": err.Error()})
+				return
+			}
+			json.NewEncoder(w).Encode(map[string]any{"status": "stopped"})
+		})
+
+		// What-if scenario analysis using Welding passenger waiting formula
+		r.Post("/what-if", func(w http.ResponseWriter, r *http.Request) {
+			var req engine.WhatIfRequest
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			var demoVehicles []models.Vehicle
+			if f != nil {
+				demoVehicles, _, _ = f.GetState()
+			}
+			allVehicles := fleetMgr.MergeDemo(demoVehicles)
+
+			res := engine.SimulateWhatIf(req, allVehicles)
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(res)
+		})
+
+		// Real stops from timetable index
+		r.Get("/stops", func(w http.ResponseWriter, r *http.Request) {
+			limit := 200
+			if l := r.URL.Query().Get("limit"); l != "" {
+				if n, err := strconv.Atoi(l); err == nil && n > 0 {
+					limit = n
+				}
+			}
+			stops := schedMatcher.GetAllStops(limit)
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(stops)
+		})
+
+		// Executive business KPIs and passenger economic impact
+		r.Get("/metrics/business", func(w http.ResponseWriter, r *http.Request) {
+			var demoVehicles []models.Vehicle
+			if f != nil {
+				demoVehicles, _, _ = f.GetState()
+			}
+			allVehicles := fleetMgr.MergeDemo(demoVehicles)
+			alerts := alertMgr.GetAll()
+			if f != nil {
+				_, scAlert, _ := f.GetState()
+				if scAlert != nil {
+					alerts = append(alerts, *scAlert)
+				}
+			}
+
+			kpis := engine.ComputeBusinessKPIs(allVehicles, alerts, alertMgr.PreventedCount())
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(kpis)
 		})
 	})
 
-	port := ":8080"
-	log.Printf("🚀 MT-Predictor Go Backend running on http://localhost%s", port)
-	if err := http.ListenAndServe(port, r); err != nil {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	serverAddr := ":" + port
+
+	log.Printf("🚀 Starting Situational Predictor Go Server on %s", serverAddr)
+	log.Printf("📡 NDTP TCP Telemetry Ingestion Receiver on %s", ndtpPort)
+	log.Printf("📖 Swagger UI Documentation on http://localhost:%s/swagger", port)
+
+	srv := &http.Server{
+		Addr:         serverAddr,
+		Handler:      r,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+
+	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("Server failed: %v", err)
 	}
 }

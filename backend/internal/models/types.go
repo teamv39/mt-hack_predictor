@@ -54,13 +54,16 @@ type SHAPFactor struct {
 
 // Recommendation represents actionable intervention suggested by Decision Support System
 type Recommendation struct {
-	ActionType      string  `json:"action_type"` // "HOLDING", "SPEED_ADJUST", "SHORT_TURN"
-	TargetVehicleID string  `json:"target_vehicle_id"`
-	HoldStopID      string  `json:"hold_stop_id"`
-	HoldStopName    string  `json:"hold_stop_name"`
-	DurationSeconds int     `json:"duration_seconds"` // e.g. 150 seconds (2.5 min)
-	PredictedImpact string  `json:"predicted_impact"` // e.g. "Восстановление интервала с 1.2 мин до 7.5 мин"
-	Applied         bool    `json:"applied"`
+	ActionType            string  `json:"action_type"` // "HOLDING", "SPEED_ADJUST", "SHORT_TURN"
+	TargetVehicleID       string  `json:"target_vehicle_id"`
+	HoldStopID            string  `json:"hold_stop_id"`
+	HoldStopName          string  `json:"hold_stop_name"`
+	DurationSeconds       int     `json:"duration_seconds"` // e.g. 150 seconds (2.5 min)
+	PredictedImpact       string  `json:"predicted_impact"` // e.g. "Восстановление интервала с 1.2 мин до 7.5 мин"
+	Applied               bool    `json:"applied"`
+	PassengerAnnouncement string  `json:"passenger_announcement,omitempty"`
+	HasBusBay             bool    `json:"has_bus_bay"`
+	DampingMaxLimitSec    int     `json:"damping_max_limit_sec,omitempty"`
 }
 
 // SystemStatus provides high-level metrics for dashboard Top Bar

@@ -36,8 +36,9 @@ def health_check() -> HealthResponse:
 @router.post("/predict", response_model=PredictionResponse, tags=["Inference"])
 def predict_single(features: FeatureVector) -> PredictionResponse:
     """
-    Computes arrival delay, bunching risk probability, and XAI SHAP factors
-    for an individual vehicle telemetry packet.
+    Predicts signed delay (sec) at the target stop in the T+10…15 min window
+    (official MAE target). Optionally returns DSS bunching/Holding fields and SHAP factors.
+    Accepts official dataset fields (tr_id, cur_dev_s) and legacy Go aliases (vehicle_id).
     """
     try:
         manager = get_model_manager()

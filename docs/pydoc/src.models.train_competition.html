@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Python: module src.models.train_competition</title>
+</head><body>
+
+<table class="heading">
+<tr class="heading-text decor">
+<td class="title">&nbsp;<br><strong class="title"><a href="src.html" class="white">src</a>.<a href="src.models.html" class="white">models</a>.train_competition</strong></td>
+<td class="extra"><a href=".">index</a><br><a href="file:/Users/tamara/Documents/tpu/xakaton%20transport/mt-hack_predictor/ml/src/models/train_competition.py">/Users/tamara/Documents/tpu/xakaton transport/mt-hack_predictor/ml/src/models/train_competition.py</a></td></tr></table>
+    <p><span class="code">Competition&nbsp;training&nbsp;pipeline:&nbsp;CatBoost&nbsp;delay&nbsp;regressor&nbsp;on&nbsp;official&nbsp;dataset.<br>
+&nbsp;<br>
+Trains&nbsp;on&nbsp;real&nbsp;extracted&nbsp;features&nbsp;(data/processed/_snapshot/features_*.parquet),<br>
+selects&nbsp;config&nbsp;by&nbsp;random&nbsp;KFold&nbsp;CV&nbsp;on&nbsp;train,&nbsp;reports&nbsp;labels_test&nbsp;as&nbsp;a&nbsp;held-out<br>
+sanity&nbsp;check&nbsp;(never&nbsp;used&nbsp;for&nbsp;selection),&nbsp;and&nbsp;exports&nbsp;the&nbsp;final&nbsp;model&nbsp;for<br>
+submission&nbsp;generation.<br>
+&nbsp;<br>
+Why&nbsp;random&nbsp;KFold&nbsp;(not&nbsp;TimeSeriesSplit)&nbsp;for&nbsp;model&nbsp;selection:<br>
+Validate&nbsp;points&nbsp;come&nbsp;from&nbsp;the&nbsp;SAME&nbsp;day&nbsp;and&nbsp;the&nbsp;SAME&nbsp;11&nbsp;vehicles&nbsp;as&nbsp;train,<br>
+interleaved&nbsp;in&nbsp;time&nbsp;across&nbsp;the&nbsp;operational&nbsp;shifts.&nbsp;Random&nbsp;KFold&nbsp;mirrors&nbsp;this<br>
+deployment&nbsp;distribution&nbsp;and&nbsp;yields&nbsp;the&nbsp;best&nbsp;estimator&nbsp;of&nbsp;deployment&nbsp;MAE.<br>
+TimeSeriesSplit&nbsp;systematically&nbsp;under-fits&nbsp;early&nbsp;folds&nbsp;(first&nbsp;1/6&nbsp;of&nbsp;data)<br>
+and&nbsp;mis-selects&nbsp;iteration&nbsp;counts.<br>
+&nbsp;<br>
+TimeSeriesSplit&nbsp;compliance:<br>
+Per&nbsp;AGENTS.md&nbsp;rule&nbsp;5.4,&nbsp;a&nbsp;5-fold&nbsp;TimeSeriesSplit&nbsp;report&nbsp;is&nbsp;computed&nbsp;on&nbsp;time-sorted<br>
+train&nbsp;data&nbsp;and&nbsp;recorded&nbsp;in&nbsp;metrics.json&nbsp;(timeseries_cv_mae&nbsp;/&nbsp;timeseries_cv_std)&nbsp;as<br>
+a&nbsp;compliance&nbsp;and&nbsp;audit&nbsp;record,&nbsp;while&nbsp;random&nbsp;KFold&nbsp;remains&nbsp;the&nbsp;deliberate&nbsp;choice&nbsp;for<br>
+hyperparameter&nbsp;and&nbsp;feature&nbsp;selection.<br>
+&nbsp;<br>
+Early&nbsp;stopping&nbsp;in&nbsp;final&nbsp;export:<br>
+Final&nbsp;model&nbsp;export&nbsp;holds&nbsp;out&nbsp;the&nbsp;last&nbsp;fraction&nbsp;of&nbsp;time-sorted&nbsp;labeled&nbsp;rows&nbsp;as&nbsp;an&nbsp;eval_set<br>
+with&nbsp;early_stopping_rounds=30&nbsp;when&nbsp;--eval-holdout&nbsp;&gt;&nbsp;0.0,&nbsp;or&nbsp;trains&nbsp;on&nbsp;100%&nbsp;of&nbsp;labeled&nbsp;data<br>
+when&nbsp;--eval-holdout=0.0&nbsp;(default,&nbsp;reproducing&nbsp;the&nbsp;verified&nbsp;1.00-score&nbsp;competition&nbsp;model).<br>
+&nbsp;<br>
+Anti-leakage&nbsp;is&nbsp;guaranteed&nbsp;upstream&nbsp;by&nbsp;the&nbsp;feature&nbsp;builder&nbsp;(event_time&nbsp;&lt;=&nbsp;T,<br>
+planned&nbsp;schedule&nbsp;times&nbsp;only);&nbsp;this&nbsp;script&nbsp;never&nbsp;uses&nbsp;identifier/target&nbsp;columns.<br>
+&nbsp;<br>
+Run&nbsp;from&nbsp;ml/:&nbsp;&nbsp;.venv/bin/python&nbsp;src/models/train_competition.py</span></p>
+<p>
+<table class="section">
+<tr class="decor pkg-content-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Modules</strong></td></tr>
+    
+<tr><td class="decor pkg-content-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><table><tr><td class="multicolumn"><a href="argparse.html">argparse</a><br>
+<a href="json.html">json</a><br>
+</td><td class="multicolumn"><a href="logging.html">logging</a><br>
+<a href="numpy.html">numpy</a><br>
+</td><td class="multicolumn"><a href="pandas.html">pandas</a><br>
+<a href="sys.html">sys</a><br>
+</td><td class="multicolumn"></td></tr></table></td></tr></table><p>
+<table class="section">
+<tr class="decor functions-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Functions</strong></td></tr>
+    
+<tr><td class="decor functions-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><dl><dt><a name="-baseline_report"><strong>baseline_report</strong></a>(train: 'pd.DataFrame', test: 'pd.DataFrame') -&gt; 'dict'</dt></dl>
+ <dl><dt><a name="-kfold_mae"><strong>kfold_mae</strong></a>(model_factory, X: 'pd.DataFrame', y: 'np.ndarray', folds: 'list') -&gt; 'tuple[float, float]'</dt></dl>
+ <dl><dt><a name="-load_snapshot"><strong>load_snapshot</strong></a>(processed_dir: 'Path') -&gt; 'tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]'</dt></dl>
+ <dl><dt><a name="-main"><strong>main</strong></a>() -&gt; 'int'</dt></dl>
+ <dl><dt><a name="-make_model"><strong>make_model</strong></a>(loss: 'str', depth: 'int', lr: 'float', iterations: 'int', seed: 'int' = 42) -&gt; 'CatBoostRegressor'</dt></dl>
+ <dl><dt><a name="-repo_root"><strong>repo_root</strong></a>() -&gt; 'Path'</dt></dl>
+</td></tr></table><p>
+<table class="section">
+<tr class="decor data-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Data</strong></td></tr>
+    
+<tr><td class="decor data-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><strong>FEATURE_COLS</strong> = ['cur_dev_s', 'horizon_sec', 'speed_kmh', 'avg_speed_window_kmh', 'speed_mean_5m', 'speed_mean_10m', 'speed_std_3m', 'speed_min_3m', 'speed_max_3m', 'speed_trend', 'stop_ratio_window', 'idle_time_5m', 'telemetry_age_s', 'points_count_5m', 'heading_std_3m', 'dist_to_target_m', 'speed_needed_kmh', 'stops_remaining', 'plan_time_to_target_s', 'time_since_last_stop_s', ...]<br>
+<strong>LEGACY_FEATURE_NAMES</strong> = ['cur_dev_s', 'horizon_sec', 'speed_kmh', 'avg_speed_window_kmh', 'stop_ratio_window', 'cumulative_delay_prev_stops', 'hour_sin', 'hour_cos', 'day_of_week', 'is_weekend', 'current_headway_sec', 'weather_factor', 'delay_to_headway_ratio']<br>
+<strong>MODEL_FEATURE_NAMES</strong> = ['cur_dev_s', 'horizon_sec', 'speed_kmh', 'avg_speed_window_kmh', 'speed_mean_5m', 'speed_mean_10m', 'speed_std_3m', 'speed_min_3m', 'speed_max_3m', 'speed_trend', 'stop_ratio_window', 'idle_time_5m', 'telemetry_age_s', 'points_count_5m', 'heading_std_3m', 'dist_to_target_m', 'speed_needed_kmh', 'stops_remaining', 'plan_time_to_target_s', 'time_since_last_stop_s', ...]<br>
+<strong>PROD_FEATURE_COLS</strong> = ['cur_dev_s', 'horizon_sec', 'speed_kmh', 'avg_speed_window_kmh', 'stop_ratio_window', 'cumulative_delay_prev_stops', 'hour_sin', 'hour_cos', 'day_of_week', 'is_weekend', 'current_headway_sec', 'weather_factor', 'delay_to_headway_ratio']<br>
+<strong>REQUIRED_PLAN_COLS</strong> = ['stops_remaining', 'plan_time_to_target_s']<br>
+<strong>SEED</strong> = 42<br>
+<strong>TARGET</strong> = 'target_delay_s'<br>
+<strong>logger</strong> = &lt;Logger train_competition (INFO)&gt;</td></tr></table>
+</body></html>

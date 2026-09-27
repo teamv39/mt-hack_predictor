@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Python: module src.models.fallback</title>
+</head><body>
+
+<table class="heading">
+<tr class="heading-text decor">
+<td class="title">&nbsp;<br><strong class="title"><a href="src.html" class="white">src</a>.<a href="src.models.html" class="white">models</a>.fallback</strong></td>
+<td class="extra"><a href=".">index</a><br><a href="file:/Users/tamara/Documents/tpu/xakaton%20transport/mt-hack_predictor/ml/src/models/fallback.py">/Users/tamara/Documents/tpu/xakaton transport/mt-hack_predictor/ml/src/models/fallback.py</a></td></tr></table>
+    <p><span class="code">Heuristic&nbsp;fallback&nbsp;predictor&nbsp;when&nbsp;pre-trained&nbsp;model&nbsp;weights&nbsp;are&nbsp;not&nbsp;present.<br>
+&nbsp;<br>
+Primary&nbsp;output&nbsp;is&nbsp;signed&nbsp;delay&nbsp;seconds&nbsp;(official&nbsp;MAE&nbsp;target).&nbsp;Bunching&nbsp;/&nbsp;Holding<br>
+signals&nbsp;are&nbsp;secondary&nbsp;DSS&nbsp;extras&nbsp;derived&nbsp;from&nbsp;optional&nbsp;headway&nbsp;features.</span></p>
+<p>
+<table class="section">
+<tr class="decor pkg-content-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Modules</strong></td></tr>
+    
+<tr><td class="decor pkg-content-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><table><tr><td class="multicolumn"><a href="math.html">math</a><br>
+</td><td class="multicolumn"></td><td class="multicolumn"></td><td class="multicolumn"></td></tr></table></td></tr></table><p>
+<table class="section">
+<tr class="decor index-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Classes</strong></td></tr>
+    
+<tr><td class="decor index-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><dl>
+<dt class="heading-text"><a href="src.models.base.html#BasePredictor">src.models.base.BasePredictor</a>(<a href="abc.html#ABC">abc.ABC</a>)
+</dt><dd>
+<dl>
+<dt class="heading-text"><a href="src.models.fallback.html#HeuristicFallbackPredictor">HeuristicFallbackPredictor</a>
+</dt></dl>
+</dd>
+</dl>
+ <p>
+<table class="section">
+<tr class="decor title-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><a name="HeuristicFallbackPredictor">class <strong>HeuristicFallbackPredictor</strong></a>(<a href="src.models.base.html#BasePredictor">src.models.base.BasePredictor</a>)</td></tr>
+    
+<tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
+<td class="decor title-decor" colspan=2><span class="code"><a href="#HeuristicFallbackPredictor">HeuristicFallbackPredictor</a>()&nbsp;-&amp;gt;&nbsp;'None'<br>
+&nbsp;<br>
+Fallback&nbsp;predictor&nbsp;using&nbsp;schedule&nbsp;deviation&nbsp;persistence&nbsp;+&nbsp;speed&nbsp;dampening.<br>&nbsp;</span></td></tr>
+<tr><td>&nbsp;</td>
+<td class="singlecolumn"><dl><dt>Method resolution order:</dt>
+<dd><a href="src.models.fallback.html#HeuristicFallbackPredictor">HeuristicFallbackPredictor</a></dd>
+<dd><a href="src.models.base.html#BasePredictor">src.models.base.BasePredictor</a></dd>
+<dd><a href="abc.html#ABC">abc.ABC</a></dd>
+<dd><a href="builtins.html#object">builtins.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="HeuristicFallbackPredictor-__init__"><strong>__init__</strong></a>(self) -&gt; 'None'</dt><dd><span class="code">Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</span></dd></dl>
+
+<dl><dt><a name="HeuristicFallbackPredictor-get_status"><strong>get_status</strong></a>(self) -&gt; 'ModelStatus'</dt><dd><span class="code">Returns&nbsp;the&nbsp;operational&nbsp;status&nbsp;of&nbsp;the&nbsp;model.</span></dd></dl>
+
+<dl><dt><a name="HeuristicFallbackPredictor-predict_batch"><strong>predict_batch</strong></a>(self, features: 'List[FeatureVector]') -&gt; 'List[PredictionResponse]'</dt><dd><span class="code">Runs&nbsp;batch&nbsp;inference&nbsp;for&nbsp;multiple&nbsp;vehicle&nbsp;feature&nbsp;vectors.</span></dd></dl>
+
+<dl><dt><a name="HeuristicFallbackPredictor-predict_single"><strong>predict_single</strong></a>(self, feature: 'FeatureVector') -&gt; 'PredictionResponse'</dt><dd><span class="code">Runs&nbsp;inference&nbsp;for&nbsp;a&nbsp;single&nbsp;vehicle&nbsp;feature&nbsp;vector.</span></dd></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>__abstractmethods__</strong> = frozenset()</dl>
+
+<dl><dt><strong>__annotations__</strong> = {}</dl>
+
+<hr>
+Data descriptors inherited from <a href="src.models.base.html#BasePredictor">src.models.base.BasePredictor</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><span class="code">dictionary&nbsp;for&nbsp;instance&nbsp;variables</span></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><span class="code">list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object</span></dd>
+</dl>
+</td></tr></table></td></tr></table><p>
+<table class="section">
+<tr class="decor data-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Data</strong></td></tr>
+    
+<tr><td class="decor data-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><strong>FEATURE_HUMAN_TITLES</strong> = {'avg_speed_window_kmh': 'Средняя скорость на окне до момента T', 'cumulative_delay_prev_stops': 'Накопленная задержка на предыдущих остановках', 'cur_dev_s': 'Текущее отклонение от графика (последняя пройденная остановка)', 'current_delay_sec': 'Текущее отставание от графика', 'current_headway_sec': 'Интервал до переднего борта (DSS)', 'day_of_week': 'День недели / пассажиропоток', 'delay_to_headway_ratio': 'Коэффициент Delay/Headway (DSS)', 'dist_to_target_m': 'Расстояние до целевой остановки', 'heading_std_3m': 'Разброс курса за 3-мин окно', 'historical_avg_speed': 'Средняя скорость на перегоне', ...}<br>
+<strong>List</strong> = typing.List<br>
+<strong>Optional</strong> = typing.Optional</td></tr></table>
+</body></html>

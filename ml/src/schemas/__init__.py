@@ -1,14 +1,24 @@
-"""Pydantic schemas for ML Service."""
+"""Pydantic schemas for ML Service (inference + official dataset rows)."""
 
-from .features import FeatureVector, BatchFeatureRequest
-from .prediction import (
-    PredictionResponse,
-    BatchPredictionResponse,
-    SHAPFactor,
-    Severity,
-    Recommendation,
+from .dataset import (
+    DelayClass as DatasetDelayClass,
+    ForecastPoint,
+    LabelPoint,
+    ScheduleStop,
+    SubmissionFile,
+    SubmissionRow,
+    TrafficPoint,
 )
+from .features import BatchFeatureRequest, FeatureVector
 from .health import HealthResponse, ModelStatus
+from .prediction import (
+    BatchPredictionResponse,
+    DelayClass,
+    PredictionResponse,
+    Recommendation,
+    Severity,
+    SHAPFactor,
+)
 
 __all__ = [
     "FeatureVector",
@@ -17,7 +27,15 @@ __all__ = [
     "BatchPredictionResponse",
     "SHAPFactor",
     "Severity",
+    "DelayClass",
     "Recommendation",
     "HealthResponse",
     "ModelStatus",
+    "TrafficPoint",
+    "ScheduleStop",
+    "ForecastPoint",
+    "LabelPoint",
+    "SubmissionRow",
+    "SubmissionFile",
+    "DatasetDelayClass",
 ]

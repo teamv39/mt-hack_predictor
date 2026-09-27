@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Python: module src.features.telemetry_cleaner</title>
+</head><body>
+
+<table class="heading">
+<tr class="heading-text decor">
+<td class="title">&nbsp;<br><strong class="title"><a href="src.html" class="white">src</a>.<a href="src.features.html" class="white">features</a>.telemetry_cleaner</strong></td>
+<td class="extra"><a href=".">index</a><br><a href="file:/Users/tamara/Documents/tpu/xakaton%20transport/mt-hack_predictor/ml/src/features/telemetry_cleaner.py">/Users/tamara/Documents/tpu/xakaton transport/mt-hack_predictor/ml/src/features/telemetry_cleaner.py</a></td></tr></table>
+    <p><span class="code">Telemetry&nbsp;data&nbsp;cleaning&nbsp;and&nbsp;filtering&nbsp;module&nbsp;for&nbsp;Moscow&nbsp;Transport&nbsp;dataset.<br>
+&nbsp;<br>
+Filters&nbsp;invalid&nbsp;GPS&nbsp;fixes,&nbsp;out-of-bounds&nbsp;coordinates,&nbsp;unrealistic&nbsp;speeds,<br>
+and&nbsp;duplicate&nbsp;packets&nbsp;to&nbsp;prepare&nbsp;clean&nbsp;telemetry&nbsp;traces&nbsp;for&nbsp;feature&nbsp;generation.</span></p>
+<p>
+<table class="section">
+<tr class="decor pkg-content-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Modules</strong></td></tr>
+    
+<tr><td class="decor pkg-content-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><table><tr><td class="multicolumn"><a href="logging.html">logging</a><br>
+</td><td class="multicolumn"><a href="numpy.html">numpy</a><br>
+</td><td class="multicolumn"><a href="pandas.html">pandas</a><br>
+</td><td class="multicolumn"></td></tr></table></td></tr></table><p>
+<table class="section">
+<tr class="decor functions-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Functions</strong></td></tr>
+    
+<tr><td class="decor functions-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><dl><dt><a name="-clean_traffic_dataframe"><strong>clean_traffic_dataframe</strong></a>(df: 'pd.DataFrame', bbox: 'Optional[dict]' = None, max_speed: 'float' = 110.0, min_speed: 'float' = 0.0) -&gt; 'pd.DataFrame'</dt><dd><span class="code">Cleans&nbsp;a&nbsp;raw&nbsp;traffic&nbsp;telemetry&nbsp;DataFrame.<br>
+&nbsp;<br>
+Rules&nbsp;applied:<br>
+1.&nbsp;Filter&nbsp;out&nbsp;`location_valid&nbsp;==&nbsp;False`&nbsp;(and&nbsp;missing&nbsp;coordinates).<br>
+2.&nbsp;Filter&nbsp;coordinates&nbsp;within&nbsp;Moscow/MO&nbsp;bounding&nbsp;box.<br>
+3.&nbsp;Filter&nbsp;out&nbsp;unrealistic&nbsp;speeds&nbsp;(negative&nbsp;or&nbsp;&gt;&nbsp;110&nbsp;km/h).<br>
+4.&nbsp;Convert&nbsp;`event_time`&nbsp;to&nbsp;datetime64&nbsp;and&nbsp;sort&nbsp;by&nbsp;`(tr_id,&nbsp;event_time)`.<br>
+5.&nbsp;Deduplicate&nbsp;identical&nbsp;timestamps&nbsp;for&nbsp;the&nbsp;same&nbsp;vehicle.</span></dd></dl>
+ <dl><dt><a name="-load_and_clean_traffic"><strong>load_and_clean_traffic</strong></a>(file_path: 'Union[str, Path]', bbox: 'Optional[dict]' = None) -&gt; 'pd.DataFrame'</dt><dd><span class="code">Loads&nbsp;a&nbsp;traffic.csv&nbsp;file&nbsp;and&nbsp;returns&nbsp;cleaned&nbsp;DataFrame.</span></dd></dl>
+</td></tr></table><p>
+<table class="section">
+<tr class="decor data-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Data</strong></td></tr>
+    
+<tr><td class="decor data-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><strong>MAX_BUS_SPEED_KMH</strong> = 110.0<br>
+<strong>MIN_BUS_SPEED_KMH</strong> = 0.0<br>
+<strong>MOSCOW_BBOX</strong> = {'lat_max': 57.0, 'lat_min': 54.5, 'lon_max': 40.5, 'lon_min': 35.0}<br>
+<strong>Optional</strong> = typing.Optional<br>
+<strong>Union</strong> = typing.Union<br>
+<strong>logger</strong> = &lt;Logger src.features.telemetry_cleaner (INFO)&gt;</td></tr></table>
+</body></html>

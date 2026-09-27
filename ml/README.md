@@ -1,33 +1,43 @@
 # MT-Hackathon Track 3: Machine Learning & Inference Service
 
-Микросервис машинного обучения и XAI-аналитики для прогнозирования интервалов и пачкования городского транспорта.
+Микросервис прогнозирования **задержки прибытия** на целевую остановку в горизонте **T+10…15 мин**
+(офименная метрика — **MAE** по `target_delay_s`) плюс опциональный DSS-контур (риск пачкования, Holding, SHAP).
 
-## 🚀 Архитектура и возможности
+## Официальная задача (dataset/)
 
-- **CatBoost Regressor**: Прогноз накопленной задержки и времени хода ($\Delta t$, Huber Loss / MAE).
-- **CatBoost Classifier**: Прогноз вероятности схлопывания интервалов / пачкования (*Bus Bunching*, PR-AUC).
-- **TreeSHAP XAI**: Мгновенный расчет вклада факторов в прогноз (< 1 мс на запрос) с человекочитаемыми описаниями на русском языке.
-- **Decision Support System (Holding)**: Расчет рекомендации удержания борта на остановке для предотвращения сбоя.
-- **Heuristic Fallback**: Полная работоспособность сервиса даже при отсутствии обученных весов моделей (транспортная математика и формулы Велдинга).
-- **Hot-Reloading**: Возможность обновления весов модели через `POST /models/reload` без простоя сервиса.
+| Что | Детали |
+|---|---|
+| Target | `target_delay_s` = факт − план, **секунды, знак важен** (+ опоздание, − опережение) |
+| Момент | `T` — использовать только `traffic.event_time ≤ T` и подсказку `cur_dev_s` |
+| Окно | плановое прибытие целевой остановки ∈ `(T+10 мин, T+15 мин]` |
+| Метрика | MAE; baseline `prediction = cur_dev_s` ≈ score 0.40 |
+| Сабмит | `sample_id;prediction` (разделитель `;`) |
 
-## 🛠 Запуск и разработка
+Схемы сырых CSV: `src/schemas/dataset.py` (`TrafficPoint`, `ScheduleStop`, `LabelPoint`, `ForecastPoint`, `SubmissionRow`).
+
+## Возможности сервиса
+
+- **CatBoost Regressor** — signed delay, Huber loss / MAE, нативный TreeSHAP.
+- **Опциональный Classifier** — риск bunching для живого DSS (не входит в offline-score).
+- **Heuristic Fallback** — персистентность `cur_dev_s` + speed/idle residual, если `.cbm` нет.
+- **Hot-reload** — `POST /models/reload` без простоя.
+- **Совместимость** — принимает и официальные поля (`tr_id`, `cur_dev_s`), и legacy Go-payload (`vehicle_id`, `current_delay_sec`).
+
+## Запуск
 
 ```bash
-# Синхронизация зависимостей
 uv sync
-
-# Запуск тестов
 uv run pytest
-
-# Запуск dev-сервера
 uv run uvicorn src.api.server:app --reload --port 8000
+
+# baseline-веса (синтетика / demo-scenario; не финальная модель на dataset/)
+uv run python -m src.models.train
 ```
 
-## 🔌 API Эндпоинты
+## API
 
-- `GET /health` — Статус сервиса, uptime, режим работы (CatBoost / Heuristic Fallback).
-- `POST /predict` — Одиночный прогноз для одного ТС.
-- `POST /predict/batch` — Высокопроизводительный пакетный прогноз для группы ТС.
-- `GET /models/info` — Список используемых фичей и статус весов моделей.
-- `POST /models/reload` — Перезагрузка моделей с диска.
+- `GET /health` — uptime, mode (`catboost` / `heuristic_fallback`), `primary_target=target_delay_s`
+- `POST /predict` — одиночный прогноз
+- `POST /predict/batch` — пакетный
+- `GET /models/info` — фичи и пути весов
+- `POST /models/reload` — горячая перезагрузка

@@ -1,0 +1,76 @@
+services:
+  # Vector Tile Builder (Planetiler auto-init: downloads OSM and builds mbtiles if missing)
+  map-builder:
+    image: ghcr.io/onthegomap/planetiler:latest
+    container_name: moscow-map-builder
+    restart: "no"
+    volumes:
+      - ./data:/data
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        set -eu
+        TARGET="/data/moscow_transport.mbtiles"
+        TARGET_TMP="/data/moscow_transport.mbtiles.tmp"
+        OSM_FILE="/data/moscow.osm.pbf"
+        URL="https://download.bbbike.org/osm/bbbike/Moscow/Moscow.osm.pbf"
+
+        rm -f "$$TARGET_TMP"
+
+        if [ -f "$$TARGET" ] && [ -s "$$TARGET" ]; then
+          HEADER=$$(head -c 15 "$$TARGET" 2>/dev/null || echo "")
+          SIZE=$$(wc -c < "$$TARGET" 2>/dev/null | tr -d ' ' || echo 0)
+          if [ "$$HEADER" = "SQLite format 3" ] && [ "$$SIZE" -gt 10000000 ]; then
+            echo "==> [Map Builder] Found valid vector tiles ($$SIZE bytes). Skipping build."
+            mkdir -p /data/sprites /data/fonts
+            exit 0
+          else
+            echo "==> [Map Builder] Corrupted or incomplete .mbtiles detected ($$SIZE bytes). Removing..."
+            rm -f "$$TARGET"
+          fi
+        fi
+
+        echo "==> [Map Builder] Vector tiles not found! Starting automated map preparation..."
+        mkdir -p /data /data/sprites /data/fonts
+
+        if [ ! -f "$$OSM_FILE" ] || [ ! -s "$$OSM_FILE" ]; then
+          echo "==> [Map Builder] Step 1/2: Downloading Moscow OSM extract from BBBike (85 MB)..."
+          wget -q --show-progress -O "$$OSM_FILE.tmp" "$$URL"
+          mv "$$OSM_FILE.tmp" "$$OSM_FILE"
+          echo "==> [Map Builder] OSM download complete: $$(du -h "$$OSM_FILE" | cut -f1)"
+        else
+          echo "==> [Map Builder] Step 1/2: Using existing OSM extract ($$OSM_FILE)."
+        fi
+
+        echo "==> [Map Builder] Step 2/2: Building vector tiles via Planetiler..."
+        java -Xmx4g -cp @/app/jib-classpath-file com.onthegomap.planetiler.Main \
+          --osm-path=$$OSM_FILE \
+          --output=$$TARGET_TMP \
+          --maxzoom=14 \
+          --exclude-layers=building \
+          --download \
+          --fetch-wikidata=false \
+          --force
+
+        mv "$$TARGET_TMP" "$$TARGET"
+        chmod 666 "$$TARGET" 2>/dev/null || true
+        echo "==> [Map Builder] Vector tiles successfully built: $$(du -h "$$TARGET" | cut -f1)! TileServer can start now."
+
+  tileserver:
+    image: maptiler/tileserver-gl:latest
+    container_name: moscow-map-tileserver
+    restart: unless-stopped
+    ports:
+      - "8085:80"
+    volumes:
+      - ./data:/data
+      - ./styles:/data/styles
+      - ./config.json:/data/config.json
+    command: ["--config", "/data/config.json", "-p", "80"]
+    depends_on:
+      map-builder:
+        condition: service_completed_successfully
+    deploy:
+      resources:
+        limits:
+          memory: 2G

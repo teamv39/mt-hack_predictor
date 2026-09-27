@@ -1,0 +1,78 @@
+name: Deploy to Production Server
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Build & Deploy to Lab VM
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+          cache-dependency-path: backend/go.sum
+
+      - name: Build Go Backend (Linux amd64)
+        run: |
+          cd backend
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o server ./cmd/server
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p ${{ secrets.SERVER_PORT || 22 }} -H "${{ secrets.SERVER_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Sync Artifacts to Server
+        run: |
+          SSH_CMD="ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.SERVER_PORT || 22 }} -o StrictHostKeyChecking=accept-new"
+          TARGET="${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/${{ secrets.SERVER_USER }}/mt-hack_predictor"
+
+          echo "==> Syncing Frontend bundle..."
+          rsync -avz -e "$SSH_CMD" --delete frontend/dist/ "${TARGET}/frontend/dist/"
+
+          echo "==> Syncing Go server binary..."
+          rsync -avz -e "$SSH_CMD" backend/server "${TARGET}/backend/server"
+
+          echo "==> Syncing ML code..."
+          rsync -avz -e "$SSH_CMD" --exclude='.venv' --exclude='__pycache__' ml/src/ "${TARGET}/ml/src/"
+          rsync -avz -e "$SSH_CMD" ml/pyproject.toml "${TARGET}/ml/pyproject.toml"
+
+          echo "==> Syncing Deploy Script..."
+          rsync -avz -e "$SSH_CMD" scripts/deploy.sh "${TARGET}/scripts/deploy.sh"
+
+      - name: Run Remote Deployment
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.SERVER_PORT || 22 }} -o StrictHostKeyChecking=accept-new \
+            "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}" \
+            "chmod +x /home/${{ secrets.SERVER_USER }}/mt-hack_predictor/scripts/deploy.sh && /home/${{ secrets.SERVER_USER }}/mt-hack_predictor/scripts/deploy.sh"
+
+      - name: Health Check
+        run: |
+          sleep 3
+          echo "==> Verifying Public Dashboard Status on :1234..."
+          curl -f --retry 3 --retry-delay 2 -s http://${{ secrets.SERVER_HOST }}:1234/api/v1/status | jq .

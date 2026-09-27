@@ -1,0 +1,32 @@
+{
+  "options": {
+    "paths": {
+      "root": "/data",
+      "fonts": "fonts",
+      "styles": "styles",
+      "mbtiles": ""
+    },
+    "domains": []
+  },
+  "data": {
+    "moscow-transport": {
+      "mbtiles": "moscow_transport.mbtiles"
+    }
+  },
+  "styles": {
+    "transport": {
+      "style": "transport.json",
+      "tilejson": {
+        "type": "vector",
+        "bounds": [36.8, 55.1, 38.2, 56.1]
+      }
+    },
+    "transport-dark": {
+      "style": "transport-dark.json",
+      "tilejson": {
+        "type": "vector",
+        "bounds": [36.8, 55.1, 38.2, 56.1]
+      }
+    }
+  }
+}
