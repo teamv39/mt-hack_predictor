@@ -36,6 +36,14 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/tiles/, ''),
         headers: {
           'X-Forwarded-Path': '/tiles'
+        },
+        configure: (proxy) => {
+          proxy.on('error', (_err, _req, res) => {
+            if (res && !res.headersSent && typeof res.writeHead === 'function') {
+              res.writeHead(503, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'tileserver_offline' }));
+            }
+          });
         }
       }
     }
