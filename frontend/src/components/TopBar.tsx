@@ -172,7 +172,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             }`}
           >
             <Activity size={13} className="opacity-80" />
-            <span>График Марея (м3)</span>
+            <span>График Марея</span>
           </button>
 
           <button

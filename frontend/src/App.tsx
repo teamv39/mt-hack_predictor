@@ -106,9 +106,10 @@ export default function App() {
       <main className="relative flex-1 min-h-0 w-full overflow-hidden">
         {activeTab === "marey" ? (
           <MareyDiagram
-            onApplyHolding={() => applyHolding(selectedAlertId || "alert_1042")}
+            selectedRouteId={selectedAlert?.routeNumberBadge || "м3"}
+            onApplyHolding={(alertId) => applyHolding(alertId || selectedAlertId || "alert_1042")}
             onOpenScenarios={() => setIsScenariosOpen(true)}
-            isApplied={selectedAlert?.recommendation?.applied || false}
+            appliedHoldingIds={appliedHoldingIds}
             isDarkMode={isDarkMode}
           />
         ) : activeTab === "terminal" ? (
