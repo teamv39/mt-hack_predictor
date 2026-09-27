@@ -166,6 +166,8 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
               </h1>
               {/* Unit Selector */}
               <select
+                id="driver-terminal-unit-select"
+                name="terminal-unit"
                 value={currentUnitId}
                 onChange={(e) => setCurrentUnitId(e.target.value)}
                 className={`text-[10px] font-bold font-mono px-2 py-0.5 rounded border cursor-pointer outline-none ${

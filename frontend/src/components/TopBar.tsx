@@ -16,6 +16,7 @@ import {
   Radio,
   Compass,
 } from "lucide-react";
+import type { DataMode } from "../hooks/useTelemetry";
 
 export type SimulationAction = "play" | "pause" | "speed" | "step" | "reset";
 
@@ -35,6 +36,8 @@ export interface TopBarProps {
   isDarkMode?: boolean;
   onToggleDarkMode?: () => void;
   onOpenGuide?: () => void;
+  dataMode?: DataMode;
+  onDataModeChange?: (mode: DataMode) => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
@@ -47,6 +50,8 @@ export const TopBar: React.FC<TopBarProps> = ({
   isDarkMode = false,
   onToggleDarkMode,
   onOpenGuide,
+  dataMode = "dataset",
+  onDataModeChange,
 }) => {
   const [timeStr, setTimeStr] = useState<string>("14:00:00");
   const [isMuted, setIsMuted] = useState<boolean>(false);
@@ -115,13 +120,13 @@ export const TopBar: React.FC<TopBarProps> = ({
               <span className={`text-[12px] font-bold tracking-tight uppercase ${isDarkMode ? "text-white" : "text-zinc-900"}`}>
                 Московский Транспорт
               </span>
-              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded font-mono ${
+              <span className={`text-xs font-bold px-1.5 py-0.5 rounded font-mono ${
                 isDarkMode ? "bg-white/10 text-zinc-300" : "bg-zinc-100 text-zinc-700"
               }`}>
                 ЦОДД
               </span>
             </div>
-            <span className={`text-[10px] font-medium tracking-tight ${isDarkMode ? "text-zinc-400" : "text-zinc-500"}`}>
+            <span className={`text-sm font-medium tracking-tight ${isDarkMode ? "text-zinc-400" : "text-zinc-500"}`}>
               Ситуационный Центр • СППР Headway DSS
             </span>
           </div>
@@ -190,6 +195,36 @@ export const TopBar: React.FC<TopBarProps> = ({
 
       {/* 2. CENTER TELEMETRY & LIVE CLOCK */}
       <div className="hidden lg:flex items-center gap-2.5">
+        {onDataModeChange && (
+          <div
+            className={`flex items-center gap-0.5 p-0.5 rounded-lg border ${
+              isDarkMode ? "bg-[#222226] border-white/10" : "bg-zinc-100 border-zinc-200"
+            }`}
+            role="group"
+            aria-label="Источник данных"
+          >
+            {([
+              ["mock", "Демо"],
+              ["dataset", "GPS"],
+              ["live", "Эфир"],
+            ] as const).map(([mode, label]) => (
+              <button
+                key={mode}
+                type="button"
+                aria-pressed={dataMode === mode}
+                title={`Источник данных: ${label}`}
+                onClick={() => onDataModeChange(mode)}
+                className={`px-2 py-1 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+                  dataMode === mode
+                    ? isDarkMode ? "bg-zinc-700 text-white shadow-xs" : "bg-white text-zinc-900 shadow-xs"
+                    : isDarkMode ? "text-zinc-400 hover:text-zinc-200 hover:bg-white/5" : "text-zinc-600 hover:text-zinc-900 hover:bg-white/60"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
         {/* Realtime Clock */}
         <div
           className={`flex items-center gap-2 px-2.5 py-1 rounded-lg border text-xs font-mono font-medium ${
@@ -200,7 +235,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         >
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           <span className="tracking-wider font-semibold">{timeStr}</span>
-          <span className={`text-[10px] ${isDarkMode ? "text-zinc-500" : "text-zinc-400"}`}>МСК</span>
+          <span className={`text-xs ${isDarkMode ? "text-zinc-500" : "text-zinc-400"}`}>МСК</span>
         </div>
 
         {/* Punctuality Badge */}
@@ -214,7 +249,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         >
           <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
           <span className="font-mono font-bold">{punctuality}</span>
-          <span className="text-[11px] opacity-70">график</span>
+          <span className="text-sm opacity-70">график</span>
         </div>
 
         {/* Risk Alerts Counter */}
@@ -228,7 +263,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         >
           <AlertTriangle size={13} className="text-amber-500 shrink-0" />
           <span className="font-mono font-bold">{incidentsCount}</span>
-          <span className="text-[11px] opacity-70">риска</span>
+          <span className="text-xs opacity-70">риска</span>
         </div>
       </div>
 
@@ -256,7 +291,7 @@ export const TopBar: React.FC<TopBarProps> = ({
 
           <button
             onClick={() => onControl && onControl("speed", simSpeed === 1 ? 2 : simSpeed === 2 ? 5 : 1)}
-            className={`px-2 py-1 rounded-md text-[11px] font-mono font-bold transition-colors cursor-pointer ${
+            className={`px-2 py-1 rounded-md text-xs font-mono font-bold transition-colors cursor-pointer ${
               isDarkMode
                 ? "hover:bg-white/10 text-zinc-300 hover:text-white"
                 : "hover:bg-white text-zinc-700 hover:text-zinc-900"

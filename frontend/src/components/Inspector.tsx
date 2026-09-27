@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   X,
   CheckCircle2,
@@ -6,6 +6,7 @@ import {
   Gauge,
   Clock,
   MapPin,
+  ChevronDown,
   Grid2x2,
 } from "lucide-react";
 import {
@@ -35,6 +36,7 @@ export const Inspector: React.FC<InspectorProps> = ({
   onClose,
   isDarkMode = false,
 }) => {
+  const [isShapOpen, setIsShapOpen] = useState(true);
   const chartData = alert?.delayChartData?.length
     ? alert.delayChartData.map((d) => ({
         stop: d.stop,
@@ -147,7 +149,7 @@ export const Inspector: React.FC<InspectorProps> = ({
             {vehicleTitle}
           </h2>
           <span
-            className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${
+            className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border ${
               vehicle?.status === "BUNCHING_RISK" || alert?.category === "critical"
                 ? "bg-rose-500/10 text-rose-400 border-rose-500/30"
                 : "bg-amber-500/10 text-amber-400 border-amber-500/30"
@@ -159,7 +161,7 @@ export const Inspector: React.FC<InspectorProps> = ({
 
         <div className="flex items-center gap-1.5 flex-wrap">
           <span
-            className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${
+            className={`px-2 py-0.5 rounded text-xs font-semibold border ${
               isDarkMode
                 ? "bg-[#27272a] border-white/10 text-zinc-200"
                 : "bg-zinc-100 border-zinc-200 text-zinc-800"
@@ -168,7 +170,7 @@ export const Inspector: React.FC<InspectorProps> = ({
             {routeBadge}
           </span>
           <span
-            className={`text-[10px] font-mono font-medium px-1.5 py-0.5 rounded border ${
+            className={`text-xs font-mono font-medium px-1.5 py-0.5 rounded border ${
               isDarkMode ? "bg-[#222226] text-zinc-400 border-white/5" : "bg-zinc-100 text-zinc-600 border-zinc-200"
             }`}
           >
@@ -183,7 +185,7 @@ export const Inspector: React.FC<InspectorProps> = ({
               isDarkMode ? "bg-[#222226] border-white/5" : "bg-zinc-50 border-zinc-200"
             }`}
           >
-            <div className="flex items-center gap-1 text-[10px] text-zinc-400 mb-0.5">
+            <div className="flex items-center gap-1 text-xs text-zinc-400 mb-0.5">
               <Gauge size={11} className="opacity-70" />
               <span>Скорость</span>
             </div>
@@ -197,7 +199,7 @@ export const Inspector: React.FC<InspectorProps> = ({
               isDarkMode ? "bg-[#222226] border-white/5" : "bg-zinc-50 border-zinc-200"
             }`}
           >
-            <div className="flex items-center gap-1 text-[10px] text-zinc-400 mb-0.5">
+            <div className="flex items-center gap-1 text-xs text-zinc-400 mb-0.5">
               <Clock size={11} className="opacity-70" />
               <span>Задержка</span>
             </div>
@@ -211,11 +213,11 @@ export const Inspector: React.FC<InspectorProps> = ({
               isDarkMode ? "bg-[#222226] border-white/5" : "bg-zinc-50 border-zinc-200"
             }`}
           >
-            <div className="flex items-center gap-1 text-[10px] text-zinc-400 mb-0.5">
+            <div className="flex items-center gap-1 text-xs text-zinc-400 mb-0.5">
               <MapPin size={11} className="opacity-70" />
               <span>Остановка</span>
             </div>
-            <span className={`text-[11px] font-semibold truncate max-w-full ${isDarkMode ? "text-zinc-200" : "text-zinc-700"}`}>
+            <span className={`text-sm font-semibold truncate max-w-full ${isDarkMode ? "text-zinc-200" : "text-zinc-700"}`}>
               {vehicle?.nextStop || alert?.recommendation?.stopName?.replace(/[«»]/g, "") || alert?.locationName || "м. Бауманская"}
             </span>
           </div>
@@ -232,7 +234,7 @@ export const Inspector: React.FC<InspectorProps> = ({
           <span className={`text-xs font-bold ${isDarkMode ? "text-white" : "text-zinc-900"}`}>
             Прогноз задержки (сек)
           </span>
-          <div className="flex items-center gap-2 text-[10px] font-medium">
+          <div className="flex items-center gap-2 text-xs font-medium">
             <span className="text-zinc-400 flex items-center gap-1">
               <span className="w-2 h-0.5 border-t border-dashed border-zinc-400 inline-block" /> План
             </span>
@@ -245,14 +247,14 @@ export const Inspector: React.FC<InspectorProps> = ({
           </div>
         </div>
 
-        <div className="h-28 w-full mt-1">
+        <div className="h-[180px] w-full mt-1">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 5, right: 8, left: -25, bottom: 0 }}>
-              <XAxis dataKey="stop" tick={{ fontSize: 9, fill: isDarkMode ? "#a1a1aa" : "#71717a" }} axisLine={false} tickLine={false} />
-              <YAxis domain={["auto", "auto"]} tick={{ fontSize: 9, fill: isDarkMode ? "#a1a1aa" : "#71717a" }} axisLine={false} tickLine={false} unit="с" />
+              <XAxis dataKey="stop" tick={{ fontSize: 12, fill: isDarkMode ? "#a1a1aa" : "#71717a" }} axisLine={false} tickLine={false} />
+              <YAxis domain={["auto", "auto"]} tick={{ fontSize: 12, fill: isDarkMode ? "#a1a1aa" : "#71717a" }} axisLine={false} tickLine={false} unit="с" />
               <Tooltip
                 contentStyle={{
-                  fontSize: "11px",
+                  fontSize: "12px",
                   borderRadius: "6px",
                   backgroundColor: isDarkMode ? "rgba(24, 24, 27, 0.95)" : "rgba(255, 255, 255, 0.95)",
                   borderColor: isDarkMode ? "rgba(255, 255, 255, 0.1)" : "#e4e4e7",
@@ -269,47 +271,61 @@ export const Inspector: React.FC<InspectorProps> = ({
 
       {/* 4. Explainable AI: SHAP Factor Decomposition */}
       <div
-        className={`rounded-lg border p-3 flex flex-col gap-2 ${
+        className={`rounded-lg border overflow-hidden ${
           isDarkMode
             ? "border-white/10 bg-[#222226] text-white"
             : "border-zinc-200 bg-zinc-50/70 text-zinc-900"
         }`}
       >
-        <div className="flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => setIsShapOpen((prev) => !prev)}
+          className={`flex w-full items-center justify-between px-3 py-2 text-left transition-colors cursor-pointer ${
+            isDarkMode ? "hover:bg-white/5" : "hover:bg-zinc-100"
+          }`}
+          aria-expanded={isShapOpen}
+        >
           <span className="text-xs font-bold flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
             <span>Факторный анализ (SHAP)</span>
           </span>
-          <span className={`text-[10px] font-bold font-mono px-1.5 py-0.5 rounded border ${
-            isDarkMode ? "bg-[#18181b] text-zinc-300 border-white/5" : "bg-white text-zinc-700 border-zinc-200"
-          }`}>
-            CatBoost ML
+          <span className="flex items-center gap-2">
+            <span className={`text-xs font-bold font-mono px-1.5 py-0.5 rounded border ${
+              isDarkMode ? "bg-[#18181b] text-zinc-300 border-white/5" : "bg-white text-zinc-700 border-zinc-200"
+            }`}>
+              CatBoost ML
+            </span>
+            <ChevronDown className={`w-4 h-4 transition-transform ${isShapOpen ? "rotate-180" : ""}`} />
           </span>
-        </div>
+        </button>
 
-        {/* Clear Horizontal Bar List */}
-        <div className="space-y-1.5 text-xs">
-          {shapFactors.map((f, i) => (
-            <div key={f.code}>
-              <div className="flex justify-between items-center text-[10px] font-medium mb-0.5">
-                <span className={isDarkMode ? "text-zinc-300" : "text-zinc-700"}>
-                  {f.title} <span className="opacity-60 font-mono">({f.code})</span>
-                </span>
-                <span className={`font-mono font-semibold ${i === 0 ? "text-rose-400 font-bold" : "text-zinc-400"}`}>
-                  +{f.delayMinutes.toFixed(1)}м ({f.percent}%)
-                </span>
-              </div>
-              <div className={`h-1.5 w-full rounded-full overflow-hidden ${isDarkMode ? "bg-zinc-800" : "bg-zinc-200"}`}>
-                <div
-                  className={`h-full rounded-full ${
-                    i === 0 ? "bg-rose-500" : "bg-zinc-500"
-                  }`}
-                  style={{ width: `${f.percent}%` }}
-                />
-              </div>
+        {isShapOpen && (
+          <div className="px-3 pb-3">
+            {/* Clear Horizontal Bar List */}
+            <div className="space-y-1.5 text-xs">
+              {shapFactors.map((f, i) => (
+                <div key={f.code}>
+                  <div className="flex justify-between items-center text-xs font-medium mb-0.5">
+                    <span className={isDarkMode ? "text-zinc-300" : "text-zinc-700"}>
+                      {f.title} <span className="opacity-60 font-mono">({f.code})</span>
+                    </span>
+                    <span className={`font-mono font-semibold ${i === 0 ? "text-rose-400 font-bold" : "text-zinc-400"}`}>
+                      +{f.delayMinutes.toFixed(1)}м ({f.percent}%)
+                    </span>
+                  </div>
+                  <div className={`h-1.5 w-full rounded-full overflow-hidden ${isDarkMode ? "bg-zinc-800" : "bg-zinc-200"}`}>
+                    <div
+                      className={`h-full rounded-full ${
+                        i === 0 ? "bg-rose-500" : "bg-zinc-500"
+                      }`}
+                      style={{ width: `${f.percent}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* 5. Holding Action DSS Recommendation Box */}
@@ -326,7 +342,7 @@ export const Inspector: React.FC<InspectorProps> = ({
           }`}>
             {appliedHeader}
           </span>
-          <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold font-mono border ${
+          <span className={`px-1.5 py-0.5 rounded text-xs font-bold font-mono border ${
             isDarkMode ? "bg-emerald-950/60 text-emerald-400 border-emerald-800/60" : "bg-emerald-50 text-emerald-800 border-emerald-200"
           }`}>
             ЭФФЕКТ: {effectPercent}%
@@ -336,7 +352,7 @@ export const Inspector: React.FC<InspectorProps> = ({
         <p className={`text-xs leading-relaxed ${isDarkMode ? "text-zinc-300" : "text-zinc-700"}`}>
           {recText}
         </p>
-        <span className={`text-[11px] font-medium ${isDarkMode ? "text-emerald-400" : "text-emerald-700"}`}>
+        <span className={`text-sm font-medium ${isDarkMode ? "text-emerald-400" : "text-emerald-700"}`}>
           {recInfoText}
         </span>
 
@@ -358,13 +374,13 @@ export const Inspector: React.FC<InspectorProps> = ({
         {onOpenScenarios && (
           <button
             onClick={onOpenScenarios}
-            className={`w-full h-7 px-2.5 rounded-md border text-[11px] font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+            className={`w-full h-8 px-2.5 rounded-lg border text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
               isDarkMode
-                ? "bg-[#1c1c20] hover:bg-white/5 border-white/10 text-zinc-300"
-                : "bg-white hover:bg-zinc-100 border-zinc-200 text-zinc-700"
+                ? "bg-[#1c1c20] hover:bg-white/5 border-white/10 text-zinc-300 hover:text-white"
+                : "bg-white hover:bg-zinc-100 border-zinc-200 text-zinc-700 hover:text-zinc-900"
             }`}
           >
-            <Grid2x2 size={12} />
+            <Grid2x2 size={13} />
             <span>Матрица альтернативных сценариев (4)</span>
           </button>
         )}

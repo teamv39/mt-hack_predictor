@@ -232,6 +232,27 @@
 
 ---
 
+### 1.11. GPS tracks (`dataset/train/traffic.csv`)
+The server loads the training CSV into memory at startup, includes only rows where `location_valid == True`, and sorts points by `event_time` (ascending). The IDs in these endpoints are integers, unlike the string IDs in `/vehicles`. If the CSV is unavailable, the list is empty.
+
+* `GET /api/v1/tracks` returns a sorted array of `{ "tr_id": 120439, "point_count": 2415 }` objects (only tracks with valid points).
+* `GET /api/v1/tracks/{tr_id}` returns the full track with chronological points and WGS84 bounds:
+
+```json
+{
+  "tr_id": 120439,
+  "points": [
+    { "event_time": "2026-01-06T23:07:44Z", "lon": 37.774517, "lat": 55.813473, "speed": 0.0, "heading": 159.0 }
+  ],
+  "bounds": { "min_lat": 55.813473, "max_lat": 55.813473, "min_lon": 37.774517, "max_lon": 37.774517 }
+}
+```
+
+* `GET /api/v1/tracks/{tr_id}/geojson` returns a GeoJSON Feature with `geometry.type = "LineString"`, `geometry.coordinates = [[lon, lat], ...]` in chronological order, and `properties.tr_id` plus `properties.point_count`.
+* Invalid `tr_id`: `400 { "error": "invalid tr_id" }`; missing track: `404 { "error": "track not found" }`.
+
+---
+
 ## 2. ML Inference API (Python / FastAPI :8000)
 
 > **Официальный target:** `predicted_delay_sec` ≡ `target_delay_s` (сек, знак: `+` опоздание, `−` опережение).  

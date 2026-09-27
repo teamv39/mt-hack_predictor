@@ -41,7 +41,7 @@ export const ToastContainer: React.FC<ToastProps> = ({ toasts, onClose }) => {
               <h4 className="text-xs font-bold text-zinc-900 dark:text-white leading-tight">
                 {toast.title}
               </h4>
-              <p className="text-[11px] text-zinc-600 dark:text-zinc-300 mt-0.5 leading-snug">
+              <p className="text-sm text-zinc-600 dark:text-zinc-300 mt-0.5 leading-snug">
                 {toast.description}
               </p>
               <span className="text-[9px] text-zinc-400 font-mono mt-1 block">

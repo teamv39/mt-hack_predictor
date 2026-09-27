@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useTelemetry } from "./hooks/useTelemetry";
 import { TopBar } from "./components/TopBar";
 import { AlertRadar } from "./components/AlertRadar";
@@ -20,15 +20,23 @@ export default function App() {
   const [isDarkMode, setIsDarkMode] = useState<boolean>(initialPrefs.theme === "dark");
   const [isInspectorOpen, setIsInspectorOpen] = useState<boolean>(initialPrefs.isInspectorOpen);
 
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", isDarkMode);
+  }, [isDarkMode]);
+
   const {
     vehicles,
     alerts,
+    appliedHoldingIds,
     selectedAlert,
     selectedVehicle,
     selectedAlertId,
     selectedVehicleId,
     metrics,
     allRoutes,
+    dataMode,
+    setDataMode,
+    datasetLoadError,
     camera,
     timeStep,
     searchQuery,
@@ -42,6 +50,7 @@ export default function App() {
     flyToTarget,
     toasts,
     removeToast,
+    dismissAlert,
     handleSelectAlert,
     handleSelectVehicle,
     applyHolding,
@@ -89,6 +98,8 @@ export default function App() {
         isDarkMode={isDarkMode}
         onToggleDarkMode={handleToggleDarkMode}
         onOpenGuide={() => setIsGuideOpen(true)}
+        dataMode={dataMode}
+        onDataModeChange={setDataMode}
       />
 
       {/* 2. Main Dashboard Workspace */}
@@ -117,6 +128,8 @@ export default function App() {
               <MapView
                 routes={allRoutes}
                 vehicles={vehicles}
+                dataMode={dataMode}
+                datasetLoadError={datasetLoadError}
                 alert={selectedAlert}
                 selectedVehicleId={selectedVehicleId}
                 onSelectVehicle={handleVehicleClick}
@@ -134,6 +147,8 @@ export default function App() {
                 alerts={alerts}
                 selectedAlertId={selectedAlertId}
                 onSelectAlert={handleAlertClick}
+                onDismissAlert={dismissAlert}
+                appliedHoldingIds={appliedHoldingIds}
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
                 activeFilter={activeFilter}

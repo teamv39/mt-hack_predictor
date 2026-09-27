@@ -96,6 +96,78 @@
         }
       }
     },
+    "/api/v1/tracks": {
+      "get": {
+        "tags": ["fleet"],
+        "summary": "List historical GPS tracks",
+        "description": "Lists tracks loaded from dataset/train/traffic.csv. Only location_valid rows are included.",
+        "operationId": "getTracks",
+        "responses": {
+          "200": {
+            "description": "Track summaries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TrackSummary" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tracks/{tr_id}": {
+      "get": {
+        "tags": ["fleet"],
+        "summary": "Get GPS points for a track",
+        "operationId": "getTrack",
+        "parameters": [
+          {
+            "name": "tr_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "example": 120439
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chronologically ordered GPS track",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TrackResponse" }
+              }
+            }
+          },
+          "400": { "description": "Invalid track ID" },
+          "404": { "description": "Track not found" }
+        }
+      }
+    },
+    "/api/v1/tracks/{tr_id}/geojson": {
+      "get": {
+        "tags": ["fleet"],
+        "summary": "Get a GPS track as GeoJSON",
+        "operationId": "getTrackGeoJSON",
+        "parameters": [
+          {
+            "name": "tr_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "example": 120439
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "GeoJSON Feature with a LineString geometry"
+          },
+          "400": { "description": "Invalid track ID" },
+          "404": { "description": "Track not found" }
+        }
+      }
+    },
     "/api/v1/alerts": {
       "get": {
         "tags": ["fleet"],
@@ -285,6 +357,45 @@
   },
   "components": {
     "schemas": {
+      "TrackSummary": {
+        "type": "object",
+        "required": ["tr_id", "point_count"],
+        "properties": {
+          "tr_id": { "type": "integer" },
+          "point_count": { "type": "integer" }
+        }
+      },
+      "GPSPoint": {
+        "type": "object",
+        "required": ["event_time", "lon", "lat", "speed", "heading"],
+        "properties": {
+          "event_time": { "type": "string", "format": "date-time" },
+          "lon": { "type": "number" },
+          "lat": { "type": "number" },
+          "speed": { "type": "number" },
+          "heading": { "type": "number" }
+        }
+      },
+      "TrackResponse": {
+        "type": "object",
+        "required": ["tr_id", "points", "bounds"],
+        "properties": {
+          "tr_id": { "type": "integer" },
+          "points": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/GPSPoint" }
+          },
+          "bounds": {
+            "type": "object",
+            "properties": {
+              "min_lat": { "type": "number" },
+              "max_lat": { "type": "number" },
+              "min_lon": { "type": "number" },
+              "max_lon": { "type": "number" }
+            }
+          }
+        }
+      },
       "SystemStatus": {
         "type": "object",
         "properties": {

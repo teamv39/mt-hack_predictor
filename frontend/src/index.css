@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 @import "maplibre-gl/dist/maplibre-gl.css";
 
 /* Official Moscow Transport Sans Font */
@@ -109,6 +110,21 @@
 
   --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.6), 0 2px 8px -1px rgba(0, 0, 0, 0.4);
   --shadow-float: 0 20px 40px -8px rgba(0, 0, 0, 0.8), 0 8px 16px -4px rgba(0, 0, 0, 0.5);
+}
+
+/* Keep compact UI labels readable across the dispatcher dashboard. */
+@layer utilities {
+  .text-xs {
+    font-size: 12px;
+  }
+
+  .text-sm {
+    font-size: 13px;
+  }
+
+  .text-base {
+    font-size: 14px;
+  }
 }
 
 @layer base {

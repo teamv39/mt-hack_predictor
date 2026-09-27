@@ -101,3 +101,6 @@ data/submissions/*_debug.csv
 .env.local
 .env.*.local
 !.env.example
+
+# Documentation assets & screenshots
+docs/presentation_assets/

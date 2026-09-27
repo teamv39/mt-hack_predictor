@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   MOCK_SYSTEM_METRICS,
   MOCK_ROUTE_DATA,
@@ -10,9 +10,178 @@ import {
   AlertItem,
   RouteData,
 } from "../mock/telemetry";
+import { demoEngine } from "../simulation/gpsDemoEngine";
 import { loadPreferences, savePreferences } from "../utils/storage";
 
 const API_BASE = "/api/v1";
+const DATASET_TRACK_LIMIT = 12;
+const DATASET_ROUTE_COLORS = [
+  "#2a78d6", "#eb6834", "#1baf7a", "#eda100",
+  "#e87ba4", "#008300", "#4a3aa7", "#e34948",
+];
+const OTHER_TRACK_COLOR = "#71717a";
+
+export type DataMode = "mock" | "dataset" | "live";
+
+export interface GPSTrackPoint {
+  event_time: string;
+  lon: number;
+  lat: number;
+  speed: number;
+  heading: number;
+}
+
+export interface GPSTrack {
+  tr_id: number;
+  points: GPSTrackPoint[];
+  bounds: {
+    min_lat: number;
+    max_lat: number;
+    min_lon: number;
+    max_lon: number;
+  };
+}
+
+interface TrackReference {
+  tr_id: number;
+  points?: GPSTrackPoint[];
+  bounds?: GPSTrack["bounds"];
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function parseTrackPoint(value: unknown): GPSTrackPoint | null {
+  if (!isRecord(value)) return null;
+  const lon = Number(value.lon);
+  const lat = Number(value.lat);
+  if (!Number.isFinite(lon) || !Number.isFinite(lat) || Math.abs(lon) > 180 || Math.abs(lat) > 90) return null;
+  return {
+    event_time: typeof value.event_time === "string" ? value.event_time : "",
+    lon,
+    lat,
+    speed: Number.isFinite(Number(value.speed)) ? Number(value.speed) : 0,
+    heading: Number.isFinite(Number(value.heading)) ? Number(value.heading) : 0,
+  };
+}
+
+function parseBounds(value: unknown): GPSTrack["bounds"] | undefined {
+  if (!isRecord(value)) return undefined;
+  const bounds = {
+    min_lat: Number(value.min_lat), max_lat: Number(value.max_lat),
+    min_lon: Number(value.min_lon), max_lon: Number(value.max_lon),
+  };
+  return Object.values(bounds).every(Number.isFinite) ? bounds : undefined;
+}
+
+function parseTrackReference(value: unknown): TrackReference | null {
+  if (!isRecord(value)) return null;
+  const trId = Number(value.tr_id);
+  if (!Number.isSafeInteger(trId)) return null;
+  const points = Array.isArray(value.points)
+    ? value.points.map(parseTrackPoint).filter((point): point is GPSTrackPoint => point !== null)
+    : undefined;
+  const bounds = parseBounds(value.bounds);
+  return { tr_id: trId, ...(points ? { points } : {}), ...(bounds ? { bounds } : {}) };
+}
+
+function getTrackReferences(payload: unknown): TrackReference[] {
+  const items = Array.isArray(payload)
+    ? payload
+    : isRecord(payload) && Array.isArray(payload.tracks) ? payload.tracks
+      : isRecord(payload) && Array.isArray(payload.data) ? payload.data : [];
+  return items.map(parseTrackReference).filter((track): track is TrackReference => track !== null);
+}
+
+function toGPSTrack(track: TrackReference): GPSTrack {
+  const points = track.points || [];
+  const lats = points.map((point) => point.lat);
+  const lons = points.map((point) => point.lon);
+  return {
+    tr_id: track.tr_id,
+    points,
+    bounds: track.bounds || {
+      min_lat: Math.min(...lats), max_lat: Math.max(...lats),
+      min_lon: Math.min(...lons), max_lon: Math.max(...lons),
+    },
+  };
+}
+
+export async function loadTracksFromDataset(): Promise<GPSTrack[]> {
+  const listResponse = await fetch(`${API_BASE}/tracks?limit=${DATASET_TRACK_LIMIT}`);
+  if (!listResponse.ok) throw new Error(`Track list request failed: ${listResponse.status}`);
+  const references = getTrackReferences(await listResponse.json()).slice(0, DATASET_TRACK_LIMIT);
+  if (references.length === 0) throw new Error("Track list is empty or invalid");
+
+  const tracks = await Promise.all(references.map(async (reference) => {
+    if (reference.points && reference.points.length > 0) return toGPSTrack(reference);
+    const response = await fetch(`${API_BASE}/tracks/${reference.tr_id}`);
+    if (!response.ok) throw new Error(`Track ${reference.tr_id} request failed: ${response.status}`);
+    const payload: unknown = await response.json();
+    const details = parseTrackReference(payload) || getTrackReferences(payload)[0];
+    if (!details || !details.points?.length) throw new Error(`Track ${reference.tr_id} has no GPS points`);
+    return toGPSTrack({ ...reference, ...details });
+  }));
+  return tracks.filter((track) => track.points.length > 0);
+}
+
+export function isSVOSpoofingPoint(lat: number, lon: number): boolean {
+  return lat >= 55.95 && lat <= 56.02 && lon >= 37.38 && lon <= 37.46;
+}
+
+export function mapTrackToVehicle(track: GPSTrack): Vehicle {
+  const hasNonSVO = track.points.some((p) => !isSVOSpoofingPoint(p.lat, p.lon));
+  const pointsPool = hasNonSVO
+    ? track.points.filter((p) => !isSVOSpoofingPoint(p.lat, p.lon))
+    : track.points;
+
+  const latestPoint = pointsPool.reduce((latest, point) => {
+    if (!latest) return point;
+    const latestTime = Date.parse(latest.event_time);
+    const pointTime = Date.parse(point.event_time);
+    return Number.isNaN(latestTime) || Number.isNaN(pointTime) || pointTime > latestTime ? point : latest;
+  }, pointsPool[0] || track.points[0]);
+  const vehicleId = `P${track.tr_id}`;
+  return {
+    id: vehicleId,
+    badgeLabel: `${track.tr_id} · GPS`,
+    plateNumber: `GPS ${track.tr_id}`,
+    model: "Транспортное средство",
+    routeId: String(track.tr_id),
+    routeName: `GPS-трек ${track.tr_id}`,
+    status: "NORMAL",
+    delaySeconds: 0,
+    predictedTerminalDelayMinutes: 0,
+    speedKmh: Math.max(0, latestPoint.speed),
+    latitude: latestPoint.lat,
+    longitude: latestPoint.lon,
+    heading: ((latestPoint.heading % 360) + 360) % 360,
+    currentStop: "В пути",
+    nextStop: "GPS-точка",
+  };
+}
+
+function mapTrackToRoute(track: GPSTrack, index: number): RouteData {
+  const hasNonSVO = track.points.some((p) => !isSVOSpoofingPoint(p.lat, p.lon));
+  const cleanPoints = hasNonSVO
+    ? track.points.filter((p) => !isSVOSpoofingPoint(p.lat, p.lon))
+    : track.points;
+
+  const points = [...cleanPoints].sort((left, right) => {
+    const leftTime = Date.parse(left.event_time);
+    const rightTime = Date.parse(right.event_time);
+    return Number.isNaN(leftTime) || Number.isNaN(rightTime) ? 0 : leftTime - rightTime;
+  });
+  return {
+    routeId: String(track.tr_id),
+    name: `GPS-трек ${track.tr_id}`,
+    color: index < DATASET_ROUTE_COLORS.length ? DATASET_ROUTE_COLORS[index] : OTHER_TRACK_COLOR,
+    routeGeometry: points.map((point) => [point.lon, point.lat]),
+    congestionSegment: [],
+    stops: [],
+  };
+}
 
 export interface ToastMessage {
   id: string;
@@ -117,36 +286,21 @@ function mapBackendAlert(ba: any): AlertItem {
 
 export function useTelemetry() {
   const initialPrefs = useMemo(() => loadPreferences(), []);
+  const dismissedAlertIds = useRef(new Set(initialPrefs.dismissedAlerts));
 
-  const [, setAppliedHoldingIds] = useState<string[]>(initialPrefs.appliedHoldingIds || []);
+  const [appliedHoldingIds, setAppliedHoldingIds] = useState<string[]>(initialPrefs.appliedHoldingIds || []);
   const [, setAppliedScenarios] = useState<Record<string, string>>(initialPrefs.appliedScenarios || {});
+  const [dataMode, setDataModeState] = useState<DataMode>("mock");
+  const [datasetRoutes, setDatasetRoutes] = useState<RouteData[]>([]);
+  const [datasetLoadError, setDatasetLoadError] = useState<string | null>(null);
 
   const [vehicles, setVehicles] = useState<Vehicle[]>(() => {
-    if (initialPrefs.appliedHoldingIds && initialPrefs.appliedHoldingIds.length > 0) {
-      return MOCK_VEHICLES.map((v) => {
-        const isMatched = MOCK_ALERTS.some(
-          (a) =>
-            initialPrefs.appliedHoldingIds?.includes(a.id) &&
-            (a.vehicleId === v.id ||
-              a.followingVehicleId === v.id ||
-              a.recommendation?.targetVehicleId?.includes(v.id.replace(/^P/, "")))
-        );
-        if (isMatched) {
-          return {
-            ...v,
-            status: "NORMAL",
-            delaySeconds: 120,
-            predictedTerminalDelayMinutes: 2,
-          };
-        }
-        return v;
-      });
-    }
-    return MOCK_VEHICLES;
+    const state = demoEngine.getState();
+    return state.vehicles.length > 0 ? state.vehicles : MOCK_VEHICLES;
   });
 
   const [alerts, setAlerts] = useState<AlertItem[]>(() => {
-    return MOCK_ALERTS.map((alt) => {
+    return MOCK_ALERTS.filter((alt) => !dismissedAlertIds.current.has(alt.id)).map((alt) => {
       const isHolding = initialPrefs.appliedHoldingIds?.includes(alt.id);
       const scenario = initialPrefs.appliedScenarios?.[alt.id];
       if (isHolding || scenario) {
@@ -163,7 +317,11 @@ export function useTelemetry() {
     });
   });
 
-  const [selectedAlertId, setSelectedAlertId] = useState<string>(initialPrefs.selectedAlertId || "alert_1042");
+  const [selectedAlertId, setSelectedAlertId] = useState<string>(() =>
+    alerts.some((alert) => alert.id === initialPrefs.selectedAlertId)
+      ? initialPrefs.selectedAlertId
+      : alerts[0]?.id || "alert_1042"
+  );
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>(initialPrefs.selectedVehicleId || "P1042");
   const [timeStep, setTimeStepState] = useState<string>(initialPrefs.timeStep || "Сейчас");
   const [searchQuery, setSearchQueryState] = useState<string>(initialPrefs.searchQuery || "");
@@ -173,18 +331,78 @@ export function useTelemetry() {
   const [simSpeed, setSimSpeedState] = useState<number>(initialPrefs.simSpeed || 1.0);
   const [flyToTarget, setFlyToTarget] = useState<{ lat: number; lon: number; zoom?: number } | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
-  const [metrics, setMetrics] = useState(() => {
-    if (initialPrefs.appliedHoldingIds && initialPrefs.appliedHoldingIds.length > 0) {
-      return {
-        ...MOCK_SYSTEM_METRICS,
-        preventedIncidentsCount: MOCK_SYSTEM_METRICS.preventedIncidentsCount + initialPrefs.appliedHoldingIds.length,
-        activeIncidentsCount: Math.max(0, MOCK_SYSTEM_METRICS.activeIncidentsCount - initialPrefs.appliedHoldingIds.length),
-        punctualityRate: 96.2,
-      };
-    }
-    return MOCK_SYSTEM_METRICS;
-  });
+  const [metrics, setMetrics] = useState(() => MOCK_SYSTEM_METRICS);
 
+  const setDataMode = useCallback((mode: DataMode) => {
+    setDataModeState(mode);
+    setDatasetLoadError(null);
+    setFlyToTarget(null);
+    setTimeStepState("Сейчас");
+    if (mode === "mock") {
+      setDatasetRoutes([]);
+      const state = demoEngine.getState();
+      setVehicles(state.vehicles);
+      setAlerts(state.alerts);
+      setSelectedAlertId(state.alerts[0]?.id || "alert_1042");
+      setSelectedVehicleId("P1042");
+    } else if (mode === "dataset") {
+      setVehicles([]);
+      setAlerts(MOCK_ALERTS.filter((alert) => !dismissedAlertIds.current.has(alert.id)));
+    } else {
+      setDatasetRoutes([]);
+      setVehicles(MOCK_VEHICLES);
+      setAlerts(MOCK_ALERTS.filter((alert) => !dismissedAlertIds.current.has(alert.id)));
+    }
+  }, []);
+
+  // Continuous GPS Demo Loop (Mock/Demo Mode)
+  useEffect(() => {
+    if (dataMode !== "mock") {
+      demoEngine.stop();
+      return;
+    }
+
+    demoEngine.start();
+    const unsubscribe = demoEngine.subscribe((simState) => {
+      setVehicles(simState.vehicles);
+      setAlerts(simState.alerts);
+      setMetrics(simState.metrics);
+      setSelectedAlertId((prev) => {
+        if (prev && simState.alerts.some((a) => a.id === prev)) return prev;
+        return simState.alerts[0]?.id || "";
+      });
+    });
+
+    return () => {
+      unsubscribe();
+      demoEngine.stop();
+    };
+  }, [dataMode]);
+
+  useEffect(() => {
+    if (dataMode !== "dataset") return;
+    let cancelled = false;
+    setDatasetRoutes([]);
+    setVehicles([]);
+    setAlerts(MOCK_ALERTS.filter((alert) => !dismissedAlertIds.current.has(alert.id)));
+    loadTracksFromDataset()
+      .then((tracks) => {
+        if (cancelled) return;
+        if (!tracks.length) throw new Error("No GPS tracks with valid points");
+        setDatasetRoutes(tracks.map(mapTrackToRoute));
+        setVehicles(tracks.map(mapTrackToVehicle));
+        setSelectedVehicleId(`P${tracks[0].tr_id}`);
+        setDatasetLoadError(null);
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        setDatasetLoadError(error instanceof Error ? error.message : "Dataset unavailable");
+        setDatasetRoutes([]);
+        setVehicles(MOCK_VEHICLES);
+        setAlerts(MOCK_ALERTS.filter((alert) => !dismissedAlertIds.current.has(alert.id)));
+      });
+    return () => { cancelled = true; };
+  }, [dataMode]);
 
   const setActiveFilter = useCallback((filter: "all" | "critical" | "bunching") => {
     setActiveFilterState(filter);
@@ -222,6 +440,23 @@ export function useTelemetry() {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
+  const dismissAlert = useCallback((alertId: string) => {
+    if (dismissedAlertIds.current.has(alertId)) return;
+
+    dismissedAlertIds.current.add(alertId);
+    savePreferences({ dismissedAlerts: [...dismissedAlertIds.current] });
+    demoEngine.dismissAlert(alertId);
+    setAlerts((prev) => prev.filter((alert) => alert.id !== alertId));
+
+    if (selectedAlertId === alertId) {
+      const nextAlert = alerts.find((alert) => alert.id !== alertId);
+      setSelectedAlertId(nextAlert?.id || "");
+      savePreferences({ selectedAlertId: nextAlert?.id || "" });
+    }
+
+    addToast({ type: "info", title: "Алерт закрыт", description: "" });
+  }, [addToast, alerts, selectedAlertId]);
+
   const selectedAlert = useMemo(() => {
     return alerts.find((a) => a.id === selectedAlertId) || alerts[0] || null;
   }, [alerts, selectedAlertId]);
@@ -237,8 +472,8 @@ export function useTelemetry() {
     );
     if (found) return found;
 
-    // 2. If an alert is selected, try matching by alert's vehicleId
-    if (selectedAlert?.vehicleId) {
+    // 2. Only live mode may synthesize a vehicle from an alert.
+    if (dataMode === "live" && selectedAlert?.vehicleId) {
       const alertVehClean = normalize(selectedAlert.vehicleId);
       const byAlert = vehicles.find((v) => normalize(v.id) === alertVehClean);
       if (byAlert) return byAlert;
@@ -265,7 +500,7 @@ export function useTelemetry() {
     }
 
     return vehicles[0] || null;
-  }, [vehicles, selectedVehicleId, selectedAlert]);
+  }, [vehicles, selectedVehicleId, selectedAlert, dataMode]);
 
   const handleSelectAlert = useCallback((alertItem: AlertItem) => {
     setSelectedAlertId(alertItem.id);
@@ -300,6 +535,8 @@ export function useTelemetry() {
 
   // Live Go Backend Synchronization (WebSocket + Polling fallback)
   useEffect(() => {
+    if (dataMode !== "live") return;
+    let cancelled = false;
     let ws: WebSocket | null = null;
     let pollTimer: ReturnType<typeof setInterval> | null = null;
     let isConnected = false;
@@ -312,6 +549,7 @@ export function useTelemetry() {
           fetch(`${API_BASE}/status`).then((r) => (r.ok ? r.json() : null)),
         ]);
 
+        if (cancelled) return;
         if (Array.isArray(vehRes) && vehRes.length > 0) {
           setVehicles((prev) => {
             const mapped = vehRes.map((bv: any) => {
@@ -325,10 +563,10 @@ export function useTelemetry() {
         }
 
         if (Array.isArray(alertRes) && alertRes.length > 0) {
-          const mappedAlerts = alertRes.map(mapBackendAlert);
+          const mappedAlerts = alertRes.map(mapBackendAlert).filter((alert) => !dismissedAlertIds.current.has(alert.id));
           setAlerts((prev) => {
             const incomingIds = new Set(mappedAlerts.map((a) => a.id));
-            const preserved = prev.filter((p) => !incomingIds.has(p.id));
+            const preserved = prev.filter((p) => !incomingIds.has(p.id) && !dismissedAlertIds.current.has(p.id));
             return [...mappedAlerts, ...preserved];
           });
         }
@@ -376,6 +614,7 @@ export function useTelemetry() {
               if (data.alert) {
                 const newAlert = mapBackendAlert(data.alert);
                 setAlerts((prev) => {
+                  if (dismissedAlertIds.current.has(newAlert.id)) return prev;
                   const exists = prev.some((a) => a.id === newAlert.id);
                   if (exists) {
                     return prev.map((a) => (a.id === newAlert.id ? newAlert : a));
@@ -420,10 +659,11 @@ export function useTelemetry() {
     }, 1200);
 
     return () => {
+      cancelled = true;
       if (ws) ws.close();
       if (pollTimer) clearInterval(pollTimer);
     };
-  }, []);
+  }, [dataMode]);
 
   const applyHolding = useCallback(async (alertId: string) => {
     try {
@@ -433,6 +673,8 @@ export function useTelemetry() {
     } catch {
       // Backend standalone fallback
     }
+
+    demoEngine.applyHolding(alertId);
 
     setAppliedHoldingIds((prev) => {
       const next = prev.includes(alertId) ? prev : [...prev, alertId];
@@ -512,6 +754,8 @@ export function useTelemetry() {
 
   const applyScenario = useCallback(
     (scenarioId: string, _title?: string) => {
+      demoEngine.applyScenario(scenarioId, selectedAlertId);
+
       setAppliedScenarios((prev) => {
         const next = { ...prev, [selectedAlertId]: scenarioId };
         savePreferences({ appliedScenarios: next });
@@ -617,15 +861,36 @@ export function useTelemetry() {
 
   const controlSimulation = useCallback(
     async (action: "play" | "pause" | "speed" | "step" | "reset", value?: number | string) => {
-      if (action === "play") setIsSimPlaying(true);
-      if (action === "pause") setIsSimPlaying(false);
+      if (action === "play") {
+        demoEngine.play();
+        setIsSimPlaying(true);
+      }
+      if (action === "pause") {
+        demoEngine.pause();
+        setIsSimPlaying(false);
+      }
       if (action === "speed" && typeof value === "number") {
+        demoEngine.setSpeed(value);
         setSimSpeedState(value);
         savePreferences({ simSpeed: value });
       }
       if (action === "step" && typeof value === "string") {
+        if (value === "+15 мин" || value === "+15м (ML)") {
+          demoEngine.seek(120);
+        } else if (value === "+30 мин" || value === "+30м") {
+          demoEngine.seek(240);
+        } else if (value === "+45 мин" || value === "+45м") {
+          demoEngine.seek(300);
+        } else if (value === "Сейчас") {
+          demoEngine.seek(0);
+        }
         setTimeStepState(value);
         savePreferences({ timeStep: value });
+      }
+      if (action === "reset") {
+        demoEngine.reset();
+        setIsSimPlaying(true);
+        setTimeStepState("Сейчас");
       }
 
       try {
@@ -645,6 +910,14 @@ export function useTelemetry() {
   );
 
   const effectiveMetrics = useMemo(() => {
+    if (dataMode === "dataset" && !datasetLoadError) {
+      return {
+        ...metrics,
+        vehiclesOnLine: vehicles.length,
+        activeIncidentsCount: 0,
+        preventedIncidentsCount: 0,
+      };
+    }
     const unappliedAlerts = alerts.filter((a) => !a.recommendation?.applied).length;
     const appliedAlerts = alerts.filter((a) => a.recommendation?.applied).length;
     const dynamicPrevented = MOCK_SYSTEM_METRICS.preventedIncidentsCount + appliedAlerts;
@@ -656,18 +929,22 @@ export function useTelemetry() {
       preventedIncidentsCount: dynamicPrevented,
       punctualityRate: dynamicPunctuality,
     };
-  }, [alerts, metrics]);
+  }, [alerts, metrics, dataMode, datasetLoadError, vehicles.length]);
 
   return {
     vehicles,
     alerts,
+    appliedHoldingIds,
     selectedAlert,
     selectedVehicle,
     selectedAlertId,
     selectedVehicleId,
     metrics: effectiveMetrics,
-    route: MOCK_ROUTE_DATA as RouteData,
-    allRoutes: MOCK_ALL_ROUTES as RouteData[],
+    dataMode,
+    setDataMode,
+    datasetLoadError,
+    route: dataMode === "dataset" ? (datasetRoutes[0] || (datasetLoadError ? (MOCK_ROUTE_DATA as RouteData) : null)) : (MOCK_ROUTE_DATA as RouteData),
+    allRoutes: dataMode === "dataset" ? (datasetRoutes.length > 0 ? datasetRoutes : (datasetLoadError ? (MOCK_ALL_ROUTES as RouteData[]) : [])) : (MOCK_ALL_ROUTES as RouteData[]),
     camera: MOCK_CAMERA,
     timeStep,
     setTimeStep,
@@ -683,6 +960,7 @@ export function useTelemetry() {
     toasts,
     addToast,
     removeToast,
+    dismissAlert,
     handleSelectAlert,
     handleSelectVehicle,
     applyHolding,
