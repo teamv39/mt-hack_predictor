@@ -17,6 +17,7 @@ import {
   CheckCircle2,
   Radio,
   Eye,
+  EyeOff,
   Route,
   Navigation,
   Bus,
@@ -101,8 +102,16 @@ function splitRouteIntoSegments(coords: [number, number][], maxJumpKm = 1.5): [n
 function buildRouteFeature(
   name: string,
   routeId: string,
-  geometry: [number, number][]
+  geometry: [number, number][],
+  sublines?: [number, number][][]
 ): GeoJSON.Feature<GeoJSON.LineString | GeoJSON.MultiLineString> {
+  if (sublines && sublines.length > 0) {
+    return {
+      type: "Feature",
+      properties: { name, routeId },
+      geometry: { type: "MultiLineString", coordinates: sublines },
+    };
+  }
   const segments = splitRouteIntoSegments(geometry, 1.5);
   if (segments.length > 1) {
     return {
@@ -204,6 +213,17 @@ export const MapView: React.FC<MapViewProps> = ({
   const [trackGeoJson, setTrackGeoJson] = useState<Record<string, GeoJSON.Feature<GeoJSON.LineString | GeoJSON.MultiLineString>>>({});
   const [isRoutesCollapsed, setIsRoutesCollapsed] = useState<boolean>(false);
   const [routeSearch, setRouteSearch] = useState<string>("");
+  const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
+
+  const activeRouteNormId = selectedRouteId || (alert?.routeId ? normalizeRouteId(alert.routeId) : null);
+
+  useEffect(() => {
+    if (alert?.routeId) {
+      const norm = normalizeRouteId(alert.routeId);
+      setSelectedRouteId(norm);
+      setVisibleRouteIds((prev) => (prev.includes(norm) ? prev : [...prev, norm]));
+    }
+  }, [alert?.id, alert?.routeId]);
 
   useEffect(() => {
     setVisibleRouteIds((previous) => {
@@ -389,18 +409,37 @@ export const MapView: React.FC<MapViewProps> = ({
         map.removeSource(srcId);
       });
 
+      const alertedRouteNormId = alert?.routeId ? normalizeRouteId(alert.routeId) : null;
+      const activeRouteNormId = selectedRouteId || alertedRouteNormId;
+      const hasActiveRoute = activeRouteNormId !== null;
+
       routes.forEach((r) => {
         if (r.routeGeometry.length < 2) return;
         const normId = normalizeRouteId(r.routeId);
         const srcId = `route-${normId}`;
         const routeData: GeoJSON.Feature<GeoJSON.LineString | GeoJSON.MultiLineString> = dataMode === "dataset" && trackGeoJson[normId]
           ? trackGeoJson[normId]
-          : buildRouteFeature(r.name, normId, r.routeGeometry);
+          : buildRouteFeature(r.name, normId, r.routeGeometry, r.sublines);
         const source = map.getSource(srcId) as maplibregl.GeoJSONSource | undefined;
         if (source) source.setData(routeData);
         else map.addSource(srcId, { type: "geojson", data: routeData });
 
         const visibility = layers.routes && visibleRouteIds.includes(normId) ? "visible" : "none";
+        const isActive = hasActiveRoute && normId === activeRouteNormId;
+        const isAlerted = alertedRouteNormId !== null && normId === alertedRouteNormId;
+
+        const casingWidth = isActive ? 12 : hasActiveRoute ? 4.5 : 6;
+        const casingColor = isAlerted
+          ? (alert?.category === "bunching" || alert?.tagType === "bunching" ? "#ef4444" : "#f59e0b")
+          : isActive
+          ? (isDarkMode ? "#ffffff" : "#0f172a")
+          : (isDarkMode ? "#09090b" : "#ffffff");
+        const casingOpacity = isActive ? 0.95 : hasActiveRoute ? 0.15 : 0.65;
+        const casingBlur = isActive ? 2.0 : 0;
+
+        const lineWidth = isActive ? 6.5 : hasActiveRoute ? 2.8 : 3.8;
+        const lineOpacity = isActive ? 1.0 : hasActiveRoute ? 0.35 : 0.90;
+
         if (!map.getLayer(`${srcId}-casing`)) {
           map.addLayer({
             id: `${srcId}-casing`,
@@ -408,9 +447,10 @@ export const MapView: React.FC<MapViewProps> = ({
             source: srcId,
             layout: { "line-cap": "round", "line-join": "round", visibility },
             paint: {
-              "line-color": isDarkMode ? "#09090b" : "#ffffff",
-              "line-width": 6,
-              "line-opacity": 0.65,
+              "line-color": casingColor,
+              "line-width": casingWidth,
+              "line-opacity": casingOpacity,
+              "line-blur": casingBlur,
             },
           });
         }
@@ -422,15 +462,32 @@ export const MapView: React.FC<MapViewProps> = ({
             layout: { "line-cap": "round", "line-join": "round", visibility },
             paint: {
               "line-color": r.color,
-              "line-width": 3.5,
-              "line-opacity": 0.95,
+              "line-width": lineWidth,
+              "line-opacity": lineOpacity,
             },
           });
         }
         map.setLayoutProperty(`${srcId}-casing`, "visibility", visibility);
         map.setLayoutProperty(`${srcId}-line`, "visibility", visibility);
+        map.setPaintProperty(`${srcId}-casing`, "line-color", casingColor);
+        map.setPaintProperty(`${srcId}-casing`, "line-width", casingWidth);
+        map.setPaintProperty(`${srcId}-casing`, "line-opacity", casingOpacity);
+        map.setPaintProperty(`${srcId}-casing`, "line-blur", casingBlur);
         map.setPaintProperty(`${srcId}-line`, "line-color", r.color);
+        map.setPaintProperty(`${srcId}-line`, "line-width", lineWidth);
+        map.setPaintProperty(`${srcId}-line`, "line-opacity", lineOpacity);
       });
+
+      // Z-Order: Bring active route layers to the very top so no other route can overlap it
+      if (activeRouteNormId) {
+        const activeSrc = `route-${activeRouteNormId}`;
+        try {
+          if (map.getLayer(`${activeSrc}-casing`)) map.moveLayer(`${activeSrc}-casing`);
+          if (map.getLayer(`${activeSrc}-line`)) map.moveLayer(`${activeSrc}-line`);
+        } catch {
+          /* */
+        }
+      }
 
       const overlaySources = ["congestion-zones", "headway-connector"];
       if (dataMode === "dataset" && !datasetLoadError) {
@@ -516,7 +573,7 @@ export const MapView: React.FC<MapViewProps> = ({
         });
       }
     },
-    [dataMode, datasetLoadError, isDarkMode, layers.routes, routes, trackGeoJson, visibleRouteIds]
+    [dataMode, datasetLoadError, isDarkMode, layers.routes, routes, trackGeoJson, visibleRouteIds, selectedRouteId, alert]
   );
   setupSituationalLayersRef.current = setupSituationalLayers;
 
@@ -867,6 +924,10 @@ export const MapView: React.FC<MapViewProps> = ({
       const isBunching = veh.status === "BUNCHING_RISK";
       const isDelayed = veh.status === "DELAYED";
       const cleanId = veh.id.replace(/^P/, "");
+      const isAlertedVehicle = Boolean(
+        alert && (alert.vehicleId === veh.id || alert.vehicleId?.replace(/^P/, "") === cleanId)
+      );
+      const isHighlighted = isAlertedVehicle || isBunching || isSelected;
 
       let marker = vehicleMarkersRef.current[veh.id];
 
@@ -896,14 +957,35 @@ export const MapView: React.FC<MapViewProps> = ({
       el.style.height = "24px";
       el.style.cursor = "pointer";
 
-      const pulseSize = isSelected ? 56 : 46;
+      const pulseSize = isAlertedVehicle ? 62 : isSelected ? 56 : 46;
       const pulseMargin = pulseSize / 2;
 
       el.innerHTML = `
         <div class="relative w-full h-full cursor-pointer group" style="transform: translateZ(0);">
+          <!-- Outer Pulsing Radar Ping Wave for Alerted Vehicle -->
+          ${
+            isAlertedVehicle
+              ? `
+            <div style="
+              position: absolute;
+              top: 50%; left: 50%;
+              width: ${pulseSize + 18}px;
+              height: ${pulseSize + 18}px;
+              margin-top: -${(pulseSize + 18) / 2}px;
+              margin-left: -${(pulseSize + 18) / 2}px;
+              border-radius: 50%;
+              border: 2px solid ${isBunching || alert?.category === "bunching" ? "#ef4444" : "#f59e0b"};
+              animation: ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+              pointer-events: none;
+              z-index: 1;
+            "></div>
+          `
+              : ""
+          }
+
           <!-- Concentric Selected or Bunching Pulse Halo centered directly on vehicle coordinates -->
           ${
-            isBunching || isSelected
+            isHighlighted
               ? `
             <div style="
               position: absolute;
@@ -913,7 +995,13 @@ export const MapView: React.FC<MapViewProps> = ({
               margin-top: -${pulseMargin}px;
               margin-left: -${pulseMargin}px;
               border-radius: 50%;
-              background: ${isBunching ? "rgba(239, 68, 68, 0.35)" : "rgba(56, 189, 248, 0.35)"};
+              background: ${
+                isAlertedVehicle || isBunching
+                  ? "rgba(239, 68, 68, 0.38)"
+                  : isDelayed
+                  ? "rgba(245, 158, 11, 0.35)"
+                  : "rgba(56, 189, 248, 0.35)"
+              };
               animation: pulse-ring 2s infinite;
               pointer-events: none;
               z-index: 1;
@@ -1210,24 +1298,67 @@ export const MapView: React.FC<MapViewProps> = ({
     onTimeStepChange(HORIZONS[prevIdx]);
   };
 
-  // Route layer & Congestion visibility toggle
+  // Route layer & Congestion visibility + Alert & Selection highlighting toggle
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
+
+    const alertedRouteNormId = alert?.routeId ? normalizeRouteId(alert.routeId) : null;
+    const activeRouteNormId = selectedRouteId || alertedRouteNormId;
+    const hasActiveRoute = activeRouteNormId !== null;
 
     routes.forEach((r) => {
       const normId = normalizeRouteId(r.routeId);
       const srcId = `route-${normId}`;
       const isVis = layers.routes && visibleRouteIds.includes(normId);
       const vis = isVis ? "visible" : "none";
-      [`${srcId}-casing`, `${srcId}-line`].forEach((layerId) => {
-        try {
-          if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", vis);
-        } catch {
-          /* */
+      const isActive = hasActiveRoute && normId === activeRouteNormId;
+      const isAlerted = alertedRouteNormId !== null && normId === alertedRouteNormId;
+
+      const casingWidth = isActive ? 12 : hasActiveRoute ? 4.5 : 6;
+      const casingColor = isAlerted
+        ? (alert?.category === "bunching" || alert?.tagType === "bunching" ? "#ef4444" : "#f59e0b")
+        : isActive
+        ? (isDarkMode ? "#ffffff" : "#0f172a")
+        : (isDarkMode ? "#09090b" : "#ffffff");
+      const casingOpacity = isActive ? 0.95 : hasActiveRoute ? 0.15 : 0.65;
+      const casingBlur = isActive ? 2.0 : 0;
+
+      const lineWidth = isActive ? 6.5 : hasActiveRoute ? 2.8 : 3.8;
+      const lineOpacity = isActive ? 1.0 : hasActiveRoute ? 0.35 : 0.90;
+
+      const casingLayer = `${srcId}-casing`;
+      const lineLayer = `${srcId}-line`;
+
+      try {
+        if (map.getLayer(casingLayer)) {
+          map.setLayoutProperty(casingLayer, "visibility", vis);
+          map.setPaintProperty(casingLayer, "line-color", casingColor);
+          map.setPaintProperty(casingLayer, "line-width", casingWidth);
+          map.setPaintProperty(casingLayer, "line-opacity", casingOpacity);
+          map.setPaintProperty(casingLayer, "line-blur", casingBlur);
         }
-      });
+        if (map.getLayer(lineLayer)) {
+          map.setLayoutProperty(lineLayer, "visibility", vis);
+          map.setPaintProperty(lineLayer, "line-color", r.color);
+          map.setPaintProperty(lineLayer, "line-width", lineWidth);
+          map.setPaintProperty(lineLayer, "line-opacity", lineOpacity);
+        }
+      } catch {
+        /* Ignore if map is updating styles */
+      }
     });
+
+    // Z-Order: Bring active route layers to the very top so no overlapping route can obscure it
+    if (activeRouteNormId) {
+      const activeSrc = `route-${activeRouteNormId}`;
+      try {
+        if (map.getLayer(`${activeSrc}-casing`)) map.moveLayer(`${activeSrc}-casing`);
+        if (map.getLayer(`${activeSrc}-line`)) map.moveLayer(`${activeSrc}-line`);
+      } catch {
+        /* */
+      }
+    }
 
     const congVis = layers.congestion ? "visible" : "none";
     [
@@ -1235,14 +1366,18 @@ export const MapView: React.FC<MapViewProps> = ({
       "congestion-amber-line",
       "congestion-red-fill",
       "congestion-red-line",
+      "headway-connector-line",
     ].forEach((layerId) => {
       try {
-        if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", congVis);
+        if (map.getLayer(layerId)) {
+          map.setLayoutProperty(layerId, "visibility", congVis);
+          map.moveLayer(layerId);
+        }
       } catch {
         /* */
       }
     });
-  }, [visibleRouteIds, routes, layers.routes, layers.congestion]);
+  }, [visibleRouteIds, routes, layers.routes, layers.congestion, alert, isDarkMode, selectedRouteId]);
 
   // Dynamically update Congestion / Risk Zones GeoJSON based on active state and visible routes
   useEffect(() => {
@@ -1321,25 +1456,39 @@ export const MapView: React.FC<MapViewProps> = ({
     });
   }, [isHoldingApplied, visibleRouteIds, layers.congestion, dataMode, datasetLoadError, routes, alert]);
 
-  // Quick camera presets
+  // Quick camera presets & route focus
   const handleFocusRoute = (routeId: string) => {
     const map = mapInstanceRef.current;
     if (!map) return;
 
-    const r = routes.find((x) => normalizeRouteId(x.routeId) === routeId);
+    const norm = normalizeRouteId(routeId);
+    setSelectedRouteId(norm);
+
+    const r = routes.find((x) => normalizeRouteId(x.routeId) === norm);
     if (r && r.routeGeometry.length > 0) {
       const bounds = r.routeGeometry.reduce(
         (b, coord) => b.extend(coord),
         new maplibregl.LngLatBounds(r.routeGeometry[0], r.routeGeometry[0])
       );
       map.fitBounds(bounds, { padding: 80, duration: 1000 });
-      if (!visibleRouteIds.includes(routeId)) {
-        setVisibleRouteIds((prev) => [...prev, routeId]);
+      if (!visibleRouteIds.includes(norm)) {
+        setVisibleRouteIds((prev) => [...prev, norm]);
       }
     }
   };
 
+  const handleSelectRoute = (routeId: string) => {
+    const norm = normalizeRouteId(routeId);
+    if (selectedRouteId === norm) {
+      setSelectedRouteId(null);
+      handleFocusNetwork();
+    } else {
+      handleFocusRoute(norm);
+    }
+  };
+
   const handleFocusNetwork = () => {
+    setSelectedRouteId(null);
     mapInstanceRef.current?.flyTo({
       center: [37.675, 55.765],
       zoom: 12.2,
@@ -1452,7 +1601,11 @@ export const MapView: React.FC<MapViewProps> = ({
             <button
               onClick={handleFocusNetwork}
               className={`px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-                isDarkMode
+                !selectedRouteId
+                  ? isDarkMode
+                    ? "bg-white/15 text-white shadow-xs"
+                    : "bg-zinc-200 text-zinc-900 shadow-xs"
+                  : isDarkMode
                   ? "hover:bg-white/10 text-zinc-300 hover:text-white"
                   : "hover:bg-zinc-100 text-zinc-700 hover:text-zinc-900"
               }`}
@@ -1462,51 +1615,58 @@ export const MapView: React.FC<MapViewProps> = ({
               <span>Сеть</span>
             </button>
 
-            {!isGpsMode && (
-              <>
-                <button
-                  onClick={() => handleFocusRoute("м3")}
-                  className={`px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-                    isDarkMode
-                      ? "hover:bg-emerald-950/40 text-emerald-300"
-                      : "hover:bg-emerald-50 text-emerald-700"
-                  }`}
-                  title="Фокус на маршруте м3 (Бауманская)"
-                >
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                  <span>м3</span>
-                  <span className="text-[10px] text-zinc-400 font-normal">Бауманская</span>
-                </button>
+            {routes.map((r) => {
+              const normId = normalizeRouteId(r.routeId);
+              const isSelected = activeRouteNormId === normId;
+              const hasAlert =
+                (alert?.routeId && normalizeRouteId(alert.routeId) === normId) ||
+                vehicles.some(
+                  (v) =>
+                    normalizeRouteId(v.routeId) === normId &&
+                    (v.status === "BUNCHING_RISK" || v.status === "DELAYED")
+                );
 
-                <button
-                  onClick={() => handleFocusRoute("м7")}
-                  className={`px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-                    isDarkMode
-                      ? "hover:bg-orange-950/40 text-orange-300"
-                      : "hover:bg-orange-50 text-orange-700"
-                  }`}
-                  title="Фокус на маршруте м7 (Таганская)"
-                >
-                  <span className="w-2 h-2 rounded-full bg-orange-500 shrink-0" />
-                  <span>м7</span>
-                  <span className="text-[10px] text-zinc-400 font-normal">Таганская</span>
-                </button>
+              const stopName =
+                r.stops && r.stops.length > 0
+                  ? r.stops[Math.floor(r.stops.length / 2)]?.name
+                      .replace(/^м\.\s*|^Метро\s*«?/i, "")
+                      .replace(/»$/, "")
+                  : "";
 
+              return (
                 <button
-                  onClick={() => handleFocusRoute("т88")}
-                  className={`px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-                    isDarkMode
-                      ? "hover:bg-purple-950/40 text-purple-300"
-                      : "hover:bg-purple-50 text-purple-700"
+                  key={normId}
+                  onClick={() => handleSelectRoute(normId)}
+                  className={`px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer border ${
+                    isSelected
+                      ? isDarkMode
+                        ? "bg-white/15 text-white border-white/20 shadow-xs"
+                        : "bg-zinc-100 text-zinc-900 border-zinc-300 shadow-xs"
+                      : isDarkMode
+                      ? "border-transparent hover:bg-white/5 text-zinc-300 hover:text-white"
+                      : "border-transparent hover:bg-zinc-100 text-zinc-700 hover:text-zinc-900"
                   }`}
-                  title="Фокус на маршруте т88 (Басманная)"
+                  title={`Маршрут ${normId} (${r.name || stopName})`}
                 >
-                  <span className="w-2 h-2 rounded-full bg-purple-500 shrink-0" />
-                  <span>т88</span>
-                  <span className="text-[10px] text-zinc-400 font-normal">Басманная</span>
+                  <span
+                    className="w-2.5 h-2.5 rounded-full shrink-0 shadow-2xs"
+                    style={{ backgroundColor: r.color }}
+                  />
+                  <span>{normId}</span>
+                  {stopName && (
+                    <span className="text-[10px] text-zinc-400 font-normal hidden sm:inline max-w-[85px] truncate">
+                      {stopName}
+                    </span>
+                  )}
+                  {hasAlert && (
+                    <span
+                      className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shrink-0"
+                      title="Активный риск на маршруте"
+                    />
+                  )}
                 </button>
-              </>
-            )}
+              );
+            })}
           </div>
         </div>
       </div>
@@ -1651,14 +1811,21 @@ export const MapView: React.FC<MapViewProps> = ({
           <button
             onClick={() => setIsRoutesCollapsed(false)}
             className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border backdrop-blur-xl shadow-md transition-all cursor-pointer group outline-none focus:outline-none ${
-              isDarkMode
+              alert?.routeId
+                ? isDarkMode
+                  ? "border-rose-500/50 bg-rose-950/80 text-rose-200 shadow-rose-900/30"
+                  : "border-rose-300 bg-rose-50 text-rose-800 shadow-rose-200/40"
+                : isDarkMode
                 ? "border-white/10 bg-[#18181b]/95 text-zinc-200 hover:bg-[#27272a] shadow-black/30"
                 : "border-zinc-200 bg-white/95 text-zinc-800 hover:bg-zinc-50 shadow-zinc-300/40"
             }`}
             title="Развернуть фильтр маршрутов"
           >
-            <Route size={11} className="text-sky-500 shrink-0" />
+            <Route size={11} className={alert?.routeId ? "text-rose-500 shrink-0" : "text-sky-500 shrink-0"} />
             <span className="font-bold text-[9.5px] uppercase tracking-wider">Маршруты</span>
+            {alert?.routeId && (
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping shrink-0" />
+            )}
             <span
               className={`text-[8.5px] px-1 py-0.2 rounded font-mono font-bold ${
                 visibleRouteIds.length === 0
@@ -1681,7 +1848,7 @@ export const MapView: React.FC<MapViewProps> = ({
             {/* Header */}
             <div className="flex items-center justify-between pb-1 mb-1 border-b border-zinc-200/70 dark:border-white/10">
               <div className="flex items-center gap-1 min-w-0">
-                <Route size={11} className="text-sky-500 shrink-0" />
+                <Route size={11} className={alert?.routeId ? "text-rose-500 shrink-0" : "text-sky-500 shrink-0"} />
                 <span className="text-[9.5px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                   Маршруты
                 </span>
@@ -1776,41 +1943,45 @@ export const MapView: React.FC<MapViewProps> = ({
                     (v) => normalizeRouteId(v.routeId) === normId
                   ).length;
                   const isVis = visibleRouteIds.includes(normId);
+                  const isSelected = activeRouteNormId === normId;
+                  const isAlertedRoute = alert?.routeId && normalizeRouteId(alert.routeId) === normId;
 
                   return (
                     <div
                       key={normId}
-                      onClick={() =>
-                        setVisibleRouteIds((prev) =>
-                          prev.includes(normId)
-                            ? prev.filter((id) => id !== normId)
-                            : [...prev, normId]
-                        )
-                      }
-                      className={`group flex items-center justify-between px-1.5 py-0.5 rounded text-left transition-all cursor-pointer select-none ${
-                        isVis
+                      title={r.name ? `${normId}: ${r.name}` : normId}
+                      onClick={() => handleSelectRoute(normId)}
+                      className={`group flex items-center justify-between px-1.5 py-0.5 rounded text-left transition-all cursor-pointer select-none border ${
+                        isSelected
                           ? isDarkMode
-                            ? "text-zinc-100 hover:bg-zinc-800/80"
-                            : "text-zinc-900 hover:bg-zinc-100"
+                            ? "bg-white/10 border-white/20 text-white shadow-xs"
+                            : "bg-zinc-100 border-zinc-300 text-zinc-900 shadow-xs"
+                          : isVis
+                          ? isDarkMode
+                            ? "border-transparent text-zinc-100 hover:bg-zinc-800/80"
+                            : "border-transparent text-zinc-900 hover:bg-zinc-100"
                           : isDarkMode
-                          ? "text-zinc-500 hover:bg-zinc-800/40 opacity-40"
-                          : "text-zinc-400 hover:bg-zinc-100/60 opacity-45"
+                          ? "border-transparent text-zinc-500 hover:bg-zinc-800/40 opacity-40"
+                          : "border-transparent text-zinc-400 hover:bg-zinc-100/60 opacity-45"
                       }`}
                     >
                       <div className="flex items-center gap-1.5 min-w-0">
+                        {/* Always display authentic route color swatch */}
                         <span
                           style={{
-                            background: r.color,
-                            width: 7,
-                            height: 3.5,
+                            backgroundColor: r.color,
+                            width: 8,
+                            height: 4,
                             borderRadius: 2,
-                            opacity: isVis ? 1 : 0.3,
+                            opacity: isVis ? 1 : 0.35,
                             flexShrink: 0,
                           }}
                         />
                         <span
                           className={`text-[10.5px] font-semibold tracking-tight truncate ${
-                            isVis
+                            isSelected
+                              ? "font-bold text-white"
+                              : isVis
                               ? isDarkMode
                                 ? "text-zinc-100"
                                 : "text-zinc-900"
@@ -1821,6 +1992,12 @@ export const MapView: React.FC<MapViewProps> = ({
                         >
                           {normId}
                         </span>
+                        {isAlertedRoute && (
+                          <span
+                            className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shrink-0"
+                            title="Активный риск по маршруту"
+                          />
+                        )}
                       </div>
 
                       <div className="flex items-center gap-1 shrink-0">
@@ -1832,15 +2009,24 @@ export const MapView: React.FC<MapViewProps> = ({
                           {count} ТС
                         </span>
                         <button
-                          onClick={(e) => handleSoloRoute(normId, e)}
-                          className={`opacity-0 group-hover:opacity-100 p-0.5 rounded transition-all cursor-pointer outline-none focus:outline-none ${
-                            isDarkMode
-                              ? "text-zinc-400 hover:text-white hover:bg-zinc-700"
-                              : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setVisibleRouteIds((prev) =>
+                              prev.includes(normId)
+                                ? prev.filter((id) => id !== normId)
+                                : [...prev, normId]
+                            );
+                          }}
+                          className={`p-0.5 rounded transition-all cursor-pointer outline-none focus:outline-none ${
+                            isVis
+                              ? isDarkMode
+                                ? "text-zinc-400 hover:text-white"
+                                : "text-zinc-500 hover:text-zinc-900"
+                              : "text-zinc-600 dark:text-zinc-600 opacity-40"
                           }`}
-                          title={`Показать только ${normId}`}
+                          title={isVis ? "Скрыть маршрут" : "Показать маршрут"}
                         >
-                          <Eye size={10} />
+                          {isVis ? <Eye size={10} /> : <EyeOff size={10} />}
                         </button>
                       </div>
                     </div>

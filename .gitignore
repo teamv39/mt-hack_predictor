@@ -83,6 +83,7 @@ map-service/data/tmp/
 map-service/data/*.tsv.gz
 
 # Data & Models (ignore large files, keep samples)
+data/*.json
 data/raw/*
 !data/raw/.gitkeep
 data/processed/*

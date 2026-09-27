@@ -81,6 +81,9 @@ export function normalizeRouteId(id?: string): string {
   } else if (/^t/i.test(s)) {
     s = "т" + s.slice(1);
   }
+  if (s === "40к") {
+    return "40";
+  }
   return s;
 }
 
@@ -147,7 +150,7 @@ const VEHICLE_CONFIGS: {
 }[] = [
   // Route м3: 3 buses
   { id: "P1042", routeId: "м3", baseProgress: 0.38, speedMultiplier: 1.0 }, // Trailing bus that gets jammed
-  { id: "P1043", routeId: "м3", baseProgress: 0.52, speedMultiplier: 1.0 }, // Leader bus to be held
+  { id: "P1043", routeId: "м3", baseProgress: 0.44, speedMultiplier: 1.0 }, // Leader bus to be held
   { id: "P1044", routeId: "м3", baseProgress: 0.85, speedMultiplier: 0.95 },
   // Route м7: 2 buses
   { id: "P2198", routeId: "м7", baseProgress: 0.25, speedMultiplier: 1.05 },
@@ -159,9 +162,9 @@ const VEHICLE_CONFIGS: {
   { id: "P3501", routeId: "24", baseProgress: 0.10, speedMultiplier: 1.0 },
   { id: "P3502", routeId: "24", baseProgress: 0.45, speedMultiplier: 1.0 },
   { id: "P3503", routeId: "24", baseProgress: 0.80, speedMultiplier: 0.95 },
-  // Route 40к: 2 buses
-  { id: "P4001", routeId: "40к", baseProgress: 0.20, speedMultiplier: 1.05 },
-  { id: "P4002", routeId: "40к", baseProgress: 0.70, speedMultiplier: 1.0 },
+  // Route 40: 2 buses
+  { id: "P4001", routeId: "40", baseProgress: 0.20, speedMultiplier: 1.05 },
+  { id: "P4002", routeId: "40", baseProgress: 0.70, speedMultiplier: 1.0 },
 ];
 
 export class GPSDemoEngine {

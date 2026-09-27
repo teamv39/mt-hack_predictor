@@ -88,8 +88,8 @@ const ROUTE_CONFIGS: Record<string, RouteConfig> = {
   м3: {
     id: "м3",
     alertId: "alert_1042",
-    routeColor: "#D32F2F",
-    badgeBg: "bg-[#D32F2F]",
+    routeColor: "#10b981",
+    badgeBg: "bg-emerald-600",
     name: "Магистраль м3: «Метро Семёновская ⇄ Стадион Лужники»",
     subTitle: "Оперативный график движения Марея • Мониторинг интервалов и пачкования",
     totalBuses: 12,
@@ -180,8 +180,8 @@ const ROUTE_CONFIGS: Record<string, RouteConfig> = {
   м7: {
     id: "м7",
     alertId: "alert_2198",
-    routeColor: "#0284c7",
-    badgeBg: "bg-[#0284c7]",
+    routeColor: "#3b82f6",
+    badgeBg: "bg-blue-600",
     name: "Магистраль м7: «138-й квартал Выхина ⇄ Метро Китай-город»",
     subTitle: "Оперативный график движения Марея • Мониторинг интервалов и заторов",
     totalBuses: 10,
@@ -270,8 +270,8 @@ const ROUTE_CONFIGS: Record<string, RouteConfig> = {
   т88: {
     id: "т88",
     alertId: "alert_0814",
-    routeColor: "#7c3aed",
-    badgeBg: "bg-[#7c3aed]",
+    routeColor: "#8b5cf6",
+    badgeBg: "bg-purple-600",
     name: "Магистраль т88: «Новорязанская ул. ⇄ Метро Лубянка»",
     subTitle: "Оперативный график движения Марея • Мониторинг интервалов и сжатия такта",
     totalBuses: 8,

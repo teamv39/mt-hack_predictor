@@ -79,16 +79,26 @@ export interface StopPoint {
   color: string;
 }
 
+import realMoscowRoutes from "./realMoscowRoutes.json";
+
 export interface RouteData {
   routeId: string;
   name: string;
   color: string;
   routeGeometry: [number, number][];
+  sublines?: [number, number][][];
   congestionSegment: [number, number][];
   stops: StopPoint[];
+  officialRouteNumber?: string;
+  officialRouteName?: string;
 }
 
-// ----------------- MOCK DATA DEFINITIONS -----------------
+// ----------------- REAL MOSCOW VECTOR ROUTES (DATA.MOS.RU) -----------------
+
+export const REAL_MOSCOW_ROUTES: RouteData[] = realMoscowRoutes as RouteData[];
+
+export const MOCK_ROUTE_DATA: RouteData = REAL_MOSCOW_ROUTES.find((r) => r.routeId === "м3")!;
+export const MOCK_STOPS: StopPoint[] = MOCK_ROUTE_DATA.stops;
 
 export const MOCK_SYSTEM_METRICS = {
   vehiclesOnLine: 412,
@@ -103,42 +113,6 @@ export const MOCK_SYSTEM_METRICS = {
   ebt: "4.2 ± 1.8",
   fps: "23 k/s",
   simulationTime: "14:30",
-};
-
-export const MOCK_STOPS: StopPoint[] = [
-  { id: "s1", name: "ул. Покровка", lat: 55.7588, lon: 37.6497, color: "#71717a" },
-  { id: "s2", name: "Лялин пер.", lat: 55.7585, lon: 37.6598, color: "#71717a" },
-  { id: "s3", name: "м. Бауманская", lat: 55.7724, lon: 37.6791, color: "#f97316" },
-  { id: "s4", name: "Бакунинская ул.", lat: 55.7785, lon: 37.6970, color: "#d97706" },
-  { id: "s5", name: "м. Электрозаводская", lat: 55.7818, lon: 37.7082, color: "#0284c7" },
-  { id: "s6", name: "м. Семёновская", lat: 55.7868, lon: 37.7225, color: "#10b981" },
-];
-
-// Реальная трасса м3: Покровка → Лялин → Бауманская → Бакунинская → Электрозаводская → Семёновская
-// По улицам: Покровка → Старая Басманная → Спартаковская → Бакунинская → Бол. Семёновская
-export const MOCK_ROUTE_DATA: RouteData = {
-  routeId: "м3",
-  name: "Серебряный бор — Семёновская",
-  color: "#10b981",
-  routeGeometry: [
-    [37.6497, 55.7588], // ул. Покровка
-    [37.6598, 55.7585], // Лялин пер.
-    [37.6680, 55.7630], // Старая Басманная
-    [37.6735, 55.7665], // Спартаковская
-    [37.6791, 55.7724], // м. Бауманская
-    [37.6855, 55.7750], // Бакунинская ул., начало
-    [37.6970, 55.7785], // Бакунинская ул.
-    [37.7020, 55.7802], // Бакунинская д.84
-    [37.7082, 55.7818], // м. Электрозаводская
-    [37.7155, 55.7845], // Бол. Семёновская
-    [37.7225, 55.7868], // м. Семёновская
-  ],
-  congestionSegment: [
-    [37.6791, 55.7724], // м. Бауманская
-    [37.6970, 55.7785], // Бакунинская
-    [37.7082, 55.7818], // м. Электрозаводская
-  ],
-  stops: MOCK_STOPS,
 };
 
 export const MOCK_VEHICLES: Vehicle[] = [
@@ -561,125 +535,18 @@ export const MOCK_CAMERA = {
   footerText: "Загрузка событий, Бауманская",
 };
 
-// ---- MULTI-ROUTE DEFINITIONS ----
+// ---- MULTI-ROUTE DEFINITIONS (REAL MOSCOW TRANSIT NETWORK) ----
 
-const MOCK_STOPS_M7: StopPoint[] = [
-  { id: "s_m7_1", name: "Яузские Ворота", lat: 55.7520, lon: 37.6400, color: "#3b82f6" },
-  { id: "s_m7_2", name: "ул. Николоямская", lat: 55.7540, lon: 37.6550, color: "#71717a" },
-  { id: "s_m7_3", name: "Николоямская д.84", lat: 55.7512, lon: 37.6621, color: "#f97316" },
-  { id: "s_m7_4", name: "Таганская пл.", lat: 55.7465, lon: 37.6695, color: "#f97316" },
-  { id: "s_m7_5", name: "Марксистская", lat: 55.7440, lon: 37.6785, color: "#71717a" },
-  { id: "s_m7_6", name: "Рогожский вал", lat: 55.7435, lon: 37.6880, color: "#71717a" },
-  { id: "s_m7_7", name: "Площадь Ильича", lat: 55.7455, lon: 37.6940, color: "#10b981" },
-];
-
-export const MOCK_ROUTE_M7: RouteData = {
-  routeId: "м7",
-  name: "Карачарово — 138-й кв. Выхина",
-  color: "#3b82f6",
-  routeGeometry: [
-    [37.6400, 55.7520],
-    [37.6465, 55.7502],
-    [37.6550, 55.7540],
-    [37.6621, 55.7512],
-    [37.6695, 55.7465],
-    [37.6785, 55.7440],
-    [37.6880, 55.7435],
-    [37.6940, 55.7455],
-  ],
-  congestionSegment: [
-    [37.6550, 55.7540],
-    [37.6621, 55.7512],
-    [37.6695, 55.7465],
-  ],
-  stops: MOCK_STOPS_M7,
-};
-
-const MOCK_STOPS_T88: StopPoint[] = [
-  { id: "s_t88_1", name: "Комсомольская пл.", lat: 55.7760, lon: 37.6580, color: "#8b5cf6" },
-  { id: "s_t88_2", name: "Новая Басманная", lat: 55.7720, lon: 37.6545, color: "#71717a" },
-  { id: "s_t88_3", name: "Доброслободская ул.", lat: 55.7645, lon: 37.6530, color: "#71717a" },
-  { id: "s_t88_4", name: "Старая Басманная", lat: 55.7612, lon: 37.6475, color: "#f97316" },
-  { id: "s_t88_5", name: "Красные Ворота", lat: 55.7570, lon: 37.6380, color: "#71717a" },
-  { id: "s_t88_6", name: "Лубянка", lat: 55.7555, lon: 37.6260, color: "#10b981" },
-];
-
-export const MOCK_ROUTE_T88: RouteData = {
-  routeId: "т88",
-  name: "Комсомольская пл. — м. Лубянка",
-  color: "#8b5cf6",
-  routeGeometry: [
-    [37.6580, 55.7760],
-    [37.6545, 55.7720],
-    [37.6530, 55.7645],
-    [37.6475, 55.7612],
-    [37.6430, 55.7590],
-    [37.6380, 55.7570],
-    [37.6320, 55.7560],
-    [37.6260, 55.7555],
-  ],
-  congestionSegment: [
-    [37.6530, 55.7645],
-    [37.6475, 55.7612],
-    [37.6430, 55.7590],
-  ],
-  stops: MOCK_STOPS_T88,
-};
-
-const MOCK_STOPS_24: StopPoint[] = [
-  { id: "s_24_1", name: "Курский вокзал", lat: 55.7580, lon: 37.6610, color: "#06b6d4" },
-  { id: "s_24_2", name: "Земляной вал", lat: 55.7610, lon: 37.6650, color: "#71717a" },
-  { id: "s_24_3", name: "Чкаловская", lat: 55.7640, lon: 37.6700, color: "#71717a" },
-  { id: "s_24_4", name: "Бауманская ул.", lat: 55.7680, lon: 37.6760, color: "#71717a" },
-  { id: "s_24_5", name: "Бауманская д.58", lat: 55.7720, lon: 37.6850, color: "#71717a" },
-  { id: "s_24_6", name: "Елоховская", lat: 55.7760, lon: 37.6960, color: "#06b6d4" },
-];
-
-export const MOCK_ROUTE_24: RouteData = {
-  routeId: "24",
-  name: "Курский вокзал — Елоховская",
-  color: "#06b6d4",
-  routeGeometry: [
-    [37.6610, 55.7580],
-    [37.6650, 55.7610],
-    [37.6700, 55.7640],
-    [37.6760, 55.7680],
-    [37.6850, 55.7720],
-    [37.6960, 55.7760],
-  ],
-  congestionSegment: [],
-  stops: MOCK_STOPS_24,
-};
-
-const MOCK_STOPS_40K: StopPoint[] = [
-  { id: "s_40k_1", name: "Сокольники", lat: 55.7900, lon: 37.6800, color: "#f59e0b" },
-  { id: "s_40k_2", name: "Русаковская", lat: 55.7850, lon: 37.6810, color: "#f97316" },
-  { id: "s_40k_3", name: "Бакунинская ул.", lat: 55.7800, lon: 37.6850, color: "#71717a" },
-  { id: "s_40k_4", name: "Спартаковская", lat: 55.7750, lon: 37.6900, color: "#71717a" },
-  { id: "s_40k_5", name: "Денисовский пер.", lat: 55.7700, lon: 37.6950, color: "#71717a" },
-  { id: "s_40k_6", name: "Лефортово", lat: 55.7650, lon: 37.7000, color: "#f59e0b" },
-];
-
-export const MOCK_ROUTE_40K: RouteData = {
-  routeId: "40к",
-  name: "Сокольники — Лефортово",
-  color: "#f59e0b",
-  routeGeometry: [
-    [37.6800, 55.7900],
-    [37.6810, 55.7850],
-    [37.6850, 55.7800],
-    [37.6900, 55.7750],
-    [37.6950, 55.7700],
-    [37.7000, 55.7650],
-  ],
-  congestionSegment: [],
-  stops: MOCK_STOPS_40K,
-};
+export const MOCK_ROUTE_M7: RouteData = REAL_MOSCOW_ROUTES.find((r) => r.routeId === "м7")!;
+export const MOCK_ROUTE_T88: RouteData = REAL_MOSCOW_ROUTES.find((r) => r.routeId === "т88")!;
+export const MOCK_ROUTE_24: RouteData = REAL_MOSCOW_ROUTES.find((r) => r.routeId === "24")!;
+export const MOCK_ROUTE_40: RouteData = REAL_MOSCOW_ROUTES.find((r) => r.routeId === "40")!;
+export const MOCK_ROUTE_40K: RouteData = { ...MOCK_ROUTE_40, routeId: "40к" };
 
 export const MOCK_ALL_ROUTES: RouteData[] = [
   MOCK_ROUTE_DATA,
   MOCK_ROUTE_M7,
   MOCK_ROUTE_T88,
   MOCK_ROUTE_24,
-  MOCK_ROUTE_40K,
+  MOCK_ROUTE_40,
 ];
