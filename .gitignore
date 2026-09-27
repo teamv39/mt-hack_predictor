@@ -70,6 +70,7 @@ catboost_info/
 
 # Datasets & Large Archives (emulator images and archives >100MB)
 *.tar
+!dataset/ndtp-telemetry-emulator.tar
 *.tar.gz
 *.zip
 *.7z

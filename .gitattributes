@@ -1,6 +1,5 @@
 # Set default behavior to automatically normalize line endings
 * text=auto eol=lf
-
 # Explicitly declare text files you want to always be normalized and converted
 *.go text eol=lf
 *.py text eol=lf
@@ -14,10 +13,8 @@
 *.yml text eol=lf
 *.toml text eol=lf
 *.sh text eol=lf
-
 # Declare files that will always have CRLF line endings on checkout
 *.bat text eol=crlf
-
 # Denote all binary files
 *.png binary
 *.jpg binary
@@ -27,3 +24,4 @@
 *.parquet binary
 *.onnx binary
 *.pkl binary
+dataset/ndtp-telemetry-emulator.tar filter=lfs diff=lfs merge=lfs -text

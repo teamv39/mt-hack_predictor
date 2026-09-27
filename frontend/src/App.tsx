@@ -130,6 +130,7 @@ export default function App() {
               <MapView
                 routes={allRoutes}
                 vehicles={vehicles}
+                alerts={alerts}
                 dataMode={dataMode}
                 datasetLoadError={datasetLoadError}
                 alert={selectedAlert}

@@ -36,6 +36,7 @@ type GPSFeeder struct {
 	predictions    map[string]mlclient.PredictResponse
 	activeAlerts   map[string]models.Alert
 	holdingUntil   map[string]time.Time
+	alertGraceUntil map[string]time.Time
 	lastBatchEval  time.Time
 	activeVehicles []models.Vehicle
 	currentAlert   *models.Alert
@@ -65,21 +66,22 @@ func NewGPSFeeder(
 	end := time.Date(2026, 1, 6, 23, 59, 0, 0, time.UTC)
 
 	gf := &GPSFeeder{
-		tracks:       tracks,
-		trackIDs:     trackIDs,
-		cursors:      cursors,
-		simTime:      start,
-		startTime:    start,
-		endTime:      end,
-		speed:        1.0, // Default 1x real-time mode
-		isPlaying:    true,
-		schedMatcher: matcher,
-		headwayCalc:  hw,
-		alertMgr:     alerts,
-		mlCli:        mlCli,
-		predictions:  make(map[string]mlclient.PredictResponse),
-		activeAlerts: make(map[string]models.Alert),
-		holdingUntil: make(map[string]time.Time),
+		tracks:          tracks,
+		trackIDs:        trackIDs,
+		cursors:         cursors,
+		simTime:         start,
+		startTime:       start,
+		endTime:         end,
+		speed:           1.0, // Default 1x real-time mode
+		isPlaying:       true,
+		schedMatcher:    matcher,
+		headwayCalc:     hw,
+		alertMgr:        alerts,
+		mlCli:           mlCli,
+		predictions:     make(map[string]mlclient.PredictResponse),
+		activeAlerts:    make(map[string]models.Alert),
+		holdingUntil:    make(map[string]time.Time),
+		alertGraceUntil: make(map[string]time.Time),
 	}
 
 	gf.recomputePositions()
@@ -132,6 +134,7 @@ func (f *GPSFeeder) Reset() {
 		f.cursors[id] = 0
 	}
 	f.holdingUntil = make(map[string]time.Time)
+	f.alertGraceUntil = make(map[string]time.Time)
 	f.predictions = make(map[string]mlclient.PredictResponse)
 	f.activeAlerts = make(map[string]models.Alert)
 	f.recomputePositions()
@@ -474,13 +477,16 @@ func (f *GPSFeeder) runBatchPrediction(reqs []mlclient.PredictRequest, vehicles 
 		}
 		f.predictions[vehID] = pred
 
-		if pred.BunchingRiskProbability >= 0.65 || pred.PredictedDelaySec >= 180 {
+		if pred.BunchingRiskProbability >= 0.65 || math.Abs(pred.PredictedDelaySec) >= 120 || pred.Severity == "CRITICAL" || pred.Severity == "HIGH" {
 			alertType := "SEVERE_DELAY"
 			cleanID := strings.TrimPrefix(vehID, "P")
 			msg := fmt.Sprintf("Задержка графика борта №%s (+%.0f мин)", cleanID, pred.PredictedDelaySec/60)
 			if pred.BunchingRiskProbability >= 0.65 {
 				alertType = "BUS_BUNCHING"
 				msg = fmt.Sprintf("Риск пачкования борта №%s (интервал %.1f мин)", cleanID, v.HeadwaySeconds/60)
+			} else if pred.PredictedDelaySec < -60 {
+				alertType = "EARLY_ARRIVAL"
+				msg = fmt.Sprintf("Опережение графика борта №%s (%.0f мин)", cleanID, pred.PredictedDelaySec/60)
 			}
 
 			holdDuration := pred.RecommendationHoldSec
@@ -512,9 +518,15 @@ func (f *GPSFeeder) runBatchPrediction(reqs []mlclient.PredictRequest, vehicles 
 				},
 				CreatedAt: f.simTime,
 			}
+			f.alertGraceUntil[vehID] = f.simTime.Add(35 * time.Second)
 		} else {
+			// Retain alert during Grace Period to prevent short-lived flickering
+			if grace, hasGrace := f.alertGraceUntil[vehID]; hasGrace && f.simTime.Before(grace) {
+				continue
+			}
 			if exp, hasHold := f.holdingUntil[vehID]; !hasHold || !f.simTime.Before(exp) {
 				delete(f.activeAlerts, vehID)
+				delete(f.alertGraceUntil, vehID)
 			}
 		}
 	}
@@ -528,13 +540,16 @@ func (f *GPSFeeder) storePrediction(vehID string, pred mlclient.PredictResponse,
 	f.predictions[vehID] = pred
 
 	// If bunching risk or severe delay, create or update Alert
-	if pred.BunchingRiskProbability >= 0.65 || pred.PredictedDelaySec >= 180 {
+	if pred.BunchingRiskProbability >= 0.65 || math.Abs(pred.PredictedDelaySec) >= 120 || pred.Severity == "CRITICAL" || pred.Severity == "HIGH" {
 		alertType := "SEVERE_DELAY"
 		cleanID := strings.TrimPrefix(vehID, "P")
 		msg := fmt.Sprintf("Задержка графика борта №%s (+%.0f мин)", cleanID, pred.PredictedDelaySec/60)
 		if pred.BunchingRiskProbability >= 0.65 {
 			alertType = "BUS_BUNCHING"
 			msg = fmt.Sprintf("Риск пачкования борта №%s (интервал %.1f мин)", cleanID, v.HeadwaySeconds/60)
+		} else if pred.PredictedDelaySec < -60 {
+			alertType = "EARLY_ARRIVAL"
+			msg = fmt.Sprintf("Опережение графика борта №%s (%.0f мин)", cleanID, pred.PredictedDelaySec/60)
 		}
 
 		holdDuration := pred.RecommendationHoldSec
@@ -567,10 +582,16 @@ func (f *GPSFeeder) storePrediction(vehID string, pred mlclient.PredictResponse,
 			},
 			CreatedAt: f.simTime,
 		}
+		f.alertGraceUntil[vehID] = f.simTime.Add(35 * time.Second)
 	} else {
-		// If condition cleared and not currently holding, remove alert
+		// Retain alert during Grace Period to prevent short-lived flickering
+		if grace, hasGrace := f.alertGraceUntil[vehID]; hasGrace && f.simTime.Before(grace) {
+			return
+		}
+		// If condition cleared, grace expired, and not currently holding, remove alert
 		if exp, hasHold := f.holdingUntil[vehID]; !hasHold || !f.simTime.Before(exp) {
 			delete(f.activeAlerts, vehID)
+			delete(f.alertGraceUntil, vehID)
 		}
 	}
 }

@@ -181,6 +181,13 @@ export interface ToastMessage {
   timestamp: string;
 }
 
+interface AlertTrackerEntry {
+  consecutiveHits: number;
+  consecutiveMisses: number;
+  graceUntil: number;
+  activeAlert: AlertItem | null;
+}
+
 export function normalizeRouteId(id?: string): string {
   if (!id) return "м3";
   let s = id.trim();
@@ -331,6 +338,7 @@ export function useTelemetry() {
     setDatasetLoadError(null);
     setFlyToTarget(null);
     setTimeStepState("Сейчас");
+    alertStabilizerRef.current.clear();
     if (mode === "mock") {
       setSimSpeedState(1.0);
       setDatasetRoutes([]);
@@ -342,7 +350,7 @@ export function useTelemetry() {
     } else if (mode === "dataset") {
       setSimSpeedState(1.0);
       setVehicles([]);
-      setAlerts(MOCK_ALERTS.filter((alert) => !dismissedAlertIds.current.has(alert.id)));
+      setAlerts([]);
       fetch(`${API_BASE}/simulation/control`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -402,6 +410,252 @@ export function useTelemetry() {
     };
   }, [dataMode]);
 
+  const allGpsVehiclesRef = useRef<Vehicle[]>([]);
+  const isPollingGpsBatchRef = useRef<boolean>(false);
+  const alertStabilizerRef = useRef<Map<string, AlertTrackerEntry>>(new Map());
+
+  const pollGpsBatch = useCallback(
+    async (vehsToPoll: Vehicle[]) => {
+      if (vehsToPoll.length === 0 || isPollingGpsBatchRef.current) return;
+      isPollingGpsBatchRef.current = true;
+
+      try {
+        const now = new Date();
+        const hourOfDay = now.getHours();
+        const dayOfWeek = (now.getDay() + 6) % 7;
+
+        const payload = {
+          vehicles: vehsToPoll.map((v) => {
+            const cleanId = v.id.replace(/^P/, "");
+            return {
+              sample_id: `${cleanId}_${Date.now()}`,
+              tr_id: cleanId,
+              vehicle_id: cleanId,
+              cur_dev_s: Number.isFinite(v.delaySeconds) ? v.delaySeconds : 0,
+              current_delay_sec: Number.isFinite(v.delaySeconds) ? v.delaySeconds : 0,
+              speed_kmh: Math.max(0, Number.isFinite(v.speedKmh) ? v.speedKmh : 20),
+              heading: Math.max(0, Math.min(360, Number.isFinite(v.heading) ? v.heading : 0)),
+              latitude: Number.isFinite(v.latitude) ? v.latitude : 55.75,
+              longitude: Number.isFinite(v.longitude) ? v.longitude : 37.61,
+              route_id: v.routeId || cleanId,
+              horizon_sec: 720,
+              hour_of_day: hourOfDay,
+              day_of_week: dayOfWeek,
+            };
+          }),
+        };
+
+        let res = await fetch("/predict/batch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }).catch(() => null);
+
+        if (!res || !res.ok) {
+          res = await fetch(`${API_BASE}/predict/batch`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          }).catch(() => null);
+        }
+
+        if (!res || !res.ok) return;
+
+        const data = await res.json();
+        const predictions: any[] = data.predictions || [];
+        if (!Array.isArray(predictions) || predictions.length === 0) return;
+
+        const predMap = new Map<string, any>();
+        for (const p of predictions) {
+          const id = String(p.vehicle_id || p.tr_id || "");
+          const cleanId = id.replace(/^P/, "");
+          predMap.set(cleanId, p);
+          predMap.set(`P${cleanId}`, p);
+        }
+
+        // Update vehicle delays and statuses
+        setVehicles((prev) =>
+          prev.map((v) => {
+            const cleanId = v.id.replace(/^P/, "");
+            const pred = predMap.get(cleanId);
+            if (!pred) return v;
+
+            const isBunching = (pred.bunching_risk_probability || 0) >= 0.65;
+            const delaySec = Math.round(pred.predicted_delay_sec || 0);
+            const isDelayed = Math.abs(delaySec) >= 90 || pred.predicted_class === "late";
+
+            return {
+              ...v,
+              delaySeconds: delaySec,
+              predictedTerminalDelayMinutes: +(delaySec / 60).toFixed(1),
+              status: isBunching
+                ? "BUNCHING_RISK"
+                : isDelayed
+                ? "DELAYED"
+                : "NORMAL",
+            };
+          })
+        );
+
+        // Filter alerts with anti-flapping hysteresis & 35s grace hold-down
+        const trackerMap = alertStabilizerRef.current;
+        const nowMs = Date.now();
+
+        for (const v of vehsToPoll) {
+          const cleanId = v.id.replace(/^P/, "");
+          const pred = predMap.get(cleanId);
+          if (!pred) continue;
+
+          const bunchingProb = pred.bunching_risk_probability || 0;
+          const isBunching = bunchingProb >= 0.65;
+          const delaySec = Math.round(pred.predicted_delay_sec || 0);
+          const isDelayed = Math.abs(delaySec) >= 90 || pred.predicted_class === "late";
+          const isHighSeverity = pred.severity && pred.severity !== "LOW";
+          const rawHasAlert = isBunching || isDelayed || isHighSeverity || (pred.recommendation_hold_sec || 0) > 0;
+
+          const alertId = `alert_gps_${cleanId}`;
+          if (dismissedAlertIds.current.has(alertId)) {
+            trackerMap.delete(cleanId);
+            continue;
+          }
+
+          let entry = trackerMap.get(cleanId);
+          if (!entry) {
+            entry = {
+              consecutiveHits: 0,
+              consecutiveMisses: 0,
+              graceUntil: 0,
+              activeAlert: null,
+            };
+            trackerMap.set(cleanId, entry);
+          }
+
+          const isCritical = bunchingProb >= 0.80 || Math.abs(delaySec) >= 180 || pred.severity === "CRITICAL";
+
+          if (rawHasAlert) {
+            entry.consecutiveHits += 1;
+            entry.consecutiveMisses = 0;
+
+            // Immediate activation for critical, 2 consecutive hits for moderate alerts
+            const shouldActivate = isCritical || entry.consecutiveHits >= 2 || entry.activeAlert !== null;
+
+            if (shouldActivate) {
+              // Maintain/extend grace period: at least 35 seconds
+              entry.graceUntil = Math.max(entry.graceUntil, nowMs + 35000);
+
+              const holdSec = pred.recommendation_hold_sec || (isBunching ? 120 : 90);
+              const holdMin = +(holdSec / 60).toFixed(1);
+
+              entry.activeAlert = {
+                id: alertId,
+                vehicleId: v.id.startsWith("P") ? v.id : `P${cleanId}`,
+                followingVehicleId: "",
+                routeNumberBadge: v.routeName || v.routeId || cleanId,
+                routeId: v.routeId || cleanId,
+                urgencyBadge: isBunching ? "T+15 мин" : Math.abs(delaySec) >= 180 ? "Задержка" : "Внимание",
+                urgencyMinutes: Math.max(1, Math.round(Math.abs(delaySec) / 60)),
+                tag: isBunching
+                  ? "Схлопывание интервала"
+                  : delaySec > 0
+                  ? "Задержка графика"
+                  : "Опережение графика",
+                tagType: isBunching ? "bunching" : "interval",
+                title: isBunching
+                  ? `Риск пачкования борта №${cleanId}`
+                  : delaySec > 0
+                  ? `Задержка рейса борта №${cleanId}`
+                  : `Опережение графика борта №${cleanId}`,
+                delayLabel: `${delaySec >= 0 ? "+" : ""}${(delaySec / 60).toFixed(1)} мин`,
+                description: isBunching
+                  ? `CatBoost ML выявил риск схлопывания интервала движения. Рекомендуется регулировочная задержка.`
+                  : `CatBoost ML: прогнозируемое отклонение от графика составляет ${delaySec} с.`,
+                confidence: Math.round((bunchingProb || (isDelayed ? 0.82 : 0.75)) * 100),
+                locationName: v.nextStop || "По маршруту",
+                latitude: v.latitude,
+                longitude: v.longitude,
+                category: isCritical ? "critical" : isBunching ? "bunching" : "all",
+                shapFactors:
+                  Array.isArray(pred.factors) && pred.factors.length > 0
+                    ? pred.factors.map((f: any, idx: number) => ({
+                        title: f.title || f.feature,
+                        delayMinutes: +(f.impact_score ? (f.impact_score / 60).toFixed(1) : 0.8),
+                        percent: Math.round(f.weight || (idx === 0 ? 50 : 25)),
+                        color: idx === 0 ? "#ef4444" : idx === 1 ? "#f59e0b" : "#3b82f6",
+                      }))
+                    : [
+                        {
+                          title: "Отклонение скорости на перегоне",
+                          delayMinutes: +(delaySec / 60).toFixed(1),
+                          percent: 65,
+                          color: "#ef4444",
+                        },
+                        { title: "Плотность транспортного потока", delayMinutes: 0.5, percent: 35, color: "#3b82f6" },
+                      ],
+                delayChartData: [
+                  { stop: "Тек. точка", plan: 0, withoutAction: delaySec, withHolding: delaySec },
+                  { stop: "След. ост.", plan: 4, withoutAction: delaySec + 25, withHolding: Math.max(0, delaySec - 20) },
+                  { stop: "Целевая", plan: 8, withoutAction: delaySec + 55, withHolding: Math.max(0, delaySec - 45) },
+                  { stop: "Конечная", plan: 14, withoutAction: delaySec + 80, withHolding: 15 },
+                ],
+                recommendation: {
+                  id: `rec_gps_${cleanId}`,
+                  targetVehicleId: v.id.startsWith("P") ? v.id : `P${cleanId}`,
+                  durationSeconds: holdSec,
+                  durationMinutes: holdMin,
+                  stopName: v.nextStop || "Ближайшая остановка",
+                  effectPercent: Math.round((bunchingProb || 0.85) * 100),
+                  text: `Придержать борт №${cleanId} на ${holdMin} мин для стабилизации такта.`,
+                  infoText: "Выравнивает интервал движения по формуле Велдинга.",
+                  applied: appliedHoldingIds.includes(alertId),
+                },
+                metrics: {
+                  headway_collapse_sec: 120,
+                },
+              };
+            }
+          } else {
+            // rawHasAlert is false - test hysteresis exit
+            entry.consecutiveMisses += 1;
+            entry.consecutiveHits = 0;
+
+            const isSafe = bunchingProb < 0.40 && Math.abs(delaySec) < 60;
+            const graceExpired = nowMs >= entry.graceUntil;
+
+            // Only release active alert after grace period expires AND 2 consecutive misses or full recovery
+            if (graceExpired && (entry.consecutiveMisses >= 2 || isSafe)) {
+              entry.activeAlert = null;
+            }
+          }
+        }
+
+        // Clean up tracker entries without active alerts
+        for (const [key, entry] of trackerMap.entries()) {
+          if (!entry.activeAlert && entry.consecutiveHits === 0) {
+            trackerMap.delete(key);
+          }
+        }
+
+        // Populate stabilized alerts
+        const newAlerts: AlertItem[] = [];
+        for (const entry of trackerMap.values()) {
+          if (entry.activeAlert) {
+            newAlerts.push(entry.activeAlert);
+          }
+        }
+
+        setAlerts(newAlerts);
+        if (newAlerts.length > 0) {
+          setSelectedAlertId((prev) => (prev && newAlerts.some((a) => a.id === prev) ? prev : newAlerts[0].id));
+        }
+      } catch {
+        // Ignore network glitches silently
+      } finally {
+        isPollingGpsBatchRef.current = false;
+      }
+    },
+    [appliedHoldingIds]
+  );
+
   useEffect(() => {
     if (dataMode !== "dataset") return;
     let cancelled = false;
@@ -409,20 +663,44 @@ export function useTelemetry() {
       .then((tracks) => {
         if (cancelled) return;
         if (!tracks.length) throw new Error("No GPS tracks with valid points");
-        setDatasetRoutes(tracks.map(mapTrackToRoute));
-        setVehicles(tracks.map(mapTrackToVehicle));
+        const loadedRoutes = tracks.map(mapTrackToRoute);
+        const loadedVehicles = tracks.map(mapTrackToVehicle);
+        setDatasetRoutes(loadedRoutes);
+        allGpsVehiclesRef.current = loadedVehicles;
+        setVehicles(loadedVehicles);
         setSelectedVehicleId(`P${tracks[0].tr_id}`);
         setDatasetLoadError(null);
+        pollGpsBatch(loadedVehicles);
       })
       .catch((error: unknown) => {
         if (cancelled) return;
         setDatasetLoadError(error instanceof Error ? error.message : "Dataset unavailable");
         setDatasetRoutes([]);
         setVehicles(MOCK_VEHICLES);
+        allGpsVehiclesRef.current = [];
         setAlerts(MOCK_ALERTS.filter((alert) => !dismissedAlertIds.current.has(alert.id)));
       });
-    return () => { cancelled = true; };
-  }, [dataMode]);
+    return () => {
+      cancelled = true;
+    };
+  }, [dataMode, pollGpsBatch]);
+
+  // Periodic continuous polling in GPS mode (every 4 seconds)
+  useEffect(() => {
+    if (dataMode !== "dataset") return;
+    const pool = allGpsVehiclesRef.current.length > 0 ? allGpsVehiclesRef.current : vehicles;
+    if (pool.length === 0) return;
+
+    pollGpsBatch(pool);
+    const interval = setInterval(() => {
+      const currentPool = allGpsVehiclesRef.current.length > 0 ? allGpsVehiclesRef.current : vehicles;
+      if (currentPool.length > 0) {
+        pollGpsBatch(currentPool);
+      }
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [dataMode, vehicles.length, pollGpsBatch]);
 
   const setActiveFilter = useCallback((filter: "all" | "critical" | "bunching") => {
     setActiveFilterState(filter);
@@ -467,6 +745,12 @@ export function useTelemetry() {
     savePreferences({ dismissedAlerts: [...dismissedAlertIds.current] });
     demoEngine.dismissAlert(alertId);
     setAlerts((prev) => prev.filter((alert) => alert.id !== alertId));
+
+    for (const [key, entry] of alertStabilizerRef.current.entries()) {
+      if (entry.activeAlert?.id === alertId || key === alertId || `alert_gps_${key}` === alertId) {
+        alertStabilizerRef.current.delete(key);
+      }
+    }
 
     if (selectedAlertId === alertId) {
       const nextAlert = alerts.find((alert) => alert.id !== alertId);
@@ -529,12 +813,61 @@ export function useTelemetry() {
       setSelectedVehicleId(alertItem.vehicleId);
     }
     savePreferences({ selectedAlertId: alertItem.id, selectedVehicleId: newVehId });
+
+    // Look up real-time vehicle position from vehicles
+    const cleanId = (alertItem.vehicleId || "").replace(/^[P№#\s]+/, "").trim();
+    const liveVeh = vehicles.find(
+      (v) =>
+        v.id === alertItem.vehicleId ||
+        v.id.replace(/^[P№#\s]+/, "").trim() === cleanId ||
+        (cleanId !== "" && (v.plateNumber?.includes(cleanId) || v.badgeLabel?.includes(cleanId)))
+    );
+
+    let targetLat = alertItem.latitude;
+    let targetLon = alertItem.longitude;
+
+    if (
+      liveVeh &&
+      typeof liveVeh.latitude === "number" &&
+      !isNaN(liveVeh.latitude) &&
+      liveVeh.latitude !== 0 &&
+      typeof liveVeh.longitude === "number" &&
+      !isNaN(liveVeh.longitude) &&
+      liveVeh.longitude !== 0
+    ) {
+      targetLat = liveVeh.latitude;
+      targetLon = liveVeh.longitude;
+    } else {
+      const followCleanId = (alertItem.followingVehicleId || alertItem.recommendation?.targetVehicleId || "")
+        .replace(/^[P№#\s]+/, "")
+        .trim();
+      if (followCleanId) {
+        const followVeh = vehicles.find(
+          (v) =>
+            v.id === alertItem.followingVehicleId ||
+            v.id.replace(/^[P№#\s]+/, "").trim() === followCleanId
+        );
+        if (
+          followVeh &&
+          typeof followVeh.latitude === "number" &&
+          !isNaN(followVeh.latitude) &&
+          followVeh.latitude !== 0 &&
+          typeof followVeh.longitude === "number" &&
+          !isNaN(followVeh.longitude) &&
+          followVeh.longitude !== 0
+        ) {
+          targetLat = followVeh.latitude;
+          targetLon = followVeh.longitude;
+        }
+      }
+    }
+
     setFlyToTarget({
-      lat: alertItem.latitude,
-      lon: alertItem.longitude,
-      zoom: 14,
+      lat: targetLat,
+      lon: targetLon,
+      zoom: 15,
     });
-  }, [selectedVehicleId]);
+  }, [selectedVehicleId, vehicles]);
 
   const handleSelectVehicle = useCallback((vehId: string) => {
     setSelectedVehicleId(vehId);
@@ -679,6 +1012,11 @@ export function useTelemetry() {
         if (Array.isArray(alertRes) && alertRes.length > 0) {
           const mappedAlerts = alertRes.map(mapBackendAlert).filter((alert) => !dismissedAlertIds.current.has(alert.id));
           setAlerts((prev) => {
+            if (dataMode === "dataset") {
+              const incomingIds = new Set(mappedAlerts.map((a) => a.id));
+              const preservedGps = prev.filter((p) => p.id.startsWith("alert_gps_") && !incomingIds.has(p.id) && !dismissedAlertIds.current.has(p.id));
+              return [...mappedAlerts, ...preservedGps];
+            }
             const incomingIds = new Set(mappedAlerts.map((a) => a.id));
             const preserved = prev.filter((p) => !incomingIds.has(p.id) && !dismissedAlertIds.current.has(p.id));
             return [...mappedAlerts, ...preserved];

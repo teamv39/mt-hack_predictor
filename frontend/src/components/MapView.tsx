@@ -165,6 +165,7 @@ const HORIZONS = ["Сейчас", "+15 мин", "+30 мин", "+45 мин"];
 interface MapViewProps {
   routes: RouteData[];
   vehicles: Vehicle[];
+  alerts?: AlertItem[];
   dataMode?: DataMode;
   datasetLoadError?: string | null;
   alert?: AlertItem | null;
@@ -182,6 +183,7 @@ interface MapViewProps {
 export const MapView: React.FC<MapViewProps> = ({
   routes,
   vehicles,
+  alerts,
   dataMode = "mock",
   datasetLoadError = null,
   alert,
@@ -358,6 +360,24 @@ export const MapView: React.FC<MapViewProps> = ({
 
   // 1. Vehicle positions — interpolate along route geometry when advancing timeline
   const displayedVehicles = useMemo(() => {
+    if (dataMode === "dataset" && !datasetLoadError) {
+      const alertVehicleIds = new Set<string>();
+      (alerts || []).forEach((a) => {
+        if (a.vehicleId) {
+          alertVehicleIds.add(a.vehicleId);
+          alertVehicleIds.add(a.vehicleId.replace(/^P/, ""));
+        }
+      });
+      if (alert?.vehicleId) {
+        alertVehicleIds.add(alert.vehicleId);
+        alertVehicleIds.add(alert.vehicleId.replace(/^P/, ""));
+      }
+      if (alertVehicleIds.size === 0) return vehicles;
+      return vehicles.filter((v) => {
+        const cleanId = v.id.replace(/^P/, "");
+        return alertVehicleIds.has(cleanId) || alertVehicleIds.has(v.id);
+      });
+    }
     if (dataMode !== "mock" || timeStep === "Сейчас") return vehicles;
 
     const horizonFrac: Record<
@@ -443,7 +463,7 @@ export const MapView: React.FC<MapViewProps> = ({
 
       return veh;
     });
-  }, [vehicles, timeStep, isHoldingApplied, primaryRoute, routes, dataMode]);
+  }, [vehicles, alerts, alert, timeStep, isHoldingApplied, primaryRoute, routes, dataMode, datasetLoadError]);
 
   // 2. Timeline auto-play timer (only in demo/mock mode with the horizon scrubber)
   useEffect(() => {
@@ -975,7 +995,7 @@ export const MapView: React.FC<MapViewProps> = ({
       const normRoute = normalizeRouteId(veh.routeId);
 
       // Skip vehicles on hidden routes
-      if (routes.length > 0 && !visibleRouteIds.includes(normRoute)) {
+      if (!isGpsMode && routes.length > 0 && !visibleRouteIds.includes(normRoute)) {
         if (vehicleMarkersRef.current[veh.id]) {
           vehicleMarkersRef.current[veh.id].remove();
           delete vehicleMarkersRef.current[veh.id];
@@ -985,10 +1005,11 @@ export const MapView: React.FC<MapViewProps> = ({
 
       const routeObj = routes.find((r) => normalizeRouteId(r.routeId) === normRoute);
       const routeColor = routeObj?.color || "#3b82f6";
-      const isSelected = veh.id === selectedVehicleId;
+      const cleanId = veh.id.replace(/^P/, "");
+      const cleanSelId = (selectedVehicleId || "").replace(/^P/, "");
+      const isSelected = veh.id === selectedVehicleId || (cleanSelId !== "" && cleanId === cleanSelId);
       const isBunching = veh.status === "BUNCHING_RISK";
       const isDelayed = veh.status === "DELAYED";
-      const cleanId = veh.id.replace(/^P/, "");
       const isAlertedVehicle = Boolean(
         alert && (alert.vehicleId === veh.id || alert.vehicleId?.replace(/^P/, "") === cleanId)
       );

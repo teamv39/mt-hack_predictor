@@ -64,8 +64,8 @@ class FeatureVector(BaseModel):
     )
 
     # --- Time context (from T or wall clock) --------------------------------
-    hour_of_day: int = Field(..., ge=0, le=23, description="Local hour of T (0–23)")
-    day_of_week: int = Field(..., ge=0, le=6, description="Weekday of T (0=Monday … 6=Sunday)")
+    hour_of_day: int = Field(default=12, ge=0, le=23, description="Local hour of T (0–23)")
+    day_of_week: int = Field(default=2, ge=0, le=6, description="Weekday of T (0=Monday … 6=Sunday)")
 
     # --- Telemetry snapshot / window aggregates (event_time ≤ T only) -------
     speed_kmh: float | None = Field(
@@ -190,6 +190,11 @@ class FeatureVector(BaseModel):
             payload["vehicle_id"] = str(tr)
         elif vid and not tr:
             payload["tr_id"] = str(vid)
+
+        if payload.get("hour_of_day") is None:
+            payload["hour_of_day"] = datetime.now().hour
+        if payload.get("day_of_week") is None:
+            payload["day_of_week"] = datetime.now().weekday()
 
         # cur_dev_s ↔ current_delay_sec
         cur = payload.get("cur_dev_s")
