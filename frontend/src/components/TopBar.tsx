@@ -14,6 +14,7 @@ import {
   Layers,
   Activity,
   Radio,
+  Compass,
 } from "lucide-react";
 import type { DataMode } from "../hooks/useTelemetry";
 
@@ -34,6 +35,7 @@ export interface TopBarProps {
   onControl?: (action: SimulationAction, value?: number | string) => void | Promise<void>;
   isDarkMode?: boolean;
   onToggleDarkMode?: () => void;
+  onOpenGuide?: () => void;
   dataMode?: DataMode;
   onDataModeChange?: (mode: DataMode) => void;
 }
@@ -47,6 +49,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   onControl,
   isDarkMode = false,
   onToggleDarkMode,
+  onOpenGuide,
   dataMode = "dataset",
   onDataModeChange,
 }) => {
@@ -310,6 +313,22 @@ export const TopBar: React.FC<TopBarProps> = ({
             <RotateCcw size={13} />
           </button>
         </div>
+
+        {/* Jury Guide Tour Button */}
+        {onOpenGuide && (
+          <button
+            onClick={onOpenGuide}
+            className={`h-8 px-2.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+              isDarkMode
+                ? "bg-[#222226] hover:bg-white/10 border-white/10 text-zinc-300 hover:text-white"
+                : "bg-zinc-100 hover:bg-zinc-200 border-zinc-200 text-zinc-700 hover:text-zinc-900"
+            }`}
+            title="Экскурсия по системе для жюри"
+          >
+            <Compass size={13} />
+            <span className="hidden sm:inline">Гайд жюри</span>
+          </button>
+        )}
 
         {/* Theme Toggle (Dark/Light) */}
         {onToggleDarkMode && (

@@ -140,9 +140,48 @@ func LoadTracksFromCSV(path string) (map[int][]GPSPoint, error) {
 		sort.SliceStable(tracks[trID], func(i, j int) bool {
 			return tracks[trID][i].EventTime.Before(tracks[trID][j].EventTime)
 		})
+		tracks[trID] = cleanTrackPoints(tracks[trID])
 	}
 
 	return tracks, nil
+}
+
+// isSVOSpoofingPoint checks whether coordinates fall into the known Sheremetyevo Airport
+// GPS electronic warfare (EW/РЭБ) spoofing cluster.
+func isSVOSpoofingPoint(lat, lon float64) bool {
+	return lat >= 55.95 && lat <= 56.02 && lon >= 37.38 && lon <= 37.46
+}
+
+// cleanTrackPoints filters out EW spoofing anomalies when a vehicle operates outside the SVO hotspot.
+func cleanTrackPoints(points []GPSPoint) []GPSPoint {
+	if len(points) == 0 {
+		return points
+	}
+
+	hasNonSVO := false
+	for _, p := range points {
+		if !isSVOSpoofingPoint(p.Lat, p.Lon) {
+			hasNonSVO = true
+			break
+		}
+	}
+	// If the entire track is located in SVO, retain all points to avoid wiping it out completely.
+	if !hasNonSVO {
+		return points
+	}
+
+	clean := make([]GPSPoint, 0, len(points))
+	for _, p := range points {
+		if isSVOSpoofingPoint(p.Lat, p.Lon) {
+			continue
+		}
+		clean = append(clean, p)
+	}
+
+	if len(clean) == 0 {
+		return points
+	}
+	return clean
 }
 
 // LoadFromCSV replaces the store contents with the filtered CSV cache and

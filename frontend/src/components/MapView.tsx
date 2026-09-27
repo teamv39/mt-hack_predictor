@@ -7,6 +7,8 @@ import {
   SkipBack,
   ChevronRight,
   ChevronLeft,
+  ChevronDown,
+  ChevronUp,
   Plus,
   Minus,
   Crosshair,
@@ -21,6 +23,8 @@ import {
   MapPin,
   Flame,
   Activity,
+  Search,
+  X,
 } from "lucide-react";
 import { Vehicle, AlertItem, RouteData } from "../mock/telemetry";
 import { normalizeRouteId, type DataMode } from "../hooks/useTelemetry";
@@ -66,13 +70,59 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-function isLineStringFeature(value: unknown): value is GeoJSON.Feature<GeoJSON.LineString> {
+export function splitRouteIntoSegments(coords: [number, number][], maxJumpKm = 1.5): [number, number][][] {
+  if (coords.length < 2) return [coords];
+  const segments: [number, number][][] = [];
+  let current: [number, number][] = [coords[0]];
+
+  for (let i = 1; i < coords.length; i++) {
+    const prev = coords[i - 1];
+    const curr = coords[i];
+    const dLat = (curr[1] - prev[1]) * 111.0;
+    const dLon = (curr[0] - prev[0]) * 63.0;
+    const distKm = Math.sqrt(dLat * dLat + dLon * dLon);
+
+    if (distKm > maxJumpKm) {
+      if (current.length >= 2) {
+        segments.push(current);
+      }
+      current = [curr];
+    } else {
+      current.push(curr);
+    }
+  }
+
+  if (current.length >= 2) {
+    segments.push(current);
+  }
+  return segments.length > 0 ? segments : [coords];
+}
+
+export function buildRouteFeature(
+  name: string,
+  routeId: string,
+  geometry: [number, number][]
+): GeoJSON.Feature<GeoJSON.LineString | GeoJSON.MultiLineString> {
+  const segments = splitRouteIntoSegments(geometry, 1.5);
+  if (segments.length > 1) {
+    return {
+      type: "Feature",
+      properties: { name, routeId },
+      geometry: { type: "MultiLineString", coordinates: segments },
+    };
+  }
+  return {
+    type: "Feature",
+    properties: { name, routeId },
+    geometry: { type: "LineString", coordinates: segments[0] || geometry },
+  };
+}
+
+function isLineGeometryFeature(value: unknown): value is GeoJSON.Feature<GeoJSON.LineString | GeoJSON.MultiLineString> {
   if (!isRecord(value) || value.type !== "Feature" || !isRecord(value.geometry)) return false;
-  if (value.geometry.type !== "LineString" || !Array.isArray(value.geometry.coordinates)) return false;
-  return value.geometry.coordinates.length >= 2 && value.geometry.coordinates.every((coordinate) =>
-    Array.isArray(coordinate) && coordinate.length >= 2 &&
-    Number.isFinite(Number(coordinate[0])) && Number.isFinite(Number(coordinate[1]))
-  );
+  const geomType = value.geometry.type;
+  if (geomType !== "LineString" && geomType !== "MultiLineString") return false;
+  return Array.isArray(value.geometry.coordinates) && value.geometry.coordinates.length > 0;
 }
 
 const CARTO_DARK_STYLE: maplibregl.StyleSpecification = {
@@ -151,7 +201,9 @@ export const MapView: React.FC<MapViewProps> = ({
   const [visibleRouteIds, setVisibleRouteIds] = useState<string[]>(() =>
     routes.map((r) => normalizeRouteId(r.routeId))
   );
-  const [trackGeoJson, setTrackGeoJson] = useState<Record<string, GeoJSON.Feature<GeoJSON.LineString>>>({});
+  const [trackGeoJson, setTrackGeoJson] = useState<Record<string, GeoJSON.Feature<GeoJSON.LineString | GeoJSON.MultiLineString>>>({});
+  const [isRoutesCollapsed, setIsRoutesCollapsed] = useState<boolean>(false);
+  const [routeSearch, setRouteSearch] = useState<string>("");
 
   useEffect(() => {
     setVisibleRouteIds(routes.map((route) => normalizeRouteId(route.routeId)));
@@ -179,18 +231,29 @@ export const MapView: React.FC<MapViewProps> = ({
     const loadGeoJson = async () => {
       const entries = await Promise.all(routes.map(async (route) => {
         const routeId = normalizeRouteId(route.routeId);
+        // If route already contains geometry points from dataset, construct clean segmented LineString/MultiLineString locally
+        if (route.routeGeometry && route.routeGeometry.length >= 2) {
+          const feature = buildRouteFeature(route.name, routeId, route.routeGeometry);
+          return [routeId, feature] as const;
+        }
+
+        // Only query backend if routeId is a valid positive integer (GPS track ID)
+        if (!/^\d+$/.test(route.routeId)) {
+          return null;
+        }
+
         try {
           const response = await fetch(`/api/v1/tracks/${encodeURIComponent(route.routeId)}/geojson`);
           if (!response.ok) return null;
           const value: unknown = await response.json();
-          if (!isLineStringFeature(value)) return null;
+          if (!isLineGeometryFeature(value)) return null;
           return [routeId, value] as const;
         } catch {
           return null;
         }
       }));
       if (cancelled) return;
-      setTrackGeoJson(Object.fromEntries(entries.filter((entry): entry is readonly [string, GeoJSON.Feature<GeoJSON.LineString>] => entry !== null)));
+      setTrackGeoJson(Object.fromEntries(entries.filter((entry): entry is readonly [string, GeoJSON.Feature<GeoJSON.LineString | GeoJSON.MultiLineString>] => entry !== null)));
     };
 
     void loadGeoJson();
@@ -220,7 +283,7 @@ export const MapView: React.FC<MapViewProps> = ({
   // 1. Vehicle positions — interpolate along route geometry when advancing timeline
   const displayedVehicles = useMemo(() => {
     if (dataMode === "dataset" && !datasetLoadError) return vehicles;
-    if (timeStep === "Сейчас") return vehicles;
+    if (timeStep === "Сейчас" || dataMode === "mock") return vehicles;
 
     const horizonFrac: Record<
       string,
@@ -307,16 +370,16 @@ export const MapView: React.FC<MapViewProps> = ({
     });
   }, [vehicles, timeStep, isHoldingApplied, primaryRoute, routes, dataMode, datasetLoadError]);
 
-  // 2. Timeline auto-play timer
+  // 2. Timeline auto-play timer (disabled in mock/dataset to allow smooth continuous GPS simulation)
   useEffect(() => {
-    if (!isPlaying) return;
+    if (!isPlaying || dataMode === "mock" || dataMode === "dataset") return;
     const interval = setInterval(() => {
       const idx = HORIZONS.indexOf(timeStep);
       const nextIdx = (idx + 1) % HORIZONS.length;
       onTimeStepChange(HORIZONS[nextIdx]);
     }, 3500);
     return () => clearInterval(interval);
-  }, [isPlaying, timeStep, onTimeStepChange]);
+  }, [isPlaying, timeStep, dataMode, onTimeStepChange]);
 
   // Function to initialize situational vector overlay layers on MapLibre
   const setupSituationalLayers = useCallback(
@@ -334,13 +397,9 @@ export const MapView: React.FC<MapViewProps> = ({
         if (r.routeGeometry.length < 2) return;
         const normId = normalizeRouteId(r.routeId);
         const srcId = `route-${normId}`;
-        const routeData: GeoJSON.Feature<GeoJSON.LineString> = dataMode === "dataset" && trackGeoJson[normId]
+        const routeData: GeoJSON.Feature<GeoJSON.LineString | GeoJSON.MultiLineString> = dataMode === "dataset" && trackGeoJson[normId]
           ? trackGeoJson[normId]
-          : {
-              type: "Feature",
-              properties: { name: r.name, routeId: normId },
-              geometry: { type: "LineString", coordinates: r.routeGeometry },
-            };
+          : buildRouteFeature(r.name, normId, r.routeGeometry);
         const source = map.getSource(srcId) as maplibregl.GeoJSONSource | undefined;
         if (source) source.setData(routeData);
         else map.addSource(srcId, { type: "geojson", data: routeData });
@@ -1284,9 +1343,42 @@ export const MapView: React.FC<MapViewProps> = ({
     }
   };
 
+  const riskRouteIds = useMemo(() => {
+    const risky = new Set<string>();
+    vehicles.forEach((v) => {
+      if (v.status === "BUNCHING_RISK" || v.status === "CRITICAL_HEADWAY" || v.status === "DELAYED") {
+        risky.add(normalizeRouteId(v.routeId));
+      }
+    });
+    if (alert?.routeId) {
+      risky.add(normalizeRouteId(alert.routeId));
+    }
+    if (risky.size === 0) {
+      ["м3", "м7", "т88"].forEach((id) => {
+        if (routes.some((r) => normalizeRouteId(r.routeId) === id)) {
+          risky.add(id);
+        }
+      });
+    }
+    return Array.from(risky);
+  }, [vehicles, alert, routes]);
+
+  const filteredRoutes = useMemo(() => {
+    if (!routeSearch.trim()) return routes;
+    const q = routeSearch.trim().toLowerCase();
+    return routes.filter((r) => {
+      const normId = normalizeRouteId(r.routeId).toLowerCase();
+      const name = (r.name || "").toLowerCase();
+      return normId.includes(q) || name.includes(q);
+    });
+  }, [routes, routeSearch]);
+
   const handleFilterRisksOnly = () => {
-    // Only routes with active alerts / bunching (м3, м7, т88)
-    setVisibleRouteIds(["м3", "м7", "т88"]);
+    if (riskRouteIds.length > 0) {
+      setVisibleRouteIds(riskRouteIds);
+    } else {
+      setVisibleRouteIds(["м3", "м7", "т88"].filter((id) => routes.some((r) => normalizeRouteId(r.routeId) === id)));
+    }
   };
 
   return (
@@ -1510,90 +1602,210 @@ export const MapView: React.FC<MapViewProps> = ({
       )}
 
       {/* 4. Route Filter Panel */}
-      <div className="absolute top-[220px] left-[365px] z-20 pointer-events-auto">
-        <div
-          className={`rounded-xl border backdrop-blur-xl shadow-xl p-2.5 min-w-[170px] ${
-            isDarkMode
-              ? "border-white/10 bg-[#18181b]/95 shadow-black/25 text-zinc-100"
-              : "border-zinc-200 bg-white/95 shadow-zinc-300/40 text-zinc-800"
-          }`}
-        >
-          <div className="flex items-center justify-between mb-2 px-1">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
-              Маршруты
+      <div className="absolute top-[205px] left-[365px] z-20 pointer-events-auto">
+        {isRoutesCollapsed ? (
+          <button
+            onClick={() => setIsRoutesCollapsed(false)}
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border backdrop-blur-xl shadow-md transition-all cursor-pointer group outline-none focus:outline-none ${
+              isDarkMode
+                ? "border-white/10 bg-[#18181b]/95 text-zinc-200 hover:bg-[#27272a] shadow-black/30"
+                : "border-zinc-200 bg-white/95 text-zinc-800 hover:bg-zinc-50 shadow-zinc-300/40"
+            }`}
+            title="Развернуть фильтр маршрутов"
+          >
+            <Route size={11} className="text-sky-500 shrink-0" />
+            <span className="font-bold text-[9.5px] uppercase tracking-wider">Маршруты</span>
+            <span
+              className={`text-[8.5px] px-1 py-0.2 rounded font-mono font-bold ${
+                visibleRouteIds.length === 0
+                  ? isDarkMode ? "bg-rose-950/60 text-rose-300" : "bg-rose-50 text-rose-600 border border-rose-200"
+                  : isDarkMode ? "bg-zinc-800 text-zinc-300" : "bg-zinc-100 text-zinc-700 border border-zinc-200"
+              }`}
+            >
+              {visibleRouteIds.length}/{routes.length}
             </span>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={handleToggleAllRoutes}
-                className="text-[9px] px-1.5 py-0.5 rounded bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold transition-all cursor-pointer"
-                title="Переключить все маршруты"
-              >
-                {visibleRouteIds.length === routes.length ? "Скрыть" : "Все"}
-              </button>
-              <button
-                onClick={handleFilterRisksOnly}
-                className="text-[9px] px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 dark:bg-rose-950/80 dark:text-rose-300 dark:hover:bg-rose-900 dark:border-rose-800/40 font-bold transition-all cursor-pointer"
-                title="Показать только проблемные маршруты"
-              >
-                Риски
-              </button>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            {routes.map((r) => {
-              const normId = normalizeRouteId(r.routeId);
-              const count = vehicles.filter(
-                (v) => normalizeRouteId(v.routeId) === normId
-              ).length;
-              const isVis = visibleRouteIds.includes(normId);
-
-              return (
-                <div
-                  key={normId}
-                  onClick={() =>
-                    setVisibleRouteIds((prev) =>
-                      prev.includes(normId)
-                        ? prev.filter((id) => id !== normId)
-                        : [...prev, normId]
-                    )
-                  }
-                  className={`group flex items-center justify-between px-2 py-1.5 rounded-lg text-left text-[11px] font-semibold transition-all cursor-pointer ${
-                    isVis
-                      ? "text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/80"
-                      : "text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100/50 dark:hover:bg-zinc-800/40 opacity-40"
+            <ChevronDown size={11} className="text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-200" />
+          </button>
+        ) : (
+          <div
+            className={`rounded-xl border backdrop-blur-xl shadow-xl w-[146px] p-1.5 transition-all flex flex-col ${
+              isDarkMode
+                ? "border-white/10 bg-[#18181b]/95 text-zinc-100 shadow-black/30"
+                : "border-zinc-200 bg-white/95 text-zinc-800 shadow-zinc-300/40"
+            }`}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between pb-1 mb-1 border-b border-zinc-200/70 dark:border-white/10">
+              <div className="flex items-center gap-1 min-w-0">
+                <Route size={11} className="text-sky-500 shrink-0" />
+                <span className="text-[9.5px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Маршруты
+                </span>
+                <span
+                  className={`text-[8.5px] px-1 py-0.2 rounded font-mono font-bold ${
+                    visibleRouteIds.length === 0
+                      ? isDarkMode ? "bg-rose-950/60 text-rose-300" : "bg-rose-50 text-rose-600 border border-rose-200"
+                      : isDarkMode ? "bg-zinc-800 text-zinc-300" : "bg-zinc-100 text-zinc-700 border border-zinc-200"
                   }`}
                 >
-                  <div className="flex items-center gap-2">
-                    <span
-                      style={{
-                        background: r.color,
-                        width: 12,
-                        height: 4,
-                        borderRadius: 2,
-                        opacity: isVis ? 1 : 0.3,
-                      }}
-                    />
-                    <span>{normId}</span>
-                  </div>
+                  {visibleRouteIds.length}/{routes.length}
+                </span>
+              </div>
 
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-zinc-500 dark:text-zinc-400 text-[10px] font-mono">
-                      {count} ТС
-                    </span>
-                    <button
-                      onClick={(e) => handleSoloRoute(normId, e)}
-                      className="opacity-0 group-hover:opacity-100 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all cursor-pointer"
-                      title={`Показать только маршрут ${normId}`}
+              <button
+                onClick={() => setIsRoutesCollapsed(true)}
+                className={`p-0.5 rounded transition-colors cursor-pointer outline-none focus:outline-none ${
+                  isDarkMode
+                    ? "text-zinc-400 hover:text-white hover:bg-zinc-800"
+                    : "text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100"
+                }`}
+                title="Свернуть панель маршрутов"
+              >
+                <ChevronUp size={11} />
+              </button>
+            </div>
+
+            {/* Quick Actions Micro Toolbar */}
+            <div className="flex items-center justify-between gap-1 mb-1">
+              <button
+                onClick={handleToggleAllRoutes}
+                className={`flex-1 py-0.5 px-1 rounded text-[8.5px] font-semibold transition-all text-center cursor-pointer outline-none focus:outline-none ${
+                  isDarkMode
+                    ? "bg-zinc-800/90 hover:bg-zinc-700 text-zinc-200"
+                    : "bg-zinc-100 hover:bg-zinc-200 text-zinc-800"
+                }`}
+                title={visibleRouteIds.length === routes.length ? "Скрыть все маршруты" : "Показать все маршруты"}
+              >
+                {visibleRouteIds.length === routes.length ? "Снять" : "Все"}
+              </button>
+
+              <button
+                onClick={handleFilterRisksOnly}
+                className={`flex-1 py-0.5 px-1 rounded text-[8.5px] font-semibold transition-all text-center cursor-pointer outline-none focus:outline-none ${
+                  isDarkMode
+                    ? "bg-rose-950/60 text-rose-300 hover:bg-rose-900/80"
+                    : "bg-rose-50 text-rose-700 hover:bg-rose-100"
+                }`}
+                title="Показать только проблемные маршруты"
+              >
+                Риски{riskRouteIds.length > 0 ? ` (${riskRouteIds.length})` : ""}
+              </button>
+            </div>
+
+            {/* Search filter only when routes > 8 */}
+            {routes.length > 8 && (
+              <div className="relative mb-1">
+                <Search
+                  size={10}
+                  className="absolute left-1.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none"
+                />
+                <input
+                  type="text"
+                  value={routeSearch}
+                  onChange={(e) => setRouteSearch(e.target.value)}
+                  placeholder="Поиск..."
+                  className={`w-full pl-5 pr-4 py-0.5 rounded text-[9.5px] outline-none transition-all ${
+                    isDarkMode
+                      ? "bg-zinc-900/90 border border-white/10 text-zinc-200 placeholder:text-zinc-500 focus:border-sky-500"
+                      : "bg-zinc-50 border border-zinc-200 text-zinc-900 placeholder:text-zinc-400 focus:border-sky-500"
+                  }`}
+                />
+                {routeSearch && (
+                  <button
+                    onClick={() => setRouteSearch("")}
+                    className="absolute right-1 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer outline-none focus:outline-none"
+                  >
+                    <X size={9} />
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Scrollable list of routes with tight height */}
+            <div className="flex flex-col gap-0.5 max-h-[145px] overflow-y-auto pr-0.5">
+              {filteredRoutes.length === 0 ? (
+                <div className="text-center py-1.5 text-[9px] text-zinc-400">Маршруты не найдены</div>
+              ) : (
+                filteredRoutes.map((r) => {
+                  const normId = normalizeRouteId(r.routeId);
+                  const count = vehicles.filter(
+                    (v) => normalizeRouteId(v.routeId) === normId
+                  ).length;
+                  const isVis = visibleRouteIds.includes(normId);
+
+                  return (
+                    <div
+                      key={normId}
+                      onClick={() =>
+                        setVisibleRouteIds((prev) =>
+                          prev.includes(normId)
+                            ? prev.filter((id) => id !== normId)
+                            : [...prev, normId]
+                        )
+                      }
+                      className={`group flex items-center justify-between px-1.5 py-0.5 rounded text-left transition-all cursor-pointer select-none ${
+                        isVis
+                          ? isDarkMode
+                            ? "text-zinc-100 hover:bg-zinc-800/80"
+                            : "text-zinc-900 hover:bg-zinc-100"
+                          : isDarkMode
+                          ? "text-zinc-500 hover:bg-zinc-800/40 opacity-40"
+                          : "text-zinc-400 hover:bg-zinc-100/60 opacity-45"
+                      }`}
                     >
-                      <Eye size={12} />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span
+                          style={{
+                            background: r.color,
+                            width: 7,
+                            height: 3.5,
+                            borderRadius: 2,
+                            opacity: isVis ? 1 : 0.3,
+                            flexShrink: 0,
+                          }}
+                        />
+                        <span
+                          className={`text-[10.5px] font-semibold tracking-tight truncate ${
+                            isVis
+                              ? isDarkMode
+                                ? "text-zinc-100"
+                                : "text-zinc-900"
+                              : isDarkMode
+                              ? "text-zinc-500"
+                              : "text-zinc-400"
+                          }`}
+                        >
+                          {normId}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1 shrink-0">
+                        <span
+                          className={`text-[9.5px] font-mono ${
+                            isDarkMode ? "text-zinc-400" : "text-zinc-500"
+                          }`}
+                        >
+                          {count} ТС
+                        </span>
+                        <button
+                          onClick={(e) => handleSoloRoute(normId, e)}
+                          className={`opacity-0 group-hover:opacity-100 p-0.5 rounded transition-all cursor-pointer outline-none focus:outline-none ${
+                            isDarkMode
+                              ? "text-zinc-400 hover:text-white hover:bg-zinc-700"
+                              : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200"
+                          }`}
+                          title={`Показать только ${normId}`}
+                        >
+                          <Eye size={10} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* 5. Floating Bottom Center Horizon Scrubber Capsule */}

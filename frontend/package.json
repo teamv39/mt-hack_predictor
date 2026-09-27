@@ -10,7 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@headlessui/react": "^2.2.10",
     "@tailwindcss/vite": "^4.3.3",
     "@turf/turf": "^7.4.0",
     "lucide-react": "^1.48.0",

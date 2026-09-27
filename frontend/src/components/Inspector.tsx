@@ -1,5 +1,4 @@
-import React from "react";
-import { Disclosure, DisclosureButton, DisclosurePanel } from "@headlessui/react";
+import React, { useState } from "react";
 import {
   X,
   CheckCircle2,
@@ -8,6 +7,7 @@ import {
   Clock,
   MapPin,
   ChevronDown,
+  Grid2x2,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -23,6 +23,7 @@ export interface InspectorProps {
   vehicle?: Vehicle | null;
   alert?: AlertItem | null;
   onApplyHolding?: (alertId: string) => void;
+  onOpenScenarios?: () => void;
   onClose?: () => void;
   isDarkMode?: boolean;
 }
@@ -31,9 +32,11 @@ export const Inspector: React.FC<InspectorProps> = ({
   vehicle,
   alert,
   onApplyHolding,
+  onOpenScenarios,
   onClose,
   isDarkMode = false,
 }) => {
+  const [isShapOpen, setIsShapOpen] = useState(true);
   const chartData = alert?.delayChartData?.length
     ? alert.delayChartData.map((d) => ({
         stop: d.stop,
@@ -267,63 +270,63 @@ export const Inspector: React.FC<InspectorProps> = ({
       </div>
 
       {/* 4. Explainable AI: SHAP Factor Decomposition */}
-      <Disclosure
-        as="div"
+      <div
         className={`rounded-lg border overflow-hidden ${
           isDarkMode
             ? "border-white/10 bg-[#222226] text-white"
             : "border-zinc-200 bg-zinc-50/70 text-zinc-900"
         }`}
       >
-        {({ open }) => (
-          <>
-            <DisclosureButton
-              className={`flex w-full items-center justify-between px-3 py-2 text-left transition-colors cursor-pointer ${
-                isDarkMode ? "hover:bg-white/5" : "hover:bg-zinc-100"
-              }`}
-            >
-              <span className="text-xs font-bold flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
-                <span>Факторный анализ (SHAP)</span>
-              </span>
-              <span className="flex items-center gap-2">
-                <span className={`text-xs font-bold font-mono px-1.5 py-0.5 rounded border ${
-                  isDarkMode ? "bg-[#18181b] text-zinc-300 border-white/5" : "bg-white text-zinc-700 border-zinc-200"
-                }`}>
-                  CatBoost ML
-                </span>
-                <ChevronDown className={`w-4 h-4 transition-transform ${open ? "rotate-180" : ""}`} />
-              </span>
-            </DisclosureButton>
+        <button
+          type="button"
+          onClick={() => setIsShapOpen((prev) => !prev)}
+          className={`flex w-full items-center justify-between px-3 py-2 text-left transition-colors cursor-pointer ${
+            isDarkMode ? "hover:bg-white/5" : "hover:bg-zinc-100"
+          }`}
+          aria-expanded={isShapOpen}
+        >
+          <span className="text-xs font-bold flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
+            <span>Факторный анализ (SHAP)</span>
+          </span>
+          <span className="flex items-center gap-2">
+            <span className={`text-xs font-bold font-mono px-1.5 py-0.5 rounded border ${
+              isDarkMode ? "bg-[#18181b] text-zinc-300 border-white/5" : "bg-white text-zinc-700 border-zinc-200"
+            }`}>
+              CatBoost ML
+            </span>
+            <ChevronDown className={`w-4 h-4 transition-transform ${isShapOpen ? "rotate-180" : ""}`} />
+          </span>
+        </button>
 
-            <DisclosurePanel className="px-3 pb-3">
-              {/* Clear Horizontal Bar List */}
-              <div className="space-y-1.5 text-xs">
-                {shapFactors.map((f, i) => (
-                  <div key={f.code}>
-                    <div className="flex justify-between items-center text-xs font-medium mb-0.5">
-                      <span className={isDarkMode ? "text-zinc-300" : "text-zinc-700"}>
-                        {f.title} <span className="opacity-60 font-mono">({f.code})</span>
-                      </span>
-                      <span className={`font-mono font-semibold ${i === 0 ? "text-rose-400 font-bold" : "text-zinc-400"}`}>
-                        +{f.delayMinutes.toFixed(1)}м ({f.percent}%)
-                      </span>
-                    </div>
-                    <div className={`h-1.5 w-full rounded-full overflow-hidden ${isDarkMode ? "bg-zinc-800" : "bg-zinc-200"}`}>
-                      <div
-                        className={`h-full rounded-full ${
-                          i === 0 ? "bg-rose-500" : "bg-zinc-500"
-                        }`}
-                        style={{ width: `${f.percent}%` }}
-                      />
-                    </div>
+        {isShapOpen && (
+          <div className="px-3 pb-3">
+            {/* Clear Horizontal Bar List */}
+            <div className="space-y-1.5 text-xs">
+              {shapFactors.map((f, i) => (
+                <div key={f.code}>
+                  <div className="flex justify-between items-center text-xs font-medium mb-0.5">
+                    <span className={isDarkMode ? "text-zinc-300" : "text-zinc-700"}>
+                      {f.title} <span className="opacity-60 font-mono">({f.code})</span>
+                    </span>
+                    <span className={`font-mono font-semibold ${i === 0 ? "text-rose-400 font-bold" : "text-zinc-400"}`}>
+                      +{f.delayMinutes.toFixed(1)}м ({f.percent}%)
+                    </span>
                   </div>
-                ))}
-              </div>
-            </DisclosurePanel>
-          </>
+                  <div className={`h-1.5 w-full rounded-full overflow-hidden ${isDarkMode ? "bg-zinc-800" : "bg-zinc-200"}`}>
+                    <div
+                      className={`h-full rounded-full ${
+                        i === 0 ? "bg-rose-500" : "bg-zinc-500"
+                      }`}
+                      style={{ width: `${f.percent}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
-      </Disclosure>
+      </div>
 
       {/* 5. Holding Action DSS Recommendation Box */}
       <div
@@ -366,6 +369,21 @@ export const Inspector: React.FC<InspectorProps> = ({
           <CheckCircle2 size={14} />
           <span>{appliedLabel}</span>
         </button>
+
+        {/* Secondary: Scenarios Matrix */}
+        {onOpenScenarios && (
+          <button
+            onClick={onOpenScenarios}
+            className={`w-full h-8 px-2.5 rounded-lg border text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              isDarkMode
+                ? "bg-[#1c1c20] hover:bg-white/5 border-white/10 text-zinc-300 hover:text-white"
+                : "bg-white hover:bg-zinc-100 border-zinc-200 text-zinc-700 hover:text-zinc-900"
+            }`}
+          >
+            <Grid2x2 size={13} />
+            <span>Матрица альтернативных сценариев (4)</span>
+          </button>
+        )}
       </div>
     </aside>
   );

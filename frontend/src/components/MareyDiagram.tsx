@@ -2,16 +2,20 @@ import React, { useState } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
+  Grid2x2,
+  ChevronDown,
 } from "lucide-react";
 
 interface MareyDiagramProps {
   onApplyHolding?: () => void;
+  onOpenScenarios?: () => void;
   isApplied?: boolean;
   isDarkMode?: boolean;
 }
 
 export const MareyDiagram: React.FC<MareyDiagramProps> = ({
   onApplyHolding,
+  onOpenScenarios,
   isApplied = false,
   isDarkMode = false,
 }) => {
@@ -453,6 +457,20 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
               <span>{holdingApplied ? "Holding №1043 применён" : "Применить Holding №1043 (2.5м)"}</span>
             </button>
 
+            {onOpenScenarios && (
+              <button
+                onClick={onOpenScenarios}
+                className={`w-full h-7 px-2 rounded-md border text-[10px] font-semibold transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                  isDarkMode
+                    ? "border-white/10 bg-[#222226] hover:bg-zinc-700 text-zinc-300"
+                    : "border-zinc-200 bg-white hover:bg-zinc-100 text-zinc-700"
+                }`}
+              >
+                <Grid2x2 size={11} className="shrink-0" />
+                <span>Матрица сценариев (4)</span>
+                <ChevronDown size={11} className="shrink-0" />
+              </button>
+            )}
           </div>
         </aside>
       </div>

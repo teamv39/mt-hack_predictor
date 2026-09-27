@@ -1,20 +1,28 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useTelemetry } from "./hooks/useTelemetry";
 import { TopBar } from "./components/TopBar";
 import { AlertRadar } from "./components/AlertRadar";
 import { MapView } from "./components/MapView";
 import { Inspector } from "./components/Inspector";
 import { ToastContainer } from "./components/Toast";
+import { ScenariosModal } from "./components/ScenariosModal";
 import { MareyDiagram } from "./components/MareyDiagram";
 import { DriverTerminal } from "./components/DriverTerminal";
+import { JuryGuideModal } from "./components/JuryGuideModal";
 import { SlidersHorizontal } from "lucide-react";
 import { loadPreferences, savePreferences } from "./utils/storage";
 import type { AlertItem } from "./mock/telemetry";
 
 export default function App() {
   const initialPrefs = useMemo(() => loadPreferences(), []);
+  const [isScenariosOpen, setIsScenariosOpen] = useState(false);
+  const [isGuideOpen, setIsGuideOpen] = useState<boolean>(!initialPrefs.hasCompletedGuide);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(initialPrefs.theme === "dark");
   const [isInspectorOpen, setIsInspectorOpen] = useState<boolean>(initialPrefs.isInspectorOpen);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", isDarkMode);
+  }, [isDarkMode]);
 
   const {
     vehicles,
@@ -46,6 +54,7 @@ export default function App() {
     handleSelectAlert,
     handleSelectVehicle,
     applyHolding,
+    applyScenario,
     controlSimulation,
   } = useTelemetry();
 
@@ -88,6 +97,7 @@ export default function App() {
         onControl={controlSimulation}
         isDarkMode={isDarkMode}
         onToggleDarkMode={handleToggleDarkMode}
+        onOpenGuide={() => setIsGuideOpen(true)}
         dataMode={dataMode}
         onDataModeChange={setDataMode}
       />
@@ -97,6 +107,7 @@ export default function App() {
         {activeTab === "marey" ? (
           <MareyDiagram
             onApplyHolding={() => applyHolding(selectedAlertId || "alert_1042")}
+            onOpenScenarios={() => setIsScenariosOpen(true)}
             isApplied={selectedAlert?.recommendation?.applied || false}
             isDarkMode={isDarkMode}
           />
@@ -153,6 +164,7 @@ export default function App() {
                   vehicle={selectedVehicle}
                   alert={selectedAlert}
                   onApplyHolding={applyHolding}
+                  onOpenScenarios={() => setIsScenariosOpen(true)}
                   onClose={() => handleSetInspectorOpen(false)}
                   isDarkMode={isDarkMode}
                 />
@@ -178,7 +190,29 @@ export default function App() {
         )}
       </main>
 
-      {/* 3. Toast Notifications for Dispatcher Feedback */}
+      {/* 3. Tactical Scenarios Modal (Stitch DSS Matrix) */}
+      <ScenariosModal
+        isOpen={isScenariosOpen}
+        onClose={() => setIsScenariosOpen(false)}
+        onApplyScenario={(id, title) => applyScenario(id, title)}
+        incidentId={selectedAlert?.id ? `#${selectedAlert.id}` : "#1042-м3"}
+        vehicleId={selectedVehicle?.id ? `№${selectedVehicle.id.replace("P", "")}` : "№1042"}
+        leaderId={selectedAlert?.recommendation?.targetVehicleId || "№1043"}
+        intervalSec={selectedAlert?.metrics?.headway_collapse_sec ?? 96}
+        isDarkMode={isDarkMode}
+      />
+
+      {/* 4. Jury Guide / Tour Modal */}
+      <JuryGuideModal
+        isOpen={isGuideOpen}
+        onClose={() => {
+          setIsGuideOpen(false);
+          savePreferences({ hasCompletedGuide: true });
+        }}
+        isDarkMode={isDarkMode}
+      />
+
+      {/* 5. Toast Notifications for Dispatcher Feedback */}
       <ToastContainer toasts={toasts} onClose={removeToast} />
     </div>
   );

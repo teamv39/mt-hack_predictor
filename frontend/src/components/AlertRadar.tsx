@@ -134,6 +134,8 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
             <div className="relative flex items-center h-8">
               <Search size={13} className="absolute left-2.5 text-zinc-400 pointer-events-none" />
               <input
+                id="radar-search-input"
+                name="search"
                 type="text"
                 placeholder="Поиск по бортам и маршрутам..."
                 value={searchQuery}
