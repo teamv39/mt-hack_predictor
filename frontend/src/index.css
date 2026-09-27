@@ -111,6 +111,21 @@
   --shadow-float: 0 20px 40px -8px rgba(0, 0, 0, 0.8), 0 8px 16px -4px rgba(0, 0, 0, 0.5);
 }
 
+/* Keep compact UI labels readable across the dispatcher dashboard. */
+@layer utilities {
+  .text-xs {
+    font-size: 12px;
+  }
+
+  .text-sm {
+    font-size: 13px;
+  }
+
+  .text-base {
+    font-size: 14px;
+  }
+}
+
 @layer base {
   *, ::before, ::after {
     box-sizing: border-box;

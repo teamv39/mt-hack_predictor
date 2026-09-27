@@ -23,7 +23,7 @@ import {
   Activity,
 } from "lucide-react";
 import { Vehicle, AlertItem, RouteData } from "../mock/telemetry";
-import { normalizeRouteId } from "../hooks/useTelemetry";
+import { normalizeRouteId, type DataMode } from "../hooks/useTelemetry";
 import * as turf from "@turf/turf";
 
 // Explicitly register MapLibre WebWorker URL for Vite
@@ -62,6 +62,19 @@ const CARTO_LIGHT_STYLE: maplibregl.StyleSpecification = {
   ],
 };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isLineStringFeature(value: unknown): value is GeoJSON.Feature<GeoJSON.LineString> {
+  if (!isRecord(value) || value.type !== "Feature" || !isRecord(value.geometry)) return false;
+  if (value.geometry.type !== "LineString" || !Array.isArray(value.geometry.coordinates)) return false;
+  return value.geometry.coordinates.length >= 2 && value.geometry.coordinates.every((coordinate) =>
+    Array.isArray(coordinate) && coordinate.length >= 2 &&
+    Number.isFinite(Number(coordinate[0])) && Number.isFinite(Number(coordinate[1]))
+  );
+}
+
 const CARTO_DARK_STYLE: maplibregl.StyleSpecification = {
   version: 8,
   sources: {
@@ -93,6 +106,8 @@ const HORIZONS = ["Сейчас", "+15 мин", "+30 мин", "+45 мин"];
 interface MapViewProps {
   routes: RouteData[];
   vehicles: Vehicle[];
+  dataMode?: DataMode;
+  datasetLoadError?: string | null;
   alert?: AlertItem | null;
   selectedVehicleId?: string;
   onSelectVehicle: (id: string) => void;
@@ -106,6 +121,8 @@ interface MapViewProps {
 export const MapView: React.FC<MapViewProps> = ({
   routes,
   vehicles,
+  dataMode = "mock",
+  datasetLoadError = null,
   alert,
   selectedVehicleId,
   onSelectVehicle,
@@ -126,12 +143,61 @@ export const MapView: React.FC<MapViewProps> = ({
   const stopMarkersRef = useRef<maplibregl.Marker[]>([]);
   const headwayMarkerRef = useRef<maplibregl.Marker | null>(null);
   const isTileServerAvailableRef = useRef<boolean>(true);
+  const setupSituationalLayersRef = useRef<(map: maplibregl.Map) => void>(() => {});
 
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [mapStyleRevision, setMapStyleRevision] = useState(0);
   const [isTileServerAvailable, setIsTileServerAvailable] = useState<boolean>(true);
   const [visibleRouteIds, setVisibleRouteIds] = useState<string[]>(() =>
     routes.map((r) => normalizeRouteId(r.routeId))
   );
+  const [trackGeoJson, setTrackGeoJson] = useState<Record<string, GeoJSON.Feature<GeoJSON.LineString>>>({});
+
+  useEffect(() => {
+    setVisibleRouteIds(routes.map((route) => normalizeRouteId(route.routeId)));
+  }, [dataMode]);
+
+  useEffect(() => {
+    setVisibleRouteIds((previous) => {
+      const available = routes.map((route) => normalizeRouteId(route.routeId));
+      if (previous.length === 0) return available;
+      const retained = previous.filter((routeId) => available.includes(routeId));
+      return retained.length > 0 ? retained : available;
+    });
+  }, [routes]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (dataMode !== "dataset" || datasetLoadError || routes.length === 0) {
+      setTrackGeoJson({});
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const loadGeoJson = async () => {
+      const entries = await Promise.all(routes.map(async (route) => {
+        const routeId = normalizeRouteId(route.routeId);
+        try {
+          const response = await fetch(`/api/v1/tracks/${encodeURIComponent(route.routeId)}/geojson`);
+          if (!response.ok) return null;
+          const value: unknown = await response.json();
+          if (!isLineStringFeature(value)) return null;
+          return [routeId, value] as const;
+        } catch {
+          return null;
+        }
+      }));
+      if (cancelled) return;
+      setTrackGeoJson(Object.fromEntries(entries.filter((entry): entry is readonly [string, GeoJSON.Feature<GeoJSON.LineString>] => entry !== null)));
+    };
+
+    void loadGeoJson();
+    return () => {
+      cancelled = true;
+    };
+  }, [dataMode, datasetLoadError, routes]);
 
   // Layer visibility toggles
   const [layers, setLayers] = useState({
@@ -149,9 +215,11 @@ export const MapView: React.FC<MapViewProps> = ({
   );
 
   const isHoldingApplied = alert?.recommendation?.applied ?? false;
+  const isGpsMode = dataMode === "dataset" && !datasetLoadError;
 
   // 1. Vehicle positions — interpolate along route geometry when advancing timeline
   const displayedVehicles = useMemo(() => {
+    if (dataMode === "dataset" && !datasetLoadError) return vehicles;
     if (timeStep === "Сейчас") return vehicles;
 
     const horizonFrac: Record<
@@ -171,14 +239,14 @@ export const MapView: React.FC<MapViewProps> = ({
       targetFrac: number
     ): [number, number] => {
       if (routeGeom.length < 2) return [37.684, 55.772];
-      const routeLine: GeoJSON.Feature<GeoJSON.LineString> = {
+      const routeGeoJSON: GeoJSON.Feature<GeoJSON.LineString> = {
         type: "Feature",
         properties: {},
         geometry: { type: "LineString", coordinates: routeGeom },
       };
-      const totalLen = turf.length(routeLine, { units: "kilometers" });
+      const totalLen = turf.length(routeGeoJSON, { units: "kilometers" });
       const clampedFrac = Math.max(0.01, Math.min(0.99, targetFrac));
-      return turf.along(routeLine, clampedFrac * totalLen, { units: "kilometers" })
+      return turf.along(routeGeoJSON, clampedFrac * totalLen, { units: "kilometers" })
         .geometry.coordinates as [number, number];
     };
 
@@ -237,7 +305,7 @@ export const MapView: React.FC<MapViewProps> = ({
 
       return veh;
     });
-  }, [vehicles, timeStep, isHoldingApplied, primaryRoute, routes]);
+  }, [vehicles, timeStep, isHoldingApplied, primaryRoute, routes, dataMode, datasetLoadError]);
 
   // 2. Timeline auto-play timer
   useEffect(() => {
@@ -253,35 +321,50 @@ export const MapView: React.FC<MapViewProps> = ({
   // Function to initialize situational vector overlay layers on MapLibre
   const setupSituationalLayers = useCallback(
     (map: maplibregl.Map) => {
-      // A. Route polylines for all routes
+      // Keep route sources in sync without resetting the basemap style.
+      Object.keys(map.getStyle().sources).filter((id) => id.startsWith("route-")).forEach((srcId) => {
+        if (routes.some((route) => `route-${normalizeRouteId(route.routeId)}` === srcId && route.routeGeometry.length >= 2)) return;
+        [`${srcId}-line`, `${srcId}-casing`].forEach((layerId) => {
+          if (map.getLayer(layerId)) map.removeLayer(layerId);
+        });
+        map.removeSource(srcId);
+      });
+
       routes.forEach((r) => {
+        if (r.routeGeometry.length < 2) return;
         const normId = normalizeRouteId(r.routeId);
         const srcId = `route-${normId}`;
-        if (!map.getSource(srcId) && r.routeGeometry.length >= 2) {
-          map.addSource(srcId, {
-            type: "geojson",
-            data: {
+        const routeData: GeoJSON.Feature<GeoJSON.LineString> = dataMode === "dataset" && trackGeoJson[normId]
+          ? trackGeoJson[normId]
+          : {
               type: "Feature",
               properties: { name: r.name, routeId: normId },
               geometry: { type: "LineString", coordinates: r.routeGeometry },
-            },
-          });
+            };
+        const source = map.getSource(srcId) as maplibregl.GeoJSONSource | undefined;
+        if (source) source.setData(routeData);
+        else map.addSource(srcId, { type: "geojson", data: routeData });
+
+        const visibility = layers.routes && visibleRouteIds.includes(normId) ? "visible" : "none";
+        if (!map.getLayer(`${srcId}-casing`)) {
           map.addLayer({
             id: `${srcId}-casing`,
             type: "line",
             source: srcId,
-            layout: { "line-cap": "round", "line-join": "round" },
+            layout: { "line-cap": "round", "line-join": "round", visibility },
             paint: {
               "line-color": isDarkMode ? "#09090b" : "#ffffff",
               "line-width": 6,
               "line-opacity": 0.65,
             },
           });
+        }
+        if (!map.getLayer(`${srcId}-line`)) {
           map.addLayer({
             id: `${srcId}-line`,
             type: "line",
             source: srcId,
-            layout: { "line-cap": "round", "line-join": "round" },
+            layout: { "line-cap": "round", "line-join": "round", visibility },
             paint: {
               "line-color": r.color,
               "line-width": 3.5,
@@ -289,12 +372,26 @@ export const MapView: React.FC<MapViewProps> = ({
             },
           });
         }
+        map.setLayoutProperty(`${srcId}-casing`, "visibility", visibility);
+        map.setLayoutProperty(`${srcId}-line`, "visibility", visibility);
+        map.setPaintProperty(`${srcId}-line`, "line-color", r.color);
       });
+
+      const overlaySources = ["congestion-zones", "headway-connector"];
+      if (dataMode === "dataset" && !datasetLoadError) {
+        ["congestion-amber-fill", "congestion-amber-line", "congestion-red-fill", "congestion-red-line", "headway-connector-line"].forEach((layerId) => {
+          if (map.getLayer(layerId)) map.removeLayer(layerId);
+        });
+        overlaySources.forEach((sourceId) => {
+          if (map.getSource(sourceId)) map.removeSource(sourceId);
+        });
+        return;
+      }
 
       // B. Congestion zones — primary (м3 Бауманская) and secondary (м7 Николоямская)
       if (!map.getSource("congestion-zones")) {
-        const primaryR = routes.find((r) => normalizeRouteId(r.routeId) === "м3");
-        const segM3 = primaryR?.congestionSegment || [
+        const primaryRoute = routes.find((r) => normalizeRouteId(r.routeId) === "м3");
+        const segM3 = primaryRoute?.congestionSegment || [
           [37.6791, 55.7724],
           [37.697, 55.7785],
           [37.7082, 55.7818],
@@ -412,8 +509,14 @@ export const MapView: React.FC<MapViewProps> = ({
         });
       }
     },
-    [isDarkMode, routes]
+    [dataMode, datasetLoadError, isDarkMode, layers.routes, routes, trackGeoJson, visibleRouteIds]
   );
+  setupSituationalLayersRef.current = setupSituationalLayers;
+
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (map && map.isStyleLoaded()) setupSituationalLayers(map);
+  }, [setupSituationalLayers]);
 
   const getStyleForTheme = useCallback(
     (dark: boolean, useLocalTiles: boolean): string | maplibregl.StyleSpecification => {
@@ -531,13 +634,10 @@ export const MapView: React.FC<MapViewProps> = ({
         }
       });
 
-      map.on("load", () => {
-        setupSituationalLayers(map);
-        map.resize();
-      });
-
       map.on("style.load", () => {
-        setupSituationalLayers(map);
+        setupSituationalLayersRef.current(map);
+        setMapStyleRevision((revision) => revision + 1);
+        map.resize();
       });
 
       mapInstanceRef.current = map;
@@ -582,9 +682,10 @@ export const MapView: React.FC<MapViewProps> = ({
     map.setStyle(targetStyle);
 
     map.once("style.load", () => {
-      setupSituationalLayers(map);
+      setupSituationalLayersRef.current(map);
+      setMapStyleRevision((revision) => revision + 1);
     });
-  }, [isDarkMode, getStyleForTheme, setupSituationalLayers]);
+  }, [isDarkMode, getStyleForTheme]);
 
   // 4. Render Stop Points Markers with clear hierarchy (Key/Metro vs Intermediate Stops)
   useEffect(() => {
@@ -718,7 +819,7 @@ export const MapView: React.FC<MapViewProps> = ({
         stopMarkersRef.current.push(marker);
       });
     });
-  }, [isDarkMode, routes, visibleRouteIds, isHoldingApplied, layers.stops]);
+  }, [isDarkMode, routes, visibleRouteIds, isHoldingApplied, layers.stops, mapStyleRevision]);
 
   // 5. Draw and Update Vehicle Markers and Headway Connector dynamically
   useEffect(() => {
@@ -1064,6 +1165,9 @@ export const MapView: React.FC<MapViewProps> = ({
     layers.vehicles,
     layers.headway,
     routes,
+    dataMode,
+    datasetLoadError,
+    mapStyleRevision,
   ]);
 
   // FlyTo handler
@@ -1201,54 +1305,66 @@ export const MapView: React.FC<MapViewProps> = ({
         >
           <div className="flex items-center gap-1.5 text-emerald-500 dark:text-emerald-400 font-bold">
             <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse"></span>
-            <span>Выпуск: {displayedVehicles.length}/{vehicles.length} ТС (100%)</span>
+            <span>
+              {isGpsMode
+                ? `GPS-треков: ${displayedVehicles.length}`
+                : `Выпуск: ${displayedVehicles.length}/${vehicles.length} ТС (100%)`}
+            </span>
           </div>
-          <span className="text-zinc-300 dark:text-zinc-600">|</span>
-          <div className="flex items-center gap-1.5 text-rose-500 dark:text-rose-400 font-bold">
-            <AlertTriangle size={13} />
-            <span>Пачкование: 1 (м3)</span>
-          </div>
-          <span className="text-zinc-300 dark:text-zinc-600">|</span>
-          <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-300 font-bold">
-            <Flame size={13} />
-            <span>Заторы: 2 зоны</span>
-          </div>
-          <span className="text-zinc-300 dark:text-zinc-600">|</span>
-          <div className="flex items-center gap-1.5 text-sky-600 dark:text-sky-400 font-bold">
-            <Activity size={13} />
-            <span>Такт: 96.2%</span>
-          </div>
+          {!isGpsMode && (
+            <>
+              <span className="text-zinc-300 dark:text-zinc-600">|</span>
+              <div className="flex items-center gap-1.5 text-rose-500 dark:text-rose-400 font-bold">
+                <AlertTriangle size={13} />
+                <span>Пачкование: 1 (м3)</span>
+              </div>
+              <span className="text-zinc-300 dark:text-zinc-600">|</span>
+              <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-300 font-bold">
+                <Flame size={13} />
+                <span>Заторы: 2 зоны</span>
+              </div>
+              <span className="text-zinc-300 dark:text-zinc-600">|</span>
+              <div className="flex items-center gap-1.5 text-sky-600 dark:text-sky-400 font-bold">
+                <Activity size={13} />
+                <span>Такт: 96.2%</span>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Quick Camera Presets */}
         <div
-          className={`flex items-center gap-1 p-1 rounded-xl border backdrop-blur-xl shadow-xl text-[11px] font-bold ${
+          className={`flex items-center gap-1 p-1 rounded-xl border backdrop-blur-xl shadow-xl text-xs font-bold ${
             isDarkMode
               ? "border-white/10 bg-[#18181b]/90 shadow-black/25"
               : "border-zinc-200 bg-white/95 shadow-zinc-300/40"
           }`}
         >
-          <button
-            onClick={() => handleFocusRoute("м3")}
-            className="px-2 py-0.5 rounded-lg text-emerald-600 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 transition-all cursor-pointer"
-            title="Фокус на перегоне м3 Бауманская"
-          >
-            м3 Бауманская
-          </button>
-          <button
-            onClick={() => handleFocusRoute("м7")}
-            className="px-2 py-0.5 rounded-lg text-orange-600 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-950/60 transition-all cursor-pointer"
-            title="Фокус на маршруте м7 Таганская"
-          >
-            м7 Таганская
-          </button>
-          <button
-            onClick={() => handleFocusRoute("т88")}
-            className="px-2 py-0.5 rounded-lg text-purple-600 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950/60 transition-all cursor-pointer"
-            title="Фокус на маршруте т88 Басманная"
-          >
-            т88 Басманная
-          </button>
+          {!isGpsMode && (
+            <>
+              <button
+                onClick={() => handleFocusRoute("м3")}
+                className="px-2 py-0.5 rounded-lg text-emerald-600 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 transition-all cursor-pointer"
+                title="Фокус на перегоне м3 Бауманская"
+              >
+                м3 Бауманская
+              </button>
+              <button
+                onClick={() => handleFocusRoute("м7")}
+                className="px-2 py-0.5 rounded-lg text-orange-600 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-950/60 transition-all cursor-pointer"
+                title="Фокус на маршруте м7 Таганская"
+              >
+                м7 Таганская
+              </button>
+              <button
+                onClick={() => handleFocusRoute("т88")}
+                className="px-2 py-0.5 rounded-lg text-purple-600 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950/60 transition-all cursor-pointer"
+                title="Фокус на маршруте т88 Басманная"
+              >
+                т88 Басманная
+              </button>
+            </>
+          )}
           <button
             onClick={handleFocusNetwork}
             className="px-2 py-0.5 rounded-lg text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all cursor-pointer"

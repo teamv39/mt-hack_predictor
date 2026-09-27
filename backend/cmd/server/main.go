@@ -79,6 +79,30 @@ func main() {
 		}
 	}
 
+	// Load historical GPS tracks before accepting HTTP requests.
+	trackStore := api.NewTrackStore()
+	trackCandidates := []string{
+		"dataset/train/traffic.csv",
+		"../dataset/train/traffic.csv",
+		"../../dataset/train/traffic.csv",
+		"/app/dataset/train/traffic.csv",
+	}
+	if path := os.Getenv("TRACKS_CSV_PATH"); path != "" {
+		trackCandidates = append([]string{path}, trackCandidates...)
+	}
+	var trackErr error
+	for _, path := range trackCandidates {
+		var count int
+		count, trackErr = trackStore.LoadFromCSV(path)
+		if trackErr == nil {
+			log.Printf("[INFO] Loaded %d GPS points in %d tracks from %s", count, trackStore.TrackCount(), path)
+			break
+		}
+	}
+	if trackErr != nil {
+		log.Printf("[WARN] Could not load GPS tracks: %v", trackErr)
+	}
+
 	// 4. Initialize Headway & Alert Engines
 	headwayCalc := engine.NewHeadwayCalculator(480.0) // 8 min nominal headway
 	alertMgr := engine.NewAlertManager()
@@ -317,6 +341,9 @@ func main() {
 
 	// API v1
 	r.Route("/api/v1", func(r chi.Router) {
+		// Historical GPS tracks from the training traffic dataset.
+		api.RegisterTrackRoutes(r, trackStore)
+
 		// Route metadata & geometry
 		r.Get("/route", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
