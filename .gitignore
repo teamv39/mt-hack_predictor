@@ -12,6 +12,8 @@ Thumbs.db
 # Go
 backend/bin/
 backend/dist/
+backend/server
+bundle.tar.gz
 *.exe
 *.exe~
 *.dll

@@ -100,3 +100,20 @@ map-down: ## Остановить тайловый сервер
 
 map-logs: ## Смотреть логи тайлового сервера
 	cd map-service && docker compose logs -f
+
+deploy-direct: ## Прямой деплой сборки на сервер через SSH (без GitHub Actions)
+	@echo "==> Сборка Linux amd64 бэкенда и фронтенда..."
+	cd frontend && npm run build
+	cd backend && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o server ./cmd/server
+	@echo "==> Создание бандла и отправка на сервер..."
+	@tar -czf bundle.tar.gz \
+		frontend/dist \
+		backend/server \
+		ml/src \
+		ml/pyproject.toml \
+		map-service/config.json \
+		map-service/styles \
+		scripts/deploy.sh
+	@cat bundle.tar.gz | ssh -o ConnectTimeout=15 user1@213.171.24.68 "cat > ~/mt-hack_predictor/bundle.tar.gz && tar -xzf ~/mt-hack_predictor/bundle.tar.gz -C ~/mt-hack_predictor && rm -f ~/mt-hack_predictor/bundle.tar.gz && chmod +x ~/mt-hack_predictor/scripts/deploy.sh && ~/mt-hack_predictor/scripts/deploy.sh"
+	@rm -f bundle.tar.gz backend/server
+	@echo "==> [OK] Деплой успешно завершен!"
