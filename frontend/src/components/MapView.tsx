@@ -768,7 +768,6 @@ export const MapView: React.FC<MapViewProps> = ({
       if (!marker) {
         const el = document.createElement("div");
         el.className = `bus-marker-${veh.id}`;
-        el.style.position = "relative";
         el.style.width = "24px";
         el.style.height = "24px";
         el.style.cursor = "pointer";
@@ -788,7 +787,6 @@ export const MapView: React.FC<MapViewProps> = ({
 
       // Update inner HTML of vehicle marker
       const el = marker.getElement();
-      el.style.position = "relative";
       el.style.width = "24px";
       el.style.height = "24px";
       el.style.cursor = "pointer";
