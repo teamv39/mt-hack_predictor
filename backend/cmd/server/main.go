@@ -74,7 +74,7 @@ func main() {
 	}
 	for _, p := range schedCandidates {
 		if n, err := schedMatcher.LoadFromCSV(p); err == nil && n > 0 {
-			log.Printf("✅ Loaded %d timetable stops into ScheduleMatcher from %s", n, p)
+			log.Printf("[INFO] Loaded %d timetable stops into ScheduleMatcher from %s", n, p)
 			break
 		}
 	}
@@ -89,7 +89,7 @@ func main() {
 		mlURL = "http://localhost:8000"
 	}
 	mlCli := mlclient.New(mlURL)
-	log.Printf("🤖 Connected to ML service at %s", mlURL)
+	log.Printf("[INFO] Connected to ML service at %s", mlURL)
 
 	// 6. Initialize NDTP Emulator Controller (:18080)
 	ndtpEmuURL := os.Getenv("NDTP_EMULATOR_URL")
@@ -184,7 +184,7 @@ func main() {
 
 	go func() {
 		if err := ndtpSrv.Start(ctx); err != nil {
-			log.Printf("⚠️ NDTP Server stopped: %v", err)
+			log.Printf("[WARN] NDTP Server stopped: %v", err)
 		}
 	}()
 
@@ -195,9 +195,9 @@ func main() {
 		"../data/sample/m3_scenario.json",
 	)
 	if err != nil {
-		log.Printf("⚠️ Scenario file not found, running with NDTP only: %v", err)
+		log.Printf("[WARN] Scenario file not found, running with NDTP only: %v", err)
 	} else {
-		log.Println("✅ Loaded m3 route scenario successfully")
+		log.Println("[INFO] Loaded m3 route scenario successfully")
 	}
 
 	// 8. Initialize WebSocket Hub
@@ -385,7 +385,7 @@ func main() {
 			targetVeh, holdSec, applied := alertMgr.ApplyRecommendation(recID)
 			if applied {
 				fleetMgr.ApplyHolding(targetVeh, holdSec)
-				log.Printf("🎯 Applied Holding via DSS: vehicle=%s, duration=%d sec", targetVeh, holdSec)
+				log.Printf("[INFO] Applied Holding via DSS: vehicle=%s, duration=%d sec", targetVeh, holdSec)
 			}
 
 			if f != nil {
@@ -573,9 +573,9 @@ func main() {
 	}
 	serverAddr := ":" + port
 
-	log.Printf("🚀 Starting Situational Predictor Go Server on %s", serverAddr)
-	log.Printf("📡 NDTP TCP Telemetry Ingestion Receiver on %s", ndtpPort)
-	log.Printf("📖 Swagger UI Documentation on http://localhost:%s/swagger", port)
+	log.Printf("[INFO] Starting Situational Predictor Go Server on %s", serverAddr)
+	log.Printf("[INFO] NDTP TCP Telemetry Ingestion Receiver on %s", ndtpPort)
+	log.Printf("[INFO] Swagger UI Documentation on http://localhost:%s/swagger", port)
 
 	srv := &http.Server{
 		Addr:         serverAddr,

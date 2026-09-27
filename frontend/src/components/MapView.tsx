@@ -629,9 +629,9 @@ export const MapView: React.FC<MapViewProps> = ({
                 border: 2px solid ${isHoldingApplied ? "#10b981" : "#ef4444"};
                 box-shadow: 0 4px 14px rgba(0,0,0,0.5);
                 white-space: nowrap;
-                animation: pulse-ring 2.5s infinite;
               ">
-                <span>${isHoldingApplied ? "✅ Holding активен" : "🛑 Зона Holding"}</span>
+                <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: ${isHoldingApplied ? "#34d399" : "#f87171"};"></span>
+                <span>${isHoldingApplied ? "Holding активен" : "Зона Holding"}</span>
                 <span style="opacity: 0.85;">· м. Бауманская</span>
               </div>
               <div style="
@@ -673,10 +673,10 @@ export const MapView: React.FC<MapViewProps> = ({
         } else {
           // Intermediate Regular Stop: compact circular dot that reveals name on hover
           el.innerHTML = `
-            <div class="stop-dot-wrapper" style="position: relative; display: flex; align-items: center; justify-content: center; cursor: pointer; pointer-events: auto; padding: 4px;">
+            <div class="stop-dot-wrapper" style="position: relative; display: flex; align-items: center; justify-content: center; cursor: pointer; pointer-events: auto;">
               <div style="
-                width: 9px;
-                height: 9px;
+                width: 8px;
+                height: 8px;
                 border-radius: 50%;
                 background: ${stop.color};
                 border: 2px solid ${isDarkMode ? "#18181b" : "#ffffff"};
@@ -768,6 +768,9 @@ export const MapView: React.FC<MapViewProps> = ({
       if (!marker) {
         const el = document.createElement("div");
         el.className = `bus-marker-${veh.id}`;
+        el.style.position = "relative";
+        el.style.width = "24px";
+        el.style.height = "24px";
         el.style.cursor = "pointer";
         el.onclick = () => onSelectVehicleRef.current(veh.id);
 
@@ -785,31 +788,68 @@ export const MapView: React.FC<MapViewProps> = ({
 
       // Update inner HTML of vehicle marker
       const el = marker.getElement();
+      el.style.position = "relative";
+      el.style.width = "24px";
+      el.style.height = "24px";
+      el.style.cursor = "pointer";
+
+      const pulseSize = isSelected ? 56 : 46;
+      const pulseMargin = pulseSize / 2;
+
       el.innerHTML = `
-        <div class="relative flex flex-col items-center cursor-pointer group" style="transform: translateZ(0);">
-          <!-- Selected or Bunching Pulse Halo -->
+        <div class="relative w-full h-full cursor-pointer group" style="transform: translateZ(0);">
+          <!-- Concentric Selected or Bunching Pulse Halo centered directly on vehicle coordinates -->
           ${
             isBunching || isSelected
               ? `
             <div style="
               position: absolute;
               top: 50%; left: 50%;
-              transform: translate(-50%, -50%);
-              width: ${isSelected ? "66px" : "54px"};
-              height: ${isSelected ? "66px" : "54px"};
+              width: ${pulseSize}px;
+              height: ${pulseSize}px;
+              margin-top: -${pulseMargin}px;
+              margin-left: -${pulseMargin}px;
               border-radius: 50%;
               background: ${isBunching ? "rgba(239, 68, 68, 0.35)" : "rgba(56, 189, 248, 0.35)"};
               animation: pulse-ring 2s infinite;
               pointer-events: none;
+              z-index: 1;
             "></div>
           `
               : ""
           }
 
-          <!-- Upper Pill Badge: Route Badge + Number + Speed / Status -->
+          <!-- Direction Pin & Vehicle Circle (Centered exactly at GPS Coordinates) -->
           <div style="
-            position: relative;
+            position: absolute;
+            top: 0; left: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: ${isBunching ? "#dc2626" : isDelayed ? "#d97706" : routeColor};
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
             z-index: 10;
+          ">
+            <!-- Arrow pointing in heading direction -->
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="transform: rotate(${
+              veh.heading || 0
+            }deg); transform-origin: center;">
+              <path d="M12 2L4 20l8-4 8 4L12 2z" />
+            </svg>
+          </div>
+
+          <!-- Upper Pill Badge: Route Badge + Number + Speed / Status (Floats above vehicle circle) -->
+          <div style="
+            position: absolute;
+            bottom: calc(100% + 4px);
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
             display: flex;
             align-items: center;
             gap: 5px;
@@ -832,7 +872,7 @@ export const MapView: React.FC<MapViewProps> = ({
             };
             box-shadow: 0 4px 14px rgba(0,0,0,${isDarkMode ? "0.55" : "0.22"});
             white-space: nowrap;
-            transition: transform 0.15s ease;
+            pointer-events: auto;
           ">
             <!-- Route Pill inside Badge -->
             <span style="
@@ -848,12 +888,12 @@ export const MapView: React.FC<MapViewProps> = ({
             <!-- Vehicle ID -->
             <span style="font-weight: 800; font-size: 11px; letter-spacing: -0.2px;">№${cleanId}</span>
 
-            <!-- Status / Speed Indicator -->
+            <!-- Status / Speed Indicator (No Emojis) -->
             ${
               isBunching
                 ? `
               <span style="display: flex; align-items: center; gap: 3px; background: rgba(239, 68, 68, 0.2); color: #ef4444; padding: 1px 5px; border-radius: 4px; font-size: 10px; font-weight: 800;">
-                ⚠️ Риск
+                Риск
               </span>
             `
                 : isDelayed
@@ -870,33 +910,10 @@ export const MapView: React.FC<MapViewProps> = ({
             }
           </div>
 
-          <!-- Direction Pin & Vehicle Circle -->
-          <div style="
-            position: relative;
-            margin-top: 2px;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            background: ${isBunching ? "#dc2626" : isDelayed ? "#d97706" : routeColor};
-            border: 2px solid #ffffff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.35);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #ffffff;
-          ">
-            <!-- Arrow pointing in heading direction -->
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="transform: rotate(${
-              veh.heading || 0
-            }deg); transform-origin: center;">
-              <path d="M12 2L4 20l8-4 8 4L12 2z" />
-            </svg>
-          </div>
-
-          <!-- Hover Tooltip Card -->
+          <!-- Hover Tooltip Card (Floats above pill badge) -->
           <div class="veh-tooltip" style="
             position: absolute;
-            bottom: calc(100% + 8px);
+            bottom: calc(100% + 36px);
             left: 50%;
             transform: translateX(-50%);
             display: none;
@@ -918,10 +935,10 @@ export const MapView: React.FC<MapViewProps> = ({
             }; font-weight: 700; margin-top: 2px;">
               ${
                 isBunching
-                  ? "⚠️ Прогноз схлопывания через 4 ост."
+                  ? "Прогноз схлопывания через 4 ост."
                   : isDelayed
-                  ? `⏱ Отставание ${Math.round(veh.delaySeconds / 60)} мин`
-                  : "✅ Движение строго по графику"
+                  ? `Отставание ${Math.round(veh.delaySeconds / 60)} мин`
+                  : "Движение строго по графику"
               }
             </div>
           </div>
