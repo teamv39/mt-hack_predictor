@@ -50,13 +50,20 @@ status: ## Проверить доступность и сквозную свя�
 	@./scripts/check_live.sh
 
 
+ensure-tiles: ## Проверить наличие mbtiles и при необходимости скачать и собрать
+	@if [ ! -f "map-service/data/moscow_transport.mbtiles" ] || [ ! -s "map-service/data/moscow_transport.mbtiles" ]; then \
+		echo "==> [Map] Векторные тайлы не найдены, запускаем автоматическую подготовку..."; \
+		./map-service/scripts/download_osm.sh; \
+		./map-service/scripts/build_tiles.sh; \
+	fi
+
 docker-build: ## Собрать все Docker-образы проекта
 	docker compose build
 
-docker-up: ## Запустить основные сервисы в Docker (Frontend + Backend + ML + TileServer)
+docker-up: ensure-tiles ## Запустить основные сервисы в Docker (Frontend + Backend + ML + TileServer)
 	docker compose up -d
 
-docker-up-all: ## Запустить все сервисы включая NDTP-эмулятор (требует предварительного docker load)
+docker-up-all: ensure-tiles ## Запустить все сервисы включая NDTP-эмулятор (требует предварительного docker load)
 	docker compose --profile emulator up -d
 
 docker-down: ## Остановить все Docker-контейнеры
@@ -71,7 +78,7 @@ map-download: ## Скачать дамп OpenStreetMap Москвы
 map-build: ## Собрать векторные тайлы Москвы через Planetiler
 	@./map-service/scripts/build_tiles.sh
 
-map-up: ## Запустить автономный тайловый сервер TileServer GL (:8085)
+map-up: ensure-tiles ## Запустить автономный тайловый сервер TileServer GL (:8085)
 	cd map-service && docker compose up -d
 
 map-down: ## Остановить тайловый сервер

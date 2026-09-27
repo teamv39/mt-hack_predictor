@@ -7,10 +7,14 @@ DATA_DIR="${SERVICE_DIR}/data"
 OSM_FILE="${DATA_DIR}/moscow.osm.pbf"
 OUTPUT_FILE="${DATA_DIR}/moscow_transport.mbtiles"
 
+if [ -f "${OUTPUT_FILE}" ] && [ -s "${OUTPUT_FILE}" ]; then
+  echo "==> Vector tiles already exist at ${OUTPUT_FILE} ($(du -h "${OUTPUT_FILE}" | cut -f1)). Skipping build."
+  exit 0
+fi
+
 if [ ! -f "${OSM_FILE}" ] || [ ! -s "${OSM_FILE}" ]; then
-  echo "Error: OSM extract not found at ${OSM_FILE}"
-  echo "Run ./scripts/download_osm.sh first"
-  exit 1
+  echo "==> OSM extract not found at ${OSM_FILE}. Running automatic download..."
+  "${SCRIPT_DIR}/download_osm.sh"
 fi
 
 echo "==> Building vector tiles via Planetiler (Docker)..."

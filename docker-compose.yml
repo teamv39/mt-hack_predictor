@@ -71,6 +71,51 @@ services:
     networks:
       - mt-network
 
+  # Vector Tile Builder (Planetiler auto-init: downloads OSM and builds mbtiles if missing)
+  map-builder:
+    image: ghcr.io/onthegomap/planetiler:latest
+    container_name: mt-predictor-map-builder
+    restart: "no"
+    volumes:
+      - ./map-service/data:/data
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        set -eu
+        TARGET="/data/moscow_transport.mbtiles"
+        OSM_FILE="/data/moscow.osm.pbf"
+        URL="https://download.bbbike.org/osm/bbbike/Moscow/Moscow.osm.pbf"
+
+        if [ -f "$$TARGET" ] && [ -s "$$TARGET" ]; then
+          echo "==> [Map Builder] Found existing vector tiles: $$TARGET. Skipping build."
+          exit 0
+        fi
+
+        echo "==> [Map Builder] Vector tiles not found! Starting automated map preparation..."
+        mkdir -p /data
+
+        if [ ! -f "$$OSM_FILE" ] || [ ! -s "$$OSM_FILE" ]; then
+          echo "==> [Map Builder] Step 1/2: Downloading Moscow OSM extract from BBBike (85 MB)..."
+          wget -q --show-progress -O "$$OSM_FILE.tmp" "$$URL"
+          mv "$$OSM_FILE.tmp" "$$OSM_FILE"
+          echo "==> [Map Builder] OSM download complete: $$(du -h "$$OSM_FILE" | cut -f1)"
+        else
+          echo "==> [Map Builder] Step 1/2: Using existing OSM extract ($$OSM_FILE)."
+        fi
+
+        echo "==> [Map Builder] Step 2/2: Building vector tiles via Planetiler..."
+        java -Xmx4g -cp @/app/jib-classpath-file com.onthegomap.planetiler.Main \
+          --osm-path=$$OSM_FILE \
+          --output=$$TARGET \
+          --maxzoom=14 \
+          --exclude-layers=building \
+          --download \
+          --fetch-wikidata=false \
+          --force
+
+        chmod 666 "$$TARGET" 2>/dev/null || true
+        echo "==> [Map Builder] Vector tiles successfully built: $$(du -h "$$TARGET" | cut -f1)! TileServer can start now."
+
   # Autonomous Moscow Vector Tile Server (TileServer GL :8085)
   tileserver:
     image: maptiler/tileserver-gl:latest
@@ -83,6 +128,9 @@ services:
       - ./map-service/styles:/data/styles
       - ./map-service/config.json:/data/config.json
     command: ["--config", "/data/config.json", "-p", "80"]
+    depends_on:
+      map-builder:
+        condition: service_completed_successfully
     deploy:
       resources:
         limits:

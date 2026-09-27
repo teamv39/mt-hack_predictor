@@ -15,7 +15,14 @@ fi
 
 echo "==> Downloading Moscow OSM extract from BBBike..."
 echo "==> Source: ${URL}"
-curl -L --fail --progress-bar "${URL}" -o "${OSM_FILE}.tmp"
+if command -v curl >/dev/null 2>&1; then
+  curl -L --fail --progress-bar "${URL}" -o "${OSM_FILE}.tmp"
+elif command -v wget >/dev/null 2>&1; then
+  wget -q --show-progress -O "${OSM_FILE}.tmp" "${URL}"
+else
+  echo "Error: neither curl nor wget found on host system" >&2
+  exit 1
+fi
 mv "${OSM_FILE}.tmp" "${OSM_FILE}"
 
 echo "==> Download complete: ${OSM_FILE} ($(du -h "${OSM_FILE}" | cut -f1))"
