@@ -2,7 +2,7 @@
 set -euo pipefail
 
 echo "==> Deploying MT-Predictor on remote server..."
-APP_DIR="/home/user1/mt-hack_predictor"
+APP_DIR="${APP_DIR:-$HOME/mt-hack_predictor}"
 cd "$APP_DIR"
 
 # Ensure backend executable

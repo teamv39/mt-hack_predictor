@@ -40,39 +40,72 @@ jobs:
           npm ci
           npm run build
 
-      - name: Configure SSH
+      - name: Configure SSH Multiplexing
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -p ${{ secrets.SERVER_PORT || 22 }} -H "${{ secrets.SERVER_HOST }}" >> ~/.ssh/known_hosts
+
+          PORT="${{ secrets.SERVER_PORT }}"
+          PORT="${PORT:-22}"
+          HOST="${{ secrets.SERVER_HOST }}"
+          USER="${{ secrets.SERVER_USER }}"
+
+          ssh-keyscan -p "$PORT" -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+
+          cat <<EOF > ~/.ssh/config
+          Host target-server
+            HostName $HOST
+            User $USER
+            Port $PORT
+            IdentityFile ~/.ssh/id_ed25519
+            ControlMaster auto
+            ControlPath ~/.ssh/cm-%r@%h:%p
+            ControlPersist 15m
+            ServerAliveInterval 20
+            ServerAliveCountMax 5
+            StrictHostKeyChecking accept-new
+            ConnectTimeout 15
+          EOF
+
+          echo "==> Establishing persistent SSH Master connection..."
+          for i in 1 2 3 4 5; do
+            if ssh -o ConnectTimeout=15 -f -N target-server; then
+              echo "✅ SSH master connected!"
+              break
+            else
+              echo "Retrying SSH connection in 5s... ($i/5)"
+              sleep 5
+            fi
+          done
+
+          echo "==> Verifying persistent SSH channel..."
+          ssh target-server "echo 'SSH Master Ready on \$(hostname)'"
 
       - name: Sync Artifacts to Server
         run: |
-          SSH_CMD="ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.SERVER_PORT || 22 }} -o StrictHostKeyChecking=accept-new"
-          TARGET="${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/${{ secrets.SERVER_USER }}/mt-hack_predictor"
+          TARGET="target-server:/home/${{ secrets.SERVER_USER }}/mt-hack_predictor"
 
           echo "==> Syncing Frontend bundle..."
-          rsync -avz -e "$SSH_CMD" --delete frontend/dist/ "${TARGET}/frontend/dist/"
+          rsync -avz -e ssh --delete frontend/dist/ "${TARGET}/frontend/dist/"
 
           echo "==> Syncing Go server binary..."
-          rsync -avz -e "$SSH_CMD" backend/server "${TARGET}/backend/server"
+          rsync -avz -e ssh backend/server "${TARGET}/backend/server"
 
           echo "==> Syncing ML code..."
-          rsync -avz -e "$SSH_CMD" --exclude='.venv' --exclude='__pycache__' ml/src/ "${TARGET}/ml/src/"
-          rsync -avz -e "$SSH_CMD" ml/pyproject.toml "${TARGET}/ml/pyproject.toml"
+          rsync -avz -e ssh --exclude='.venv' --exclude='__pycache__' ml/src/ "${TARGET}/ml/src/"
+          rsync -avz -e ssh ml/pyproject.toml "${TARGET}/ml/pyproject.toml"
 
           echo "==> Syncing Deploy Script..."
-          rsync -avz -e "$SSH_CMD" scripts/deploy.sh "${TARGET}/scripts/deploy.sh"
+          rsync -avz -e ssh scripts/deploy.sh "${TARGET}/scripts/deploy.sh"
 
       - name: Run Remote Deployment
         run: |
-          ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.SERVER_PORT || 22 }} -o StrictHostKeyChecking=accept-new \
-            "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}" \
+          ssh target-server \
             "chmod +x /home/${{ secrets.SERVER_USER }}/mt-hack_predictor/scripts/deploy.sh && /home/${{ secrets.SERVER_USER }}/mt-hack_predictor/scripts/deploy.sh"
 
       - name: Health Check
         run: |
-          sleep 3
+          sleep 5
           echo "==> Verifying Public Dashboard Status on :1234..."
-          curl -f --retry 3 --retry-delay 2 -s http://${{ secrets.SERVER_HOST }}:1234/api/v1/status | jq .
+          curl -f --retry 5 --retry-delay 3 -s http://${{ secrets.SERVER_HOST }}:1234/api/v1/status | jq .

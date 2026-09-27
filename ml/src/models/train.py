@@ -255,12 +255,12 @@ def train_and_export_models(
     settings = get_settings()
     reg_out = output_dir / settings.regressor_model_filename
     final_reg.save_model(str(reg_out))
-    logger.info(f"✅ Exported delay regressor → {reg_out}")
+    logger.info(f"Exported delay regressor -> {reg_out}")
 
     if final_clf is not None:
         clf_out = output_dir / settings.classifier_model_filename
         final_clf.save_model(str(clf_out))
-        logger.info(f"✅ Exported optional bunching classifier → {clf_out}")
+        logger.info(f"Exported optional bunching classifier -> {clf_out}")
 
 
 if __name__ == "__main__":
