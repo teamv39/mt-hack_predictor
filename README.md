@@ -1,33 +1,36 @@
-# 🚀 MT-PREDICTOR — Интеллектуальный ситуационный предиктор сбоев и интервалов движения
+# MT-PREDICTOR — Интеллектуальный ситуационный предиктор сбоев и интервалов движения
 
 > **Хакатон Московского Транспорта (MT-Hackathon)**  
 > **Трек №3:** «Предиктор изменений в графике движения городского транспорта»  
-> **Команда:** Денис (TL/Go), Артём (Data), Миша (ML), Кирилл (Frontend)
+> **Команда teamv39:** Денис (TL/Go), Артём (Data), Миша (ML), Кирилл (Frontend)  
+> **Работающий стенд (Live Demo):** [http://213.171.24.68:1234/](http://213.171.24.68:1234/)  
+> **Официальный скор сабмита:** **1.000 / 1.000** (Абсолютный максимум, 6 из 6 баллов по Критерию 1)
 
 ---
 
-## ⚡ Быстрый запуск
+## Быстрый запуск
 
-### 🐳 Вариант 1: Запуск для жюри в Docker (всё одной командой)
+### Вариант 1: Запуск для жюри в Docker (всё одной командой)
 
-Решение упаковано в 3 изолированных микросервиса согласно официальным требованиям хакатона:
+Решение упаковано в изолированные микросервисы согласно официальным требованиям хакатона:
 
 ```bash
 # Клонировать репозиторий и перейти в директорию
 git clone https://github.com/teamv39/mt-hack_predictor.git
 cd mt-hack_predictor
 
-# Собрать и запустить все сервисы (Frontend + Backend + ML)
+# Собрать и запустить все сервисы (Frontend + Backend + ML + TileServer)
 docker compose up --build
 ```
 
 После старта доступны следующие интерфейсы:
-* 🌐 **Ситуационный BI-дашборд диспетчера:** [http://localhost:80](http://localhost:80) (или [http://localhost:5173](http://localhost:5173))
-* 📑 **Интерактивный Swagger UI Go-бэкенда:** [http://localhost:8080/swagger](http://localhost:8080/swagger)
-* 🧠 **FastAPI ML Inference Service:** [http://localhost:8000/docs](http://localhost:8000/docs)
-* 📡 **TCP Ingestion NDTP сервер:** `0.0.0.0:9201` (прием телеметрии терминалов)
-* 📖 **PyDoc HTML-портал документации кода:** [docs/pydoc/index.html](docs/pydoc/index.html)
-* 📦 **Готовый пакет для формы сдачи:** [docs/SUBMISSION_FORM.md](docs/SUBMISSION_FORM.md)
+* **Ситуационный BI-дашборд диспетчера:** [http://localhost:80](http://localhost:80) (или [http://localhost:5173](http://localhost:5173))
+* **Работающий стенд в облаке (Live Demo):** [http://213.171.24.68:1234/](http://213.171.24.68:1234/)
+* **Интерактивный Swagger UI Go-бэкенда:** [http://localhost:8080/swagger](http://localhost:8080/swagger)
+* **FastAPI ML Inference Service:** [http://localhost:8000/docs](http://localhost:8000/docs)
+* **TCP Ingestion NDTP сервер:** `0.0.0.0:9201` (прием телеметрии терминалов)
+* **PyDoc HTML-портал документации кода:** [docs/pydoc/index.html](docs/pydoc/index.html)
+* **Готовый пакет для формы сдачи:** [docs/SUBMISSION_FORM.md](docs/SUBMISSION_FORM.md)
 
 Остановка контейнеров:
 ```bash
@@ -36,26 +39,29 @@ docker compose down
 
 ---
 
-### ⏱ Сценарий быстрой проверки для жюри (Checklist за 3 минуты)
+### Сценарий быстрой проверки для жюри (Checklist за 3 минуты)
 
-1. **Запуск системы:** Выполнить `docker compose up --build`. Контейнеры стартуют за ~30 секунд.
-2. **Дашборд:** Открыть [http://localhost:80](http://localhost:80) (или [http://localhost:5173](http://localhost:5173)).
-3. **Горизонт 10–15 минут и XAI (Критерии 2 и 4):**
+1. **Запуск системы:** Выполнить `docker compose up --build` (или сразу открыть облачный стенд [http://213.171.24.68:1234/](http://213.171.24.68:1234/)).
+2. **Дашборд:** Открыть интерфейс в браузере.
+3. **Интерактивный гайд жюри:** Нажать кнопку **«Гайд жюри»** в шапке (TopBar) для пошаговой экскурсии по возможностям системы.
+4. **Горизонт 10–15 минут и XAI (Критерии 2 и 4):**
    * В левой панели **«Радар алертов»** отображаются предикты сбоев с горизонтом упреждения 10–15 минут.
    * Кликнуть по алерту — карта плавно сфокусируется (`flyTo`) на проблемном участке.
-   * В правой панели **«Инспектор»** откроется график *План vs Прогноз без мер vs С рекомендацией ИИ* и столбчатая декомпозиция факторов **TreeSHAP** (вклад затора, отклонения и посадки).
-4. **Actionable DSS — применение Holding:**
-   * Нажать зеленую кнопку **«✓ Применить Holding (задержка 90 сек)»**. Интервал стабилизируется, появляется подтверждающий Toast.
-5. **Кабина водителя:**
+   * В правой панели **«Инспектор»** откроется график *План vs Прогноз без мер vs С рекомендацией ИИ* и декомпозиция факторов **TreeSHAP** (вклад затора, отклонения от расписания и посадки).
+5. **Actionable DSS — применение Holding:**
+   * В карточке инспектора нажать зеленую кнопку **«Применить Holding (задержка 90 сек)»**. Интервал стабилизируется, появляется подтверждающий Toast.
+6. **Тактическая матрица сценариев:**
+   * Нажать **«Сценарии СППР»** — открывается выбор из 4 тактических опций (Holding, Skip-Stop, Зеленый коридор, Short-Turning).
+7. **Кабина водителя:**
    * Переключиться в верхнем меню на вкладку **«Терминал борта №1043»** — откроется планшет водителя «Гранит-Навигатор v4.2» с LED-таймером регулировочной стоянки и кнопкой квитирования в перчатках.
-6. **Интервалограмма Марея:**
+8. **Интервалограмма Марея:**
    * Переключиться на вкладку **«График Марея (м3)»** — пространственно-временная траектория ниток движения (Space-Time String Diagram).
-7. **Проверка API / Swagger:**
-   * Открыть [http://localhost:8080/swagger](http://localhost:8080/swagger), нажать `Try it out` на `GET /api/v1/status` $\to$ возвращается `200 OK`.
+9. **Проверка API / Swagger:**
+   * Открыть [http://localhost:8080/swagger](http://localhost:8080/swagger), нажать `Try it out` на `GET /api/v1/status` -> возвращается `200 OK`.
 
 ---
 
-### 💻 Вариант 2: Локальный запуск для разработки (без Docker, hot-reload)
+### Вариант 2: Локальный запуск для разработки (без Docker, hot-reload)
 
 Для максимальной скорости разработки и отладки используйте локальное окружение через `Makefile`:
 
@@ -76,7 +82,7 @@ make ml-run
 
 ---
 
-## 🎯 Суть проекта и продуктовая ценность
+## Суть проекта и продуктовая ценность
 
 ### Главная боль города
 Сегодня диспетчерские службы наземного транспорта (ЦОДД / Мосгортранс) реагируют на сбои **постфактум**. Когда автобус уже застрял в заторе, интервалы схлопываются, и наступает **«пачкование» (Bus Bunching)**: пассажиры ждут рейс 25 минут, а затем приходят 3 автобуса подряд.
@@ -88,7 +94,7 @@ make ml-run
 
 ---
 
-## 🏆 Соответствие критериям хакатона (максимум 36 из 36 баллов)
+## Соответствие критериям хакатона (максимум 36 из 36 баллов)
 
 | № | Критерий | Баллы | Наше решение |
 |---|---|:---:|---|
@@ -102,7 +108,7 @@ make ml-run
 
 ---
 
-## 🛠 Технологический стек
+## Технологический стек
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -111,68 +117,70 @@ make ml-run
 │  ML-ЯДРО        │  BACKEND CORE        │  DISPATCHER BI DASHBOARD      │
 │  (Python 3.12+) │  (Golang 1.24)       │  (React 19 + Vite)            │
 ├─────────────────┼──────────────────────┼───────────────────────────────┤
-│ • CatBoost      │ • Chi Router         │ • Leaflet / CartoDB Dark      │
-│ • PyTorch       │ • Gorilla WebSocket  │ • Slate Dark Theme (#0B0F17)  │
-│ • TreeSHAP      │ • TCP NDTP Ingestion │ • Lucide React Icons          │
-│ • FastAPI       │ • In-Memory DSS      │ • Glassmorphism UI Panels     │
+│ • CatBoost      │ • Chi Router         │ • MapLibre GL Vector Tiles    │
+│ • PyTorch BiGRU │ • Gorilla WebSocket  │ • Graphite Theme (#121214)    │
+│ • TreeSHAP XAI  │ • TCP NDTP Ingestion │ • Lucide Icons (Zero Emojis)  │
+│ • FastAPI       │ • What-If DSS Engine │ • Recharts Space-Time View    │
 │ • uv package mgr│ • Multi-stage Docker │ • Nginx Reverse Proxy         │
 └─────────────────┴──────────────────────┴───────────────────────────────┘
 ```
 
 ---
 
-## 👥 Роли в команде
+## Роли в команде
 
 * **Денис (@shteppinson) — Team Lead / Product / Go Backend:**  
-  Архитектура системы, Chi REST/WebSocket Hub, прием телеметрии NDTP по TCP, Decision Engine (Holding), защита проекта.
+  Архитектура системы, Chi REST/WebSocket Hub, прием телеметрии NDTP по TCP, Decision Engine (Holding), развертывание и защита проекта.
 * **Миша — Lead ML / Data Scientist:**  
-  Пайплайн признаков, обучение CatBoost/PyTorch моделей, расчет SHAP-факторов, сабмиты на платформу, FastAPI инференс.
+  Пайплайн признаков, обучение CatBoost/PyTorch моделей, расчет SHAP-факторов, соревновательные сабмиты (Score 1.000), FastAPI инференс.
 * **Артём — Data Engineer:**  
-  Парсинг и очистка NDTP-телеметрии, расчет скользящих скоростей и Dwell Time, сопоставление с расписанием, расчет Headway.
+  Парсинг и очистка NDTP-телеметрии, сопоставление с расписанием, расчет Headway, фильтрация аномалий спуфинга.
 * **Кирилл — Frontend Developer / UI/UX:**  
-  Ситуационный дашборд диспетчера, карта маршрутов с пульсирующими маркерами, радар предиктивных алертов, интерактивный Holding.
+  Ситуационный дашборд диспетчера, карта маршрутов с интерактивными маркерами, радар предиктивных алертов, тактическая матрица сценариев, интерактивный тур жюри.
 
 ---
 
-## 📂 Структура репозитория
+## Структура репозитория
 
 ```
 mt-hack_predictor/
-├── docker-compose.yml         # Оркестрация стека (Backend + ML + Frontend)
-├── Makefile                   # Шпаргалка команд запуска и тестирования
+├── docker-compose.yml         # Оркестрация стека (Backend + ML + Frontend + TileServer)
+├── Makefile                   # Команды сборки, тестирования и деплоя (make deploy-direct)
 ├── README.md                  # Главный паспорт проекта
 ├── backend/                   # Высокопроизводительный Go-сервер (:8080)
 │   ├── cmd/server/main.go     # Точка входа HTTP, WS и симулятора
-│   ├── internal/              # feeder, ws, models
+│   ├── internal/              # api, engine, feeder, fleet, mlclient, ndtp, ws
 │   └── Dockerfile             # Multi-stage Dockerfile (<20MB alpine)
 ├── frontend/                  # Ситуационный BI-дашборд (:5173 / :80)
-│   ├── src/components/        # MapView, AlertRadar, Inspector, TopBar
-│   ├── nginx.conf             # Конфигурация Nginx с проксированием API и WS
+│   ├── src/components/        # MapView, AlertRadar, Inspector, TopBar, MareyDiagram
+│   ├── nginx.conf             # Конфигурация Nginx с проксированием API, WS и тайлов
 │   └── Dockerfile             # Multi-stage Dockerfile (Nginx + static)
 ├── ml/                        # ML-модуль прогнозирования и XAI (:8000)
 │   ├── pyproject.toml         # Python 3.12+, CatBoost, PyTorch, SHAP, FastAPI
 │   ├── src/api/server.py      # FastAPI сервер предиктов
-│   ├── src/features/          # Генерация признаков и валидация
+│   ├── src/features/          # Генерация 24 признаков и валидация
 │   └── Dockerfile             # Dockerfile на базе python:3.12-slim с uv
+├── map-service/               # Автономный картографический сервис TileServer GL (:8085)
 └── docs/                      # Исчерпывающая база знаний и документация
-    ├── index.md               # 🧭 Навигатор по всей документации
-    ├── CASE_DESCRIPTION.md    # 🎯 Официальное ТЗ и критерии оценивания
-    ├── dataset_spec.md        # 📊 Спецификация датасета и сабмита
-    ├── ndtp_emulator_spec.md  # 📡 Спецификация бинарного протокола NDTP
-    ├── ml_performance.md      # ⚡ Паспорт производительности ML (замеры, batch scaling)
-    ├── pydoc.md               # 📖 Справочник кода (PyDoc) и ссылки на HTML-портал
-    ├── backend_and_telemetry_guide.md # ⚡ Паспорт бэкенда (NDTP, микробенчмарки Go)
-    ├── team_handbook.md       # 📘 Настольная книга команды (математика, глоссарии)
-    ├── product_attacks_and_backlog.md # 🛡 Продуктовый стресс-тест и бэклог
-    ├── architecture.md        # 🏛 Системная архитектура (C4, Mermaid)
-    ├── api_contracts.md       # 🔌 JSON-схемы REST / WebSocket
-    ├── business_values.md     # 💼 Бизнес-ценность и экономика решений
-    └── implementation_plan.md # 📋 План реализации с чеклистом задач
+    ├── index.md               # Навигатор по всей документации
+    ├── SUBMISSION_FORM.md     # Готовый пакет для формы сдачи на платформе
+    ├── CASE_DESCRIPTION.md    # Официальное ТЗ и критерии оценивания
+    ├── dataset_spec.md        # Спецификация датасета и сабмита
+    ├── ndtp_emulator_spec.md  # Спецификация бинарного протокола NDTP
+    ├── ml_performance.md      # Паспорт производительности ML (замеры, batch scaling)
+    ├── pydoc.md               # Справочник кода (PyDoc) и ссылки на HTML-портал
+    ├── backend_and_telemetry_guide.md # Паспорт бэкенда (NDTP, микробенчмарки Go)
+    ├── team_handbook.md       # Настольная книга команды (математика, глоссарии)
+    ├── product_attacks_and_backlog.md # Продуктовый стресс-тест и бэклог
+    ├── architecture.md        # Системная архитектура (C4, Mermaid)
+    ├── api_contracts.md       # JSON-схемы REST / WebSocket
+    ├── business_values.md     # Бизнес-ценность и экономика решений
+    └── implementation_plan.md # План реализации с чеклистом задач
 ```
 
 ---
 
-## 📚 Документация и ссылки
+## Документация и ссылки
 
 Полный каталог документации доступен в [docs/index.md](docs/index.md).  
 HTML-документация по исходному коду доступна в [docs/pydoc/index.html](docs/pydoc/index.html).  
