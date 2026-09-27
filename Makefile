@@ -53,8 +53,11 @@ status: ## Проверить доступность и сквозную свя�
 docker-build: ## Собрать все Docker-образы проекта
 	docker compose build
 
-docker-up: ## Запустить все сервисы в Docker-контейнерах
+docker-up: ## Запустить основные сервисы в Docker (Frontend + Backend + ML + TileServer)
 	docker compose up -d
+
+docker-up-all: ## Запустить все сервисы включая NDTP-эмулятор (требует предварительного docker load)
+	docker compose --profile emulator up -d
 
 docker-down: ## Остановить все Docker-контейнеры
 	docker compose down
