@@ -49,7 +49,7 @@
 <td class="section-title" colspan=3>&nbsp;<br><a name="PlanProgress">class <strong>PlanProgress</strong></a>(<a href="pydantic.main.html#BaseModel">pydantic.main.BaseModel</a>)</td></tr>
     
 <tr><td class="decor title-decor" rowspan=2><span class="code">&nbsp;&nbsp;&nbsp;</span></td>
-<td class="decor title-decor" colspan=2><span class="code"><a href="#PlanProgress">PlanProgress</a>(*,&nbsp;stops_remaining:&nbsp;int,&nbsp;plan_time_to_target_s:&nbsp;Optional[float]&nbsp;=&nbsp;None,&nbsp;time_since_last_stop_s:&nbsp;Optional[float]&nbsp;=&nbsp;None,&nbsp;plan_sec_per_stop:&nbsp;Optional[float]&nbsp;=&nbsp;None)&nbsp;-&amp;gt;&nbsp;None<br>
+<td class="decor title-decor" colspan=2><span class="code"><a href="#PlanProgress">PlanProgress</a>(*,&nbsp;stops_remaining:&nbsp;int,&nbsp;plan_time_to_target_s:&nbsp;float&nbsp;|&nbsp;None&nbsp;=&nbsp;None,&nbsp;time_since_last_stop_s:&nbsp;float&nbsp;|&nbsp;None&nbsp;=&nbsp;None,&nbsp;plan_sec_per_stop:&nbsp;float&nbsp;|&nbsp;None&nbsp;=&nbsp;None)&nbsp;-&amp;gt;&nbsp;None<br>
 &nbsp;<br>
 Route-progress&nbsp;features&nbsp;derived&nbsp;from&nbsp;planned&nbsp;schedule&nbsp;times.<br>&nbsp;</span></td></tr>
 <tr><td>&nbsp;</td>
@@ -71,7 +71,7 @@ Data descriptors defined here:<br>
 Data and other attributes defined here:<br>
 <dl><dt><strong>__abstractmethods__</strong> = frozenset()</dl>
 
-<dl><dt><strong>__annotations__</strong> = {'plan_sec_per_stop': 'Optional[float]', 'plan_time_to_target_s': 'Optional[float]', 'stops_remaining': 'int', 'time_since_last_stop_s': 'Optional[float]'}</dl>
+<dl><dt><strong>__annotations__</strong> = {'plan_sec_per_stop': 'float | None', 'plan_time_to_target_s': 'float | None', 'stops_remaining': 'int', 'time_since_last_stop_s': 'float | None'}</dl>
 
 <dl><dt><strong>__class_vars__</strong> = set()</dl>
 
@@ -81,7 +81,7 @@ Data and other attributes defined here:<br>
 
 <dl><dt><strong>__pydantic_computed_fields__</strong> = {}</dl>
 
-<dl><dt><strong>__pydantic_core_schema__</strong> = {'cls': &lt;class 'src.features.schedule_matcher.PlanProgress'&gt;, 'config': {'title': 'PlanProgress'}, 'custom_init': False, 'metadata': {'pydantic_js_functions': [&lt;bound method BaseModel.__get_pydantic_json_sche...ss 'src.features.schedule_matcher.PlanProgress'&gt;&gt;]}, 'ref': 'src.features.schedule_matcher.PlanProgress:522517968912', 'root_model': False, 'schema': {'computed_fields': [], 'fields': {'plan_sec_per_stop': {'metadata': {'pydantic_js_updates': {'description': 'plan_time_to_target_s / stops_remaining'}}, 'schema': {'default': None, 'schema': {'schema': {...}, 'type': 'nullable'}, 'type': 'default'}, 'type': 'model-field'}, 'plan_time_to_target_s': {'metadata': {'pydantic_js_updates': {'description': 'Plan time from last passed stop to target, seconds'}}, 'schema': {'default': None, 'schema': {'schema': {...}, 'type': 'nullable'}, 'type': 'default'}, 'type': 'model-field'}, 'stops_remaining': {'metadata': {'pydantic_js_updates': {'description': 'Planned stops remaining to target (T, target]'}}, 'schema': {'type': 'int'}, 'type': 'model-field'}, 'time_since_last_stop_s': {'metadata': {'pydantic_js_updates': {'description': 'Seconds since last passed stop'}}, 'schema': {'default': None, 'schema': {'schema': {...}, 'type': 'nullable'}, 'type': 'default'}, 'type': 'model-field'}}, 'model_name': 'PlanProgress', 'type': 'model-fields'}, 'type': 'model'}</dl>
+<dl><dt><strong>__pydantic_core_schema__</strong> = {'cls': &lt;class 'src.features.schedule_matcher.PlanProgress'&gt;, 'config': {'title': 'PlanProgress'}, 'custom_init': False, 'metadata': {'pydantic_js_functions': [&lt;bound method BaseModel.__get_pydantic_json_sche...ss 'src.features.schedule_matcher.PlanProgress'&gt;&gt;]}, 'ref': 'src.features.schedule_matcher.PlanProgress:511643547664', 'root_model': False, 'schema': {'computed_fields': [], 'fields': {'plan_sec_per_stop': {'metadata': {'pydantic_js_updates': {'description': 'plan_time_to_target_s / stops_remaining'}}, 'schema': {'default': None, 'schema': {'schema': {...}, 'type': 'nullable'}, 'type': 'default'}, 'type': 'model-field'}, 'plan_time_to_target_s': {'metadata': {'pydantic_js_updates': {'description': 'Plan time from last passed stop to target, seconds'}}, 'schema': {'default': None, 'schema': {'schema': {...}, 'type': 'nullable'}, 'type': 'default'}, 'type': 'model-field'}, 'stops_remaining': {'metadata': {'pydantic_js_updates': {'description': 'Planned stops remaining to target (T, target]'}}, 'schema': {'type': 'int'}, 'type': 'model-field'}, 'time_since_last_stop_s': {'metadata': {'pydantic_js_updates': {'description': 'Seconds since last passed stop'}}, 'schema': {'default': None, 'schema': {'schema': {...}, 'type': 'nullable'}, 'type': 'default'}, 'type': 'model-field'}}, 'model_name': 'PlanProgress', 'type': 'model-fields'}, 'type': 'model'}</dl>
 
 <dl><dt><strong>__pydantic_custom_init__</strong> = False</dl>
 
@@ -107,7 +107,7 @@ Data and other attributes defined here:<br>
     },
 ), definitions=[], cache_strings=True)</dl>
 
-<dl><dt><strong>__signature__</strong> = &lt;Signature (*, stops_remaining: int, plan_time_t...an_sec_per_stop: Optional[float] = None) -&gt; None&gt;</dl>
+<dl><dt><strong>__signature__</strong> = &lt;Signature (*, stops_remaining: int, plan_time_t... plan_sec_per_stop: float | None = None) -&gt; None&gt;</dl>
 
 <dl><dt><strong>model_config</strong> = {'frozen': True}</dl>
 
@@ -516,11 +516,11 @@ Expected&nbsp;columns:<br>
 -&nbsp;`geom`&nbsp;(WKT&nbsp;geometry)<br>
 -&nbsp;optional&nbsp;`building_address`</span></dd></dl>
 
-<dl><dt><a name="ScheduleIndex-distance_to_target_m"><strong>distance_to_target_m</strong></a>(self, bus_lat: 'Optional[float]', bus_lon: 'Optional[float]', tr_id: 'int', target_stop_id: 'int') -&gt; 'Optional[float]'</dt><dd><span class="code">Calculates&nbsp;distance&nbsp;in&nbsp;meters&nbsp;between&nbsp;bus&nbsp;and&nbsp;target&nbsp;stop.</span></dd></dl>
+<dl><dt><a name="ScheduleIndex-distance_to_target_m"><strong>distance_to_target_m</strong></a>(self, bus_lat: 'float | None', bus_lon: 'float | None', tr_id: 'int', target_stop_id: 'int') -&gt; 'float | None'</dt><dd><span class="code">Calculates&nbsp;distance&nbsp;in&nbsp;meters&nbsp;between&nbsp;bus&nbsp;and&nbsp;target&nbsp;stop.</span></dd></dl>
 
-<dl><dt><a name="ScheduleIndex-get_stop_coords"><strong>get_stop_coords</strong></a>(self, tr_id: 'int', target_stop_id: 'int') -&gt; 'Tuple[Optional[float], Optional[float]]'</dt><dd><span class="code">Returns&nbsp;(lat,&nbsp;lon)&nbsp;of&nbsp;the&nbsp;stop&nbsp;if&nbsp;present&nbsp;in&nbsp;index.</span></dd></dl>
+<dl><dt><a name="ScheduleIndex-get_stop_coords"><strong>get_stop_coords</strong></a>(self, tr_id: 'int', target_stop_id: 'int') -&gt; 'tuple[float | None, float | None]'</dt><dd><span class="code">Returns&nbsp;(lat,&nbsp;lon)&nbsp;of&nbsp;the&nbsp;stop&nbsp;if&nbsp;present&nbsp;in&nbsp;index.</span></dd></dl>
 
-<dl><dt><a name="ScheduleIndex-plan_progress"><strong>plan_progress</strong></a>(self, tr_id: 'int', t_epoch_sec: 'Union[int, Any]', target_time_epoch_sec: 'Union[int, Any]') -&gt; 'PlanProgress'</dt><dd><span class="code">Route-progress&nbsp;features&nbsp;from&nbsp;planned&nbsp;times&nbsp;only&nbsp;(legal&nbsp;at&nbsp;moment&nbsp;T).<br>
+<dl><dt><a name="ScheduleIndex-plan_progress"><strong>plan_progress</strong></a>(self, tr_id: 'int', t_epoch_sec: 'int | Any', target_time_epoch_sec: 'int | Any') -&gt; 'PlanProgress'</dt><dd><span class="code">Route-progress&nbsp;features&nbsp;from&nbsp;planned&nbsp;times&nbsp;only&nbsp;(legal&nbsp;at&nbsp;moment&nbsp;T).<br>
 &nbsp;<br>
 Returns&nbsp;<a href="#PlanProgress">PlanProgress</a>(stops_remaining,&nbsp;plan_time_to_target_s,<br>
 time_since_last_stop_s,&nbsp;plan_sec_per_stop):<br>
@@ -545,7 +545,7 @@ Data descriptors defined here:<br>
     
 <tr><td class="decor functions-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
 <td class="singlecolumn"><dl><dt><a name="-angle_diff_deg"><strong>angle_diff_deg</strong></a>(angle1: 'float', angle2: 'float') -&gt; 'float'</dt><dd><span class="code">Calculates&nbsp;minimal&nbsp;circular&nbsp;difference&nbsp;between&nbsp;two&nbsp;angles&nbsp;in&nbsp;degrees&nbsp;[0,&nbsp;180].</span></dd></dl>
- <dl><dt><a name="-clean_traffic_dataframe"><strong>clean_traffic_dataframe</strong></a>(df: 'pd.DataFrame', bbox: 'Optional[dict]' = None, max_speed: 'float' = 110.0, min_speed: 'float' = 0.0) -&gt; 'pd.DataFrame'</dt><dd><span class="code">Cleans&nbsp;a&nbsp;raw&nbsp;traffic&nbsp;telemetry&nbsp;DataFrame.<br>
+ <dl><dt><a name="-clean_traffic_dataframe"><strong>clean_traffic_dataframe</strong></a>(df: 'pd.DataFrame', bbox: 'dict | None' = None, max_speed: 'float' = 110.0, min_speed: 'float' = 0.0) -&gt; 'pd.DataFrame'</dt><dd><span class="code">Cleans&nbsp;a&nbsp;raw&nbsp;traffic&nbsp;telemetry&nbsp;DataFrame.<br>
 &nbsp;<br>
 Rules&nbsp;applied:<br>
 1.&nbsp;Filter&nbsp;out&nbsp;`location_valid&nbsp;==&nbsp;False`&nbsp;(and&nbsp;missing&nbsp;coordinates).<br>
@@ -553,12 +553,12 @@ Rules&nbsp;applied:<br>
 3.&nbsp;Filter&nbsp;out&nbsp;unrealistic&nbsp;speeds&nbsp;(negative&nbsp;or&nbsp;&gt;&nbsp;110&nbsp;km/h).<br>
 4.&nbsp;Convert&nbsp;`event_time`&nbsp;to&nbsp;datetime64&nbsp;and&nbsp;sort&nbsp;by&nbsp;`(tr_id,&nbsp;event_time)`.<br>
 5.&nbsp;Deduplicate&nbsp;identical&nbsp;timestamps&nbsp;for&nbsp;the&nbsp;same&nbsp;vehicle.</span></dd></dl>
- <dl><dt><a name="-feature_vector_to_dict"><strong>feature_vector_to_dict</strong></a>(fv: 'FeatureVector') -&gt; 'Dict[str, Any]'</dt><dd><span class="code">Converts&nbsp;a&nbsp;FeatureVector&nbsp;into&nbsp;an&nbsp;enriched&nbsp;flat&nbsp;dict&nbsp;for&nbsp;model&nbsp;input.</span></dd></dl>
- <dl><dt><a name="-feature_vectors_to_dataframe"><strong>feature_vectors_to_dataframe</strong></a>(vectors: 'List[FeatureVector]') -&gt; 'pd.DataFrame'</dt><dd><span class="code">Converts&nbsp;FeatureVector&nbsp;list&nbsp;into&nbsp;a&nbsp;DataFrame&nbsp;with&nbsp;all&nbsp;model-servable&nbsp;columns.</span></dd></dl>
+ <dl><dt><a name="-feature_vector_to_dict"><strong>feature_vector_to_dict</strong></a>(fv: 'FeatureVector') -&gt; 'dict[str, Any]'</dt><dd><span class="code">Converts&nbsp;a&nbsp;FeatureVector&nbsp;into&nbsp;an&nbsp;enriched&nbsp;flat&nbsp;dict&nbsp;for&nbsp;model&nbsp;input.</span></dd></dl>
+ <dl><dt><a name="-feature_vectors_to_dataframe"><strong>feature_vectors_to_dataframe</strong></a>(vectors: 'list[FeatureVector]') -&gt; 'pd.DataFrame'</dt><dd><span class="code">Converts&nbsp;FeatureVector&nbsp;list&nbsp;into&nbsp;a&nbsp;DataFrame&nbsp;with&nbsp;all&nbsp;model-servable&nbsp;columns.</span></dd></dl>
  <dl><dt><a name="-haversine_distance_m"><strong>haversine_distance_m</strong></a>(lat1: 'float', lon1: 'float', lat2: 'float', lon2: 'float') -&gt; 'float'</dt><dd><span class="code">Calculates&nbsp;geodesic&nbsp;distance&nbsp;between&nbsp;two&nbsp;points&nbsp;in&nbsp;meters&nbsp;using&nbsp;Haversine&nbsp;formula.</span></dd></dl>
- <dl><dt><a name="-load_and_clean_traffic"><strong>load_and_clean_traffic</strong></a>(file_path: 'Union[str, Path]', bbox: 'Optional[dict]' = None) -&gt; 'pd.DataFrame'</dt><dd><span class="code">Loads&nbsp;a&nbsp;traffic.csv&nbsp;file&nbsp;and&nbsp;returns&nbsp;cleaned&nbsp;DataFrame.</span></dd></dl>
- <dl><dt><a name="-load_schedule_index"><strong>load_schedule_index</strong></a>(schedule_path: 'Union[str, Path]') -&gt; 'ScheduleIndex'</dt><dd><span class="code">Loads&nbsp;schedule&nbsp;CSV&nbsp;and&nbsp;constructs&nbsp;a&nbsp;<a href="#ScheduleIndex">ScheduleIndex</a>.</span></dd></dl>
- <dl><dt><a name="-parse_wkt_point"><strong>parse_wkt_point</strong></a>(wkt_str: 'Optional[str]') -&gt; 'Tuple[Optional[float], Optional[float]]'</dt><dd><span class="code">Parses&nbsp;'POINT&nbsp;(lon&nbsp;lat)'&nbsp;string&nbsp;into&nbsp;(lon,&nbsp;lat)&nbsp;floats.</span></dd></dl>
+ <dl><dt><a name="-load_and_clean_traffic"><strong>load_and_clean_traffic</strong></a>(file_path: 'str | Path', bbox: 'dict | None' = None) -&gt; 'pd.DataFrame'</dt><dd><span class="code">Loads&nbsp;a&nbsp;traffic.csv&nbsp;file&nbsp;and&nbsp;returns&nbsp;cleaned&nbsp;DataFrame.</span></dd></dl>
+ <dl><dt><a name="-load_schedule_index"><strong>load_schedule_index</strong></a>(schedule_path: 'str | Path') -&gt; 'ScheduleIndex'</dt><dd><span class="code">Loads&nbsp;schedule&nbsp;CSV&nbsp;and&nbsp;constructs&nbsp;a&nbsp;<a href="#ScheduleIndex">ScheduleIndex</a>.</span></dd></dl>
+ <dl><dt><a name="-parse_wkt_point"><strong>parse_wkt_point</strong></a>(wkt_str: 'str | None') -&gt; 'tuple[float | None, float | None]'</dt><dd><span class="code">Parses&nbsp;'POINT&nbsp;(lon&nbsp;lat)'&nbsp;string&nbsp;into&nbsp;(lon,&nbsp;lat)&nbsp;floats.</span></dd></dl>
  <dl><dt><a name="-to_epoch_s"><strong>to_epoch_s</strong></a>(ts: 'Any') -&gt; 'Any'</dt><dd><span class="code">Converts&nbsp;naive&nbsp;or&nbsp;timezone-aware&nbsp;timestamps&nbsp;to&nbsp;Unix&nbsp;epoch&nbsp;seconds.<br>
 &nbsp;<br>
 'naive&nbsp;=&nbsp;UTC'&nbsp;Contract:<br>
@@ -600,5 +600,5 @@ Raises:<br>
 <strong>FEATURE_HUMAN_TITLES</strong> = {'avg_speed_window_kmh': 'Средняя скорость на окне до момента T', 'cumulative_delay_prev_stops': 'Накопленная задержка на предыдущих остановках', 'cur_dev_s': 'Текущее отклонение от графика (последняя пройденная остановка)', 'current_delay_sec': 'Текущее отставание от графика', 'current_headway_sec': 'Интервал до переднего борта (DSS)', 'day_of_week': 'День недели / пассажиропоток', 'delay_to_headway_ratio': 'Коэффициент Delay/Headway (DSS)', 'dist_to_target_m': 'Расстояние до целевой остановки', 'heading_std_3m': 'Разброс курса за 3-мин окно', 'historical_avg_speed': 'Средняя скорость на перегоне', ...}<br>
 <strong>LEGACY_FEATURE_NAMES</strong> = ['cur_dev_s', 'horizon_sec', 'speed_kmh', 'avg_speed_window_kmh', 'stop_ratio_window', 'cumulative_delay_prev_stops', 'hour_sin', 'hour_cos', 'day_of_week', 'is_weekend', 'current_headway_sec', 'weather_factor', 'delay_to_headway_ratio']<br>
 <strong>MODEL_FEATURE_NAMES</strong> = ['cur_dev_s', 'horizon_sec', 'speed_kmh', 'avg_speed_window_kmh', 'speed_mean_5m', 'speed_mean_10m', 'speed_std_3m', 'speed_min_3m', 'speed_max_3m', 'speed_trend', 'stop_ratio_window', 'idle_time_5m', 'telemetry_age_s', 'points_count_5m', 'heading_std_3m', 'dist_to_target_m', 'speed_needed_kmh', 'stops_remaining', 'plan_time_to_target_s', 'time_since_last_stop_s', ...]<br>
-<strong>__all__</strong> = ['MODEL_FEATURE_NAMES', 'LEGACY_FEATURE_NAMES', 'COMPAT_FEATURE_NAMES', 'FEATURE_HUMAN_TITLES', 'feature_vector_to_dict', 'feature_vectors_to_dataframe', 'clean_traffic_dataframe', 'load_and_clean_traffic', 'ScheduleIndex', 'PlanProgress', 'load_schedule_index', 'haversine_distance_m', 'angle_diff_deg', 'parse_wkt_point', 'to_epoch_s']</td></tr></table>
+<strong>__all__</strong> = ['COMPAT_FEATURE_NAMES', 'FEATURE_HUMAN_TITLES', 'LEGACY_FEATURE_NAMES', 'MODEL_FEATURE_NAMES', 'PlanProgress', 'ScheduleIndex', 'angle_diff_deg', 'clean_traffic_dataframe', 'feature_vector_to_dict', 'feature_vectors_to_dataframe', 'haversine_distance_m', 'load_and_clean_traffic', 'load_schedule_index', 'parse_wkt_point', 'to_epoch_s']</td></tr></table>
 </body></html>

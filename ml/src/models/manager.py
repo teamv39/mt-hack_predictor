@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import time
-from typing import List, Optional
 
 from ..core.config import get_settings
 from ..core.logging import setup_logger
@@ -73,7 +72,7 @@ class ModelManager:
     def predict_single(self, feature: FeatureVector) -> PredictionResponse:
         return self._predictor.predict_single(feature)
 
-    def predict_batch(self, features: List[FeatureVector]) -> List[PredictionResponse]:
+    def predict_batch(self, features: list[FeatureVector]) -> list[PredictionResponse]:
         return self._predictor.predict_batch(features)
 
     def get_status(self) -> ModelStatus:
@@ -84,7 +83,7 @@ class ModelManager:
         return round(time.time() - self.start_time, 2)
 
 
-_global_model_manager: Optional[ModelManager] = None
+_global_model_manager: ModelManager | None = None
 
 
 def get_model_manager() -> ModelManager:

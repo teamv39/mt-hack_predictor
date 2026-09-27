@@ -166,7 +166,7 @@ func main() {
 
 		// 5. Asynchronous ML prediction & DSS Alert evaluation
 		go func(veh models.Vehicle, feat telemetry.Features, match schedule.MatchResult, hwSec float64, hw engine.HeadwayInfo) {
-			predCtx, predCancel := context.WithTimeout(context.Background(), 250*time.Millisecond)
+			predCtx, predCancel := context.WithTimeout(context.Background(), 3*time.Second)
 			defer predCancel()
 
 			pred := mlCli.PredictEnriched(predCtx, veh, match.CurDevSeconds, feat.AvgSpeed3m, hwSec, mlclient.EnrichedFeatures{
@@ -417,6 +417,14 @@ func main() {
 
 			if f != nil {
 				f.ApplyHolding(true)
+				if targetVeh == "" {
+					_, scAlert, _ := f.GetState()
+					if scAlert != nil && scAlert.Recommendation != nil {
+						targetVeh = scAlert.Recommendation.TargetVehicleID
+						holdSec = scAlert.Recommendation.DurationSeconds
+						fleetMgr.ApplyHolding(targetVeh, holdSec)
+					}
+				}
 			}
 
 			// Immediate broadcast of updated state
@@ -531,7 +539,15 @@ func main() {
 			ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
 			defer cancel()
 
-			err := ndtpCli.StopEmulation(ctx, "backend", 9201)
+			targetHost := os.Getenv("NDTP_HOST_FOR_EMULATOR")
+			if targetHost == "" {
+				targetHost = "backend"
+			}
+
+			err := ndtpCli.StopEmulation(ctx, targetHost, 9201)
+			if err != nil {
+				err = ndtpCli.StopEmulation(ctx, "localhost", 9201)
+			}
 			w.Header().Set("Content-Type", "application/json")
 			if err != nil {
 				w.WriteHeader(http.StatusServiceUnavailable)

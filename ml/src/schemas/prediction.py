@@ -8,7 +8,6 @@ optional for the live dispatcher dashboard.
 from __future__ import annotations
 
 from enum import Enum
-from typing import List, Optional
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -64,12 +63,12 @@ class PredictionResponse(BaseModel):
     It must NOT be clipped at zero — early arrivals are valid targets.
     """
 
-    sample_id: Optional[str] = Field(
+    sample_id: str | None = Field(
         default=None,
         description="Official sample_id when predicting a labels/points row",
     )
-    vehicle_id: Optional[str] = Field(default=None, description="Vehicle ID (tr_id)")
-    tr_id: Optional[str] = Field(default=None, description="Official vehicle ID alias")
+    vehicle_id: str | None = Field(default=None, description="Vehicle ID (tr_id)")
+    tr_id: str | None = Field(default=None, description="Official vehicle ID alias")
     predicted_delay_sec: float = Field(
         ...,
         description=(
@@ -77,11 +76,11 @@ class PredictionResponse(BaseModel):
             "Sign matters: positive = late, negative = early. Official MAE target."
         ),
     )
-    predicted_class: Optional[DelayClass] = Field(
+    predicted_class: DelayClass | None = Field(
         default=None,
         description="Bucketed class from predicted_delay_sec (−60 / +120 thresholds)",
     )
-    horizon_sec: Optional[float] = Field(
+    horizon_sec: float | None = Field(
         default=None,
         description="Seconds from T to planned target arrival when known",
     )
@@ -97,7 +96,7 @@ class PredictionResponse(BaseModel):
         description="Optional ETA to incident / target in minutes (default ~mid horizon)",
     )
     severity: Severity = Field(default=Severity.LOW, description="Severity for dashboard alerts")
-    factors: List[SHAPFactor] = Field(
+    factors: list[SHAPFactor] = Field(
         default_factory=list,
         description="Top SHAP / surrogate factors explaining the delay prediction",
     )
@@ -106,14 +105,14 @@ class PredictionResponse(BaseModel):
         ge=0,
         description="Optional holding duration recommendation in seconds",
     )
-    recommendation: Optional[Recommendation] = Field(
+    recommendation: Recommendation | None = Field(
         default=None,
         description="Optional actionable intervention for the dispatcher UI",
     )
 
     @model_validator(mode="before")
     @classmethod
-    def _align_ids_and_class(cls, data):  # noqa: ANN001
+    def _align_ids_and_class(cls, data):
         if not isinstance(data, dict):
             return data
         payload = dict(data)
@@ -142,7 +141,7 @@ class PredictionResponse(BaseModel):
 class BatchPredictionResponse(BaseModel):
     """Batch prediction results with metadata and timing."""
 
-    predictions: List[PredictionResponse] = Field(..., description="Per-vehicle / per-sample predictions")
+    predictions: list[PredictionResponse] = Field(..., description="Per-vehicle / per-sample predictions")
     total: int = Field(..., description="Count of evaluated points")
     inference_time_ms: float = Field(..., description="Inference latency in milliseconds")
     model_version: str = Field(..., description="Version / mode of the serving model")

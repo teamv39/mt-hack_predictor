@@ -10,15 +10,14 @@ from __future__ import annotations
 import argparse
 import logging
 import math
-import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import numpy as np
 import pandas as pd
 
 from .schedule_matcher import PlanProgress, ScheduleIndex, load_schedule_index
-from .telemetry_cleaner import clean_traffic_dataframe, load_and_clean_traffic
+from .telemetry_cleaner import load_and_clean_traffic
 from .time_utils import to_epoch_s
 
 logging.basicConfig(
@@ -40,7 +39,7 @@ class TelemetryVehicleIndex:
 
         epoch_sec = to_epoch_s(traffic_df["event_time"])
 
-        self._vehicles: Dict[int, Dict[str, np.ndarray]] = {}
+        self._vehicles: dict[int, dict[str, np.ndarray]] = {}
 
         for tr_id, group in traffic_df.groupby("tr_id"):
             sort_idx = np.argsort(group["event_time"].values)
@@ -60,7 +59,7 @@ class TelemetryVehicleIndex:
         self,
         tr_id: int,
         t_epoch_sec: int,
-    ) -> Optional[Dict[str, np.ndarray]]:
+    ) -> dict[str, np.ndarray] | None:
         """Returns all telemetry records strictly on or before T (event_time <= T)."""
         data = self._vehicles.get(tr_id)
         if data is None:
@@ -83,8 +82,8 @@ class TelemetryVehicleIndex:
 def extract_features_for_sample(
     sample_row: pd.Series,
     telemetry_index: TelemetryVehicleIndex,
-    schedule_index: Optional[ScheduleIndex],
-) -> Dict[str, Any]:
+    schedule_index: ScheduleIndex | None,
+) -> dict[str, Any]:
     """Generates an enriched feature dict for a single (tr_id, T) prediction point."""
     sample_id = str(sample_row["sample_id"])
     tr_id = int(sample_row["tr_id"])
@@ -130,8 +129,8 @@ def extract_features_for_sample(
     telemetry_age_s = 999.0
     points_count_5m = 0
     heading_std_3m = 0.0
-    bus_lat: Optional[float] = None
-    bus_lon: Optional[float] = None
+    bus_lat: float | None = None
+    bus_lon: float | None = None
 
     if telem is not None and len(telem["ts"]) > 0:
         ts_arr = telem["ts"]
@@ -202,7 +201,7 @@ def extract_features_for_sample(
         progress = schedule_index.plan_progress(tr_id, t_epoch, target_epoch)
 
     # Compile feature dictionary
-    feat: Dict[str, Any] = {
+    feat: dict[str, Any] = {
         # Identifiers
         "sample_id": sample_id,
         "tr_id": tr_id,
@@ -258,8 +257,8 @@ def extract_features_for_sample(
 
 def process_dataset_split(
     split: str,
-    dataset_root: Union[str, Path] = "dataset",
-    output_dir: Union[str, Path] = "data/processed",
+    dataset_root: str | Path = "dataset",
+    output_dir: str | Path = "data/processed",
 ) -> Path:
     """Builds features for a given split ('train', 'test', or 'validate')."""
     dataset_root = Path(dataset_root)
@@ -301,7 +300,7 @@ def process_dataset_split(
     labels_df = pd.read_csv(labels_path)
     logger.info(f"Generating features for {len(labels_df):,} samples ...")
 
-    records: List[Dict[str, Any]] = []
+    records: list[dict[str, Any]] = []
     for _, row in labels_df.iterrows():
         feat = extract_features_for_sample(row, telem_index, schedule_index)
         records.append(feat)

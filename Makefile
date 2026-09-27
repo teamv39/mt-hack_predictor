@@ -36,12 +36,14 @@ ml-benchmark: ## Запустить замеры производительно�
 check: ## Проверить компиляцию Go, сборку фронтенда и тесты ML
 	@echo "==> Проверка Go..."
 	@if command -v go >/dev/null 2>&1; then \
-		cd backend && go build -o /dev/null ./cmd/server && echo "    Go компиляция успешна"; \
+		cd backend && go test ./... && go build -o /dev/null ./cmd/server && echo "    Go тесты и компиляция успешны"; \
+	elif command -v docker >/dev/null 2>&1; then \
+		docker run --rm -v "$$PWD/backend:/app" -w /app golang:1.24-alpine sh -c "go test ./... && go build -o /dev/null ./cmd/server" && echo "    Go тесты и компиляция успешны (через Docker)"; \
 	else \
-		echo "    Go не установлен локально (запуск выполняется в Docker)"; \
+		echo "    Go и Docker не установлены локально"; \
 	fi
 	@echo "==> Проверка Frontend..."
-	cd frontend && npm run build
+	cd frontend && npx tsc --noEmit && npm run build
 	@echo "==> Проверка ML тестов..."
 	cd ml && uv run pytest
 	@echo "==> Все доступные проверки пройдены успешно!"

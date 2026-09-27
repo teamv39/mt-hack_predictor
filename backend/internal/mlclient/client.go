@@ -8,6 +8,8 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -15,7 +17,7 @@ import (
 )
 
 const (
-	defaultTimeout  = 100 * time.Millisecond
+	defaultTimeout  = 2 * time.Second
 	defaultDebounce = 10 * time.Second
 )
 
@@ -131,10 +133,16 @@ func New(baseURL string) *Client {
 	if baseURL == "" {
 		baseURL = "http://localhost:8000"
 	}
+	timeout := defaultTimeout
+	if envTimeout := os.Getenv("ML_CLIENT_TIMEOUT_MS"); envTimeout != "" {
+		if ms, err := strconv.Atoi(envTimeout); err == nil && ms > 0 {
+			timeout = time.Duration(ms) * time.Millisecond
+		}
+	}
 	return &Client{
 		baseURL: baseURL,
 		http: &http.Client{
-			Timeout: defaultTimeout,
+			Timeout: timeout,
 			Transport: &http.Transport{
 				MaxIdleConns:        32,
 				MaxIdleConnsPerHost: 16,

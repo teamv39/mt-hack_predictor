@@ -74,9 +74,12 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
     return true;
   });
 
-  useEffect(() => {
+  const filterKey = `${searchQuery}:${activeFilter}`;
+  const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
+  if (filterKey !== prevFilterKey) {
+    setPrevFilterKey(filterKey);
     setCurrentPage(0);
-  }, [searchQuery, activeFilter]);
+  }
 
   const totalPages = Math.ceil(filteredAlerts.length / MAX_VISIBLE_ALERTS);
   const page = totalPages === 0 ? 0 : Math.min(currentPage, totalPages - 1);

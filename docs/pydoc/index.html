@@ -202,17 +202,17 @@
                 Автоматически сгенерированная техническая документация исходного кода (Python 3.12, CatBoost, FastAPI, Pydantic v2).
             </p>
             <div class="quick-nav">
-                <a href="#src.api">🔌 API & Routes</a>
-                <a href="#src.models">🧠 Models & SHAP</a>
-                <a href="#src.features">⚙️ Features & Telemetry</a>
-                <a href="#src.schemas">📋 Schemas (Pydantic)</a>
-                <a href="#src.core">🔧 Core & Config</a>
-                <a href="../../README.md">📘 Главный README</a>
-                <a href="../api_contracts.md">🔌 Контракты API</a>
-                <a href="../ml_performance.md">⚡ Сведения о производительности</a>
+                <a href="#src.api">API & Routes</a>
+                <a href="#src.models">Models & SHAP</a>
+                <a href="#src.features">Features & Telemetry</a>
+                <a href="#src.schemas">Schemas (Pydantic)</a>
+                <a href="#src.core">Core & Config</a>
+                <a href="../../README.md">Главный README</a>
+                <a href="../api_contracts.md">Контракты API</a>
+                <a href="../ml_performance.md">Сведения о производительности</a>
             </div>
             <div class="interactive-box">
-                💡 <strong>Интерактивный просмотр через консоль:</strong> Чтобы запустить встроенный локальный сервер документации PyDoc, выполните команду:
+                <strong>Интерактивный просмотр через консоль:</strong> Чтобы запустить встроенный локальный сервер документации PyDoc, выполните команду:
                 <br>
                 <code>uv run python -m pydoc -p 8088</code> затем откройте <strong>http://localhost:8088/src.html</strong>
             </div>
@@ -221,7 +221,7 @@
         <main>
             
         <section class="category-section">
-            <h2 class="cat-title">📦 Root Package</h2>
+            <h2 class="cat-title">Root Package</h2>
             <p class="cat-desc">Top-level package definition and package-wide exports.</p>
             <div class="grid">
             <div class="card">
@@ -236,7 +236,7 @@
         </section>
         
         <section class="category-section">
-            <h2 class="cat-title">🔌 API & Serving Layer</h2>
+            <h2 class="cat-title">API & Serving Layer</h2>
             <p class="cat-desc">FastAPI application, ASGI lifecycle management, REST routing, CORS, and HTTP request handling.</p>
             <div class="grid">
             <div class="card">
@@ -269,7 +269,7 @@
         </section>
         
         <section class="category-section">
-            <h2 class="cat-title">🧠 ML Models & Explainability</h2>
+            <h2 class="cat-title">ML Models & Explainability</h2>
             <p class="cat-desc">CatBoost delay regressor (signed target_delay_s), bunching classifier, TreeSHAP feature attribution, ModelManager cascade, and fallback predictors.</p>
             <div class="grid">
             <div class="card">
@@ -278,7 +278,7 @@
                     <span class="tag pkg-tag">package</span>
                 </div>
                 <p class="mod-desc">Model predictors and management interfaces.</p>
-                <div class="sym-list"><span class="badge">BasePredictor</span><span class="badge">HeuristicFallbackPredictor</span><span class="badge">CatBoostPredictor</span><span class="badge">ModelManager</span><span class="badge">get_model_manager</span></div>
+                <div class="sym-list"><span class="badge">BasePredictor</span><span class="badge">CatBoostPredictor</span><span class="badge">HeuristicFallbackPredictor</span><span class="badge">ModelManager</span><span class="badge">get_model_manager</span></div>
             </div>
             
             <div class="card">
@@ -328,6 +328,15 @@
             
             <div class="card">
                 <div class="card-header">
+                    <a class="mod-link" href="src.models.nn_sequence.html">src.models.nn_sequence</a>
+                    <span class="tag mod-tag">module</span>
+                </div>
+                <p class="mod-desc">PyTorch GRU sequence model for telemetry micro-dynamics (Task 7.1.5).</p>
+                <div class="sym-list"><span class="badge">DelayGRU</span><span class="badge">SequenceSample</span><span class="badge">TelemetrySequenceDataset</span><span class="badge">evaluate_blend</span><span class="badge">extract_sequences</span><span class="badge">load_gru_model</span></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
                     <a class="mod-link" href="src.models.train.html">src.models.train</a>
                     <span class="tag mod-tag">module</span>
                 </div>
@@ -347,7 +356,7 @@
         </section>
         
         <section class="category-section">
-            <h2 class="cat-title">⚙️ Feature Engineering & Processing</h2>
+            <h2 class="cat-title">Feature Engineering & Processing</h2>
             <p class="cat-desc">Real-time telemetry cleaners, geospatial schedule matching, headway calculations, and train feature extractors.</p>
             <div class="grid">
             <div class="card">
@@ -356,7 +365,7 @@
                     <span class="tag pkg-tag">package</span>
                 </div>
                 <p class="mod-desc">Feature extraction and engineering tools for Moscow Transport Delay Predictor.</p>
-                <div class="sym-list"><span class="badge">MODEL_FEATURE_NAMES</span><span class="badge">LEGACY_FEATURE_NAMES</span><span class="badge">COMPAT_FEATURE_NAMES</span><span class="badge">FEATURE_HUMAN_TITLES</span><span class="badge">feature_vector_to_dict</span><span class="badge">feature_vectors_to_dataframe</span></div>
+                <div class="sym-list"><span class="badge">COMPAT_FEATURE_NAMES</span><span class="badge">FEATURE_HUMAN_TITLES</span><span class="badge">LEGACY_FEATURE_NAMES</span><span class="badge">MODEL_FEATURE_NAMES</span><span class="badge">PlanProgress</span><span class="badge">ScheduleIndex</span></div>
             </div>
             
             <div class="card">
@@ -425,7 +434,7 @@
         </section>
         
         <section class="category-section">
-            <h2 class="cat-title">📋 Pydantic v2 Data Schemas</h2>
+            <h2 class="cat-title">Pydantic v2 Data Schemas</h2>
             <p class="cat-desc">Strict validation models for input feature vectors, batch requests, prediction responses, SHAP factors, and official dataset rows.</p>
             <div class="grid">
             <div class="card">
@@ -434,7 +443,7 @@
                     <span class="tag pkg-tag">package</span>
                 </div>
                 <p class="mod-desc">Pydantic schemas for ML Service (inference + official dataset rows).</p>
-                <div class="sym-list"><span class="badge">FeatureVector</span><span class="badge">BatchFeatureRequest</span><span class="badge">PredictionResponse</span><span class="badge">BatchPredictionResponse</span><span class="badge">SHAPFactor</span><span class="badge">Severity</span></div>
+                <div class="sym-list"><span class="badge">BatchFeatureRequest</span><span class="badge">BatchPredictionResponse</span><span class="badge">DatasetDelayClass</span><span class="badge">DelayClass</span><span class="badge">FeatureVector</span><span class="badge">ForecastPoint</span></div>
             </div>
             
             <div class="card">
@@ -476,7 +485,7 @@
         </section>
         
         <section class="category-section">
-            <h2 class="cat-title">🔧 Core & Configuration</h2>
+            <h2 class="cat-title">Core & Configuration</h2>
             <p class="cat-desc">Application settings (SettingsConfigDict), environment variable bindings, and structured logging.</p>
             <div class="grid">
             <div class="card">

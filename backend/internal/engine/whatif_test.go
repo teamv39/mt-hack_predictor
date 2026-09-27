@@ -70,3 +70,26 @@ func TestSimulateWhatIfDispatchReserve(t *testing.T) {
 		t.Errorf("expected additional vehicle headway in after state")
 	}
 }
+
+func TestSimulateWhatIfHolding_SpecificTargetVehicle(t *testing.T) {
+	v1 := models.Vehicle{ID: "bus_1", RouteID: "m3", HeadwaySeconds: 120.0}
+	v2 := models.Vehicle{ID: "bus_2", RouteID: "m3", HeadwaySeconds: 400.0}
+
+	req := WhatIfRequest{
+		Action:          "HOLDING",
+		RouteID:         "m3",
+		TargetVehicleID: "bus_2",
+		HoldSeconds:     100,
+	}
+
+	res := SimulateWhatIf(req, []models.Vehicle{v1, v2})
+
+	// bus_2 is at index 1, its headway should be increased by 100
+	if len(res.HeadwaysAfterSec) != 2 {
+		t.Fatalf("expected 2 headways, got %d", len(res.HeadwaysAfterSec))
+	}
+	if res.HeadwaysAfterSec[1] != 500.0 {
+		t.Errorf("expected bus_2 headway to be 500.0, got %v", res.HeadwaysAfterSec[1])
+	}
+}
+

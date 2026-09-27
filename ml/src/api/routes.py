@@ -1,13 +1,15 @@
 """API route definitions for prediction and diagnostics."""
 
 import time
+
 from fastapi import APIRouter, HTTPException, status
-from ..schemas.features import FeatureVector, BatchFeatureRequest
-from ..schemas.prediction import PredictionResponse, BatchPredictionResponse
-from ..schemas.health import HealthResponse, ModelStatus
-from ..models.manager import get_model_manager
+
 from ..core.config import get_settings
 from ..core.logging import setup_logger
+from ..models.manager import get_model_manager
+from ..schemas.features import BatchFeatureRequest, FeatureVector
+from ..schemas.health import HealthResponse, ModelStatus
+from ..schemas.prediction import BatchPredictionResponse, PredictionResponse
 
 logger = setup_logger("api_routes")
 router = APIRouter()
@@ -48,7 +50,7 @@ def predict_single(features: FeatureVector) -> PredictionResponse:
         logger.error(f"Error during single prediction: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Inference computation error: {str(e)}",
+            detail=f"Inference computation error: {e!s}",
         )
 
 
@@ -81,7 +83,7 @@ def predict_batch(request: BatchFeatureRequest) -> BatchPredictionResponse:
         logger.error(f"Error during batch prediction: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Batch inference failed: {str(e)}",
+            detail=f"Batch inference failed: {e!s}",
         )
 
 

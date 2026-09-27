@@ -5,12 +5,13 @@ Designed for Artyom (Data Eng) & Misha (Lead ML) to run immediately on incoming 
 """
 
 import json
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
-from sklearn.model_selection import TimeSeriesSplit
+from catboost import CatBoostClassifier, CatBoostRegressor, Pool
 from sklearn.metrics import mean_absolute_error, roc_auc_score
-from catboost import CatBoostRegressor, CatBoostClassifier, Pool
+from sklearn.model_selection import TimeSeriesSplit
 
 
 def load_scenario_as_df(scenario_path: str) -> pd.DataFrame:

@@ -110,7 +110,7 @@ func (m *Matcher) LoadFromCSV(csvPath string) (int, error) {
 	timeCol, hasTime := colIdx["time_begin"]
 	trCol, hasTr := colIdx["tr_id"]
 	geomCol, hasGeom := colIdx["geom"]
-	addrCol := colIdx["building_address"]
+	addrCol, hasAddr := colIdx["building_address"]
 
 	if !hasID || !hasTime || !hasTr || !hasGeom {
 		return 0, fmt.Errorf("missing required columns in schedule CSV: %+v", colIdx)
@@ -157,7 +157,7 @@ func (m *Matcher) LoadFromCSV(csvPath string) (int, error) {
 		}
 
 		address := ""
-		if addrCol >= 0 && addrCol < len(record) {
+		if hasAddr && addrCol >= 0 && addrCol < len(record) {
 			address = strings.Trim(strings.TrimSpace(record[addrCol]), `"`)
 		}
 

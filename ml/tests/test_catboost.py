@@ -141,6 +141,7 @@ def test_competition_model_online_serving_24_features():
 def test_legacy_train_pipeline_feature_matrix():
     """Verifies that synthetic train pipeline produces all LEGACY_FEATURE_NAMES without KeyError."""
     from pathlib import Path
+
     from src.features.extractor import LEGACY_FEATURE_NAMES
     from src.models.train import engineer_training_features, load_dataset_from_scenario
 

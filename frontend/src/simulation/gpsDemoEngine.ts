@@ -230,14 +230,14 @@ export class GPSDemoEngine {
     this.notify();
   }
 
-  public applyHolding(alertId?: string): void {
+  public applyHolding(_alertId?: string): void {
     this.isHoldingApplied = true;
     this.holdingRemainingSec = 150;
     this.appliedScenarioId = "holding";
     this.notify();
   }
 
-  public applyScenario(scenarioId: string, alertId?: string): void {
+  public applyScenario(scenarioId: string, _alertId?: string): void {
     this.isHoldingApplied = true;
     this.holdingRemainingSec = 150;
     this.appliedScenarioId = scenarioId;

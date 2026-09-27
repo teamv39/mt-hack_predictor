@@ -1,6 +1,5 @@
 """Tests for Pydantic schemas — inference features and official dataset rows."""
 
-from datetime import datetime
 
 import pytest
 from pydantic import ValidationError

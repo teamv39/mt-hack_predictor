@@ -149,6 +149,9 @@ func (m *Manager) MergeDemo(demo []models.Vehicle) []models.Vehicle {
 	seen := make(map[string]struct{}, len(demo)+len(m.vehicles))
 	out := make([]models.Vehicle, 0, len(demo)+len(m.vehicles))
 	for _, v := range demo {
+		if m.isHoldingActiveRLocked(v.ID) {
+			v.Status = "REGULATING"
+		}
 		out = append(out, v)
 		seen[v.ID] = struct{}{}
 	}
@@ -159,6 +162,14 @@ func (m *Manager) MergeDemo(demo []models.Vehicle) []models.Vehicle {
 		out = append(out, *v)
 	}
 	return out
+}
+
+func (m *Manager) isHoldingActiveRLocked(vehicleID string) bool {
+	exp, ok := m.holdingUntil[vehicleID]
+	if !ok {
+		return false
+	}
+	return time.Now().Before(exp)
 }
 
 func (m *Manager) isHoldingActiveLocked(vehicleID string) bool {

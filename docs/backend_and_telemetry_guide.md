@@ -1,4 +1,4 @@
-# ⚡ Руководство по архитектуре Go-бэкенда и телеметрии (Backend & Telemetry Guide)
+# Руководство по архитектуре Go-бэкенда и телеметрии (Backend & Telemetry Guide)
 
 > **Проект:** Интеллектуальный ситуационный предиктор сбоев и интервалов движения (MT-Hackathon, Трек №3)  
 > **Автор и архитектор компонента:** Денис (@shteppinson), Team Lead / Go Backend Developer  
@@ -6,7 +6,7 @@
 
 ---
 
-## 🧭 1. Архитектурная миссия и технологический выбор
+## 1. Архитектурная миссия и технологический выбор
 
 Городская транспортная система Москвы — это более **8 500 электробусов и автобусов**, непрерывно генерирующих телеметрию с частотой от 1 до 5 секунд. При пиковых нагрузках диспетчерский центр Мосгортранса / ЦОДД обрабатывает **до 10 000 пакетов в секунду**.
 
@@ -24,16 +24,16 @@ Go-бэкенд выступает **высокоскоростным шлюзо
 
 ---
 
-## 🏛 2. Системная диаграмма архитектуры бэкенда
+## 2. Системная диаграмма архитектуры бэкенда
 
 ```mermaid
 flowchart TD
-    subgraph Ingestion["📡 Слой приема телеметрии"]
+    subgraph Ingestion["Слой приема телеметрии"]
         NDTPEmu["Эмулятор NDTP (:18080)"] -->|TCP поток| NDTPSrv["NDTP TCP Server (:9201)\nLittle-Endian Binary Parser"]
         Scenario["Сценарный генератор\n(m3_scenario.json)"] -->|Replay 1Hz| Feeder["Data Feeder"]
     end
 
-    subgraph State["🧠 In-Memory State & Analytics Core"]
+    subgraph State["In-Memory State & Analytics Core"]
         NDTPSrv -->|NavCell| FleetMgr["Fleet Manager\n(sync.RWMutex Cache)"]
         NDTPSrv -->|Points| Tracker["Telemetry Tracker\n(15-min Sliding Window)"]
         NDTPSrv -->|Lat, Lon, Ts| Matcher["Schedule Matcher\n(5 558 остановок Москвы)"]
@@ -51,13 +51,13 @@ flowchart TD
         Headway --> Alerts
     end
 
-    subgraph MLBridge["🤖 ML Resilience Bridge"]
+    subgraph MLBridge["ML Resilience Bridge"]
         Alerts -->|Асинхронный вызов| MLClient["Async ML Client\n(Circuit Breaker, 250ms Timeout)"]
         MLClient -->|HTTP POST :8000| FastAPI["Python CatBoost / SHAP"]
         MLClient -.->|Fallback при сбое ML| Heuristic["Кинематический фоллбэк"]
     end
 
-    subgraph Distribution["🖥 Слой отдачи и диспетчеризации"]
+    subgraph Distribution["Слой отдачи и диспетчеризации"]
         FleetMgr --> WS["WebSocket Hub (:8080/ws)\nNon-blocking Broadcast 1Hz"]
         Alerts --> WS
         WhatIfEngine --> REST["REST API v1 (:8080)\nChi Router + Swagger UI"]
@@ -68,7 +68,7 @@ flowchart TD
 
 ---
 
-## 📡 3. Бинарный протокол NDTP (ГОСТ Р 54619-2011 / ЕРА-ГЛОНАСС)
+## 3. Бинарный протокол NDTP (ГОСТ Р 54619-2011 / ЕРА-ГЛОНАСС)
 
 Сервер слушает сырой TCP-порт `:9201`. Парсер реализован в пакете [`backend/internal/ndtp`](file:///Users/shteppinson/dev/hacks/mt-hack_predictor/backend/internal/ndtp).
 
@@ -140,7 +140,7 @@ func SwapUint16(v uint16) uint16 {
 
 ---
 
-## 📍 4. In-Memory Schedule Matcher (Привязка к расписанию)
+## 4. In-Memory Schedule Matcher (Привязка к расписанию)
 
 Модуль [`backend/internal/schedule/matcher.go`](file:///Users/shteppinson/dev/hacks/mt-hack_predictor/backend/internal/schedule/matcher.go) индексирует эталонное расписание движения Мосгортранса (`schedule_plan.csv`, более 5 500 остановок).
 
@@ -158,7 +158,7 @@ $$d = 2 R \cdot \arcsin \left( \sqrt{\sin^2\left(\frac{\Delta \phi}{2}\right) + 
 
 ---
 
-## 🚦 5. Headway Engine и алгоритм рекомендаций Holding
+## 5. Headway Engine и алгоритм рекомендаций Holding
 
 ### 5.1. Расчет динамического Headway
 В модуле [`backend/internal/engine/headway.go`](file:///Users/shteppinson/dev/hacks/mt-hack_predictor/backend/internal/engine/headway.go) для каждого борта непрерывно определяется его положение в пространственной топологии маршрута:
@@ -184,7 +184,7 @@ $$t_{hold} = \min\left( \frac{H_{behind} - H_{ahead}}{2}, 180\text{ с} \right)$
 
 ---
 
-## 📊 6. Сценарный What-If симулятор и формула Велдинга
+## 6. Сценарный What-If симулятор и формула Велдинга
 
 В модуле [`backend/internal/engine/whatif.go`](file:///Users/shteppinson/dev/hacks/mt-hack_predictor/backend/internal/engine/whatif.go) реализована интерактивная оценка контрфактических сценариев для диспетчера.
 
@@ -207,7 +207,7 @@ $$E[W] = \frac{\bar{H}}{2} \cdot \left( 1 + \frac{\text{Var}(H)}{\bar{H}^2} \rig
 
 ---
 
-## ⚡ 7. Верифицированные микробенчмарки производительности
+## 7. Верифицированные микробенчмарки производительности
 
 Все замеры проведены на стандартном наборе тестов Go testing (`go test -bench=. -benchmem ./...`):
 
@@ -221,14 +221,14 @@ $$E[W] = \frac{\bar{H}}{2} \cdot \left( 1 + \frac{\text{Var}(H)}{\bar{H}^2} \rig
 | **`BenchmarkSimulateWhatIf`** (Сценарное моделирование) | **352.60 ns/op** | **384 B/op** | **7 allocs/op** | **2 800 000 симуляций/сек** |
 | **`BenchmarkCRC16Modbus`** (Контрольная сумма) | **147.60 ns/op** | **0 B/op** | **0 allocs/op** | **216.7 MB/s** |
 
-> 💡 **Результат:** Бэкенд на Go работает с **нулевыми аллокациями в горячем цикле обработки телеметрии**, гарантируя отсутствие пауз сборщика мусора (GC pauses) и стабильный sub-millisecond response time.
+> **Результат:** Бэкенд на Go работает с **нулевыми аллокациями в горячем цикле обработки телеметрии**, гарантируя отсутствие пауз сборщика мусора (GC pauses) и стабильный sub-millisecond response time.
 
 ---
 
-## 🔌 8. REST & WebSocket API Контракты
+## 8. REST & WebSocket API Контракты
 
 Подробная интерактивная документация доступна во встроенном Swagger UI по адресу:  
-🔗 **[http://localhost:8080/swagger](http://localhost:8080/swagger)**
+**[http://localhost:8080/swagger](http://localhost:8080/swagger)**
 
 ### Ключевые маршруты:
 1. `GET /health` — проверка состояния всех подсистем (NDTP, ML-клиент, расписание, активные алерты).
@@ -242,7 +242,7 @@ $$E[W] = \frac{\bar{H}}{2} \cdot \left( 1 + \frac{\text{Var}(H)}{\bar{H}^2} \rig
 
 ---
 
-## 🛠 9. Команды для проверки и запуска
+## 9. Команды для проверки и запуска
 
 ```bash
 # 1. Запуск всех тестов бэкенда

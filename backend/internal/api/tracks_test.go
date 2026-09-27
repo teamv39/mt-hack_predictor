@@ -119,3 +119,30 @@ func TestTrackRoutesRejectInvalidAndMissingTrack(t *testing.T) {
 		}
 	}
 }
+
+func TestTrackRoutesLimitQueryParam(t *testing.T) {
+	store := NewTrackStore()
+	store.tracks = map[int][]GPSPoint{
+		1: {{Lon: 37.1, Lat: 55.1}},
+		2: {{Lon: 37.2, Lat: 55.2}},
+		3: {{Lon: 37.3, Lat: 55.3}},
+	}
+
+	r := chi.NewRouter()
+	RegisterTrackRoutes(r, store)
+
+	record := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/tracks?limit=2", nil)
+	r.ServeHTTP(record, req)
+	if record.Code != http.StatusOK {
+		t.Fatalf("GET /tracks?limit=2 status = %d", record.Code)
+	}
+	var summaries []TrackSummary
+	if err := json.NewDecoder(record.Body).Decode(&summaries); err != nil {
+		t.Fatal(err)
+	}
+	if len(summaries) != 2 {
+		t.Fatalf("expected 2 tracks with limit=2, got %d", len(summaries))
+	}
+}
+

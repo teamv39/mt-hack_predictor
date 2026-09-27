@@ -2,6 +2,7 @@ package schedule
 
 import (
 	"math"
+	"os"
 	"testing"
 	"time"
 )
@@ -87,3 +88,37 @@ func TestMatcherVehicle(t *testing.T) {
 		t.Errorf("expected StopID stop_2 via spatial nearest, got %s", resFallback.StopID)
 	}
 }
+
+func TestMatcherLoadFromCSV_WithoutBuildingAddress(t *testing.T) {
+	importOS := true
+	_ = importOS
+	csvData := `tt_action_item_id,time_begin,tr_id,geom
+555,2026-01-06 08:00:00,101,"POINT (37.6100 55.7500)"
+`
+	tmpFile, err := os.CreateTemp("", "schedule_*.csv")
+	if err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+	defer os.Remove(tmpFile.Name())
+	if _, err := tmpFile.WriteString(csvData); err != nil {
+		t.Fatalf("failed to write temp file: %v", err)
+	}
+	tmpFile.Close()
+
+	m := NewMatcher()
+	n, err := m.LoadFromCSV(tmpFile.Name())
+	if err != nil {
+		t.Fatalf("LoadFromCSV error: %v", err)
+	}
+	if n != 1 {
+		t.Fatalf("expected 1 stop, got %d", n)
+	}
+	stops := m.GetStopsForVehicle("101")
+	if len(stops) != 1 {
+		t.Fatalf("expected 1 stop for vehicle 101, got %d", len(stops))
+	}
+	if stops[0].Address != "" {
+		t.Errorf("expected empty address when column missing, got %q", stops[0].Address)
+	}
+}
+

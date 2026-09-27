@@ -1,4 +1,4 @@
-# 📋 Implementation Plan — МТ Предиктор
+# Implementation Plan — МТ Предиктор
 
 > **Статус:** Кейс и датасет подключены; ML-схемы актуализированы под `target_delay_s` (MAE)  
 > **Дата:** 2026-09-25  
@@ -6,100 +6,100 @@
 
 ---
 
-## ✅ Фаза 0 — Инфраструктура и каркас (DONE)
+## [DONE] Фаза 0 — Инфраструктура и каркас (DONE)
 
 | # | Задача | Статус | Результат |
 |---|--------|--------|-----------|
-| 0.1 | Инициализация репозитория, `.gitignore`, `.gitattributes` | ✅ Done | Корневые файлы |
-| 0.2 | `AGENTS.md`, `CLAUDE.md` — инструкции для AI | ✅ Done | Единый контекст для агентов |
-| 0.3 | `README.md` — полный паспорт проекта | ✅ Done | 15 KB описание |
-| 0.4 | `Makefile` с командами для всех сервисов | ✅ Done | 12 таргетов |
-| 0.5 | Структура `data/` (raw, processed, sample, models) | ✅ Done | `.gitkeep` файлы |
+| 0.1 | Инициализация репозитория, `.gitignore`, `.gitattributes` | [DONE] Done | Корневые файлы |
+| 0.2 | `AGENTS.md`, `CLAUDE.md` — инструкции для AI | [DONE] Done | Единый контекст для агентов |
+| 0.3 | `README.md` — полный паспорт проекта | [DONE] Done | 15 KB описание |
+| 0.4 | `Makefile` с командами для всех сервисов | [DONE] Done | 12 таргетов |
+| 0.5 | Структура `data/` (raw, processed, sample, models) | [DONE] Done | `.gitkeep` файлы |
 
 ---
 
-## ✅ Фаза 1 — Go Backend Core (DONE)
+## [DONE] Фаза 1 — Go Backend Core (DONE)
 
 | # | Задача | Статус | Файл |
 |---|--------|--------|------|
-| 1.1 | Chi-роутер, middleware (RequestID, Logger, CORS, Timeout) | ✅ Done | `backend/cmd/server/main.go` |
-| 1.2 | WebSocket Hub (горутина broadcast, потокобезопасность) | ✅ Done | `backend/internal/ws/hub.go` |
-| 1.3 | Data Feeder — потоковый эмулятор телеметрии из JSON-лога | ✅ Done | `backend/internal/feeder/feeder.go` |
-| 1.4 | Доменные модели (Vehicle, Alert, Recommendation, SystemStatus) | ✅ Done | `backend/internal/models/types.go` |
-| 1.5 | REST API: `/health`, `/api/v1/route`, `/vehicles`, `/alerts`, `/status` | ✅ Done | main.go |
-| 1.6 | POST `/recommendations/{id}/apply` — применение Holding | ✅ Done | main.go |
-| 1.7 | POST `/simulation/control` — play/pause/speed/reset | ✅ Done | main.go |
-| 1.8 | Multi-stage Dockerfile (Go 1.24 → scratch) | ✅ Done | `backend/Dockerfile` |
+| 1.1 | Chi-роутер, middleware (RequestID, Logger, CORS, Timeout) | [DONE] Done | `backend/cmd/server/main.go` |
+| 1.2 | WebSocket Hub (горутина broadcast, потокобезопасность) | [DONE] Done | `backend/internal/ws/hub.go` |
+| 1.3 | Data Feeder — потоковый эмулятор телеметрии из JSON-лога | [DONE] Done | `backend/internal/feeder/feeder.go` |
+| 1.4 | Доменные модели (Vehicle, Alert, Recommendation, SystemStatus) | [DONE] Done | `backend/internal/models/types.go` |
+| 1.5 | REST API: `/health`, `/api/v1/route`, `/vehicles`, `/alerts`, `/status` | [DONE] Done | main.go |
+| 1.6 | POST `/recommendations/{id}/apply` — применение Holding | [DONE] Done | main.go |
+| 1.7 | POST `/simulation/control` — play/pause/speed/reset | [DONE] Done | main.go |
+| 1.8 | Multi-stage Dockerfile (Go 1.24 → scratch) | [DONE] Done | `backend/Dockerfile` |
 
 ---
 
-## ✅ Фаза 2 — Frontend Dashboard (DONE)
+## [DONE] Фаза 2 — Frontend Dashboard (DONE)
 
 | # | Задача | Статус | Файл |
 |---|--------|--------|------|
-| 2.1 | Vite + React каркас, дизайн-система CSS (Slate Dark Mode `#0B0F17`) | ✅ Done | `frontend/src/index.css` |
-| 2.2 | `MapView` — Leaflet + CartoDB Dark Matter, маркеры бортов с пульсацией | ✅ Done | `frontend/src/components/MapView.jsx` |
-| 2.3 | `AlertRadar` — панель предиктивных алертов с SHAP-факторами | ✅ Done | `frontend/src/components/AlertRadar.jsx` |
-| 2.4 | `Inspector` — инспектор борта, сравнительный график траекторий | ✅ Done | `frontend/src/components/Inspector.jsx` |
-| 2.5 | `TopBar` — системный статус, счетчик тиков, таймлайн симуляции | ✅ Done | `frontend/src/components/TopBar.jsx` |
-| 2.6 | `useTelemetry` хук — WebSocket + REST fallback | ✅ Done | `frontend/src/hooks/useTelemetry.js` |
-| 2.7 | Кнопка «Применить Holding» с fetch POST | ✅ Done | Inspector.jsx |
-| 2.8 | Nginx Dockerfile (SPA + reverse proxy `/api/`, `/ws`) | ✅ Done | `frontend/Dockerfile` |
-| 2.9 | SEO: `<title>`, `<meta description>`, `lang="ru"` | ✅ Done | `frontend/index.html` |
+| 2.1 | Vite + React каркас, дизайн-система CSS (Slate Dark Mode `#0B0F17`) | [DONE] Done | `frontend/src/index.css` |
+| 2.2 | `MapView` — Leaflet + CartoDB Dark Matter, маркеры бортов с пульсацией | [DONE] Done | `frontend/src/components/MapView.jsx` |
+| 2.3 | `AlertRadar` — панель предиктивных алертов с SHAP-факторами | [DONE] Done | `frontend/src/components/AlertRadar.jsx` |
+| 2.4 | `Inspector` — инспектор борта, сравнительный график траекторий | [DONE] Done | `frontend/src/components/Inspector.jsx` |
+| 2.5 | `TopBar` — системный статус, счетчик тиков, таймлайн симуляции | [DONE] Done | `frontend/src/components/TopBar.jsx` |
+| 2.6 | `useTelemetry` хук — WebSocket + REST fallback | [DONE] Done | `frontend/src/hooks/useTelemetry.js` |
+| 2.7 | Кнопка «Применить Holding» с fetch POST | [DONE] Done | Inspector.jsx |
+| 2.8 | Nginx Dockerfile (SPA + reverse proxy `/api/`, `/ws`) | [DONE] Done | `frontend/Dockerfile` |
+| 2.9 | SEO: `<title>`, `<meta description>`, `lang="ru"` | [DONE] Done | `frontend/index.html` |
 
 ---
 
-## ✅ Фаза 3 — ML Inference Service (DONE — схемы под официальный датасет)
+## [DONE] Фаза 3 — ML Inference Service (DONE — схемы под официальный датасет)
 
 | # | Задача | Статус | Файл |
 |---|--------|--------|------|
-| 3.1 | Модульная архитектура и `pydantic-settings` (v0.3.0, MAE target) | ✅ Done | `ml/src/core/config.py` |
-| 3.2 | Pydantic v2: inference + **dataset CSV** (`TrafficPoint`/`LabelPoint`/…) | ✅ Done | `ml/src/schemas/{features,dataset,prediction}.py` |
-| 3.3 | CatBoost delay regressor + TreeSHAP; classifier опционален (DSS) | ✅ Done | `ml/src/models/catboost_model.py` |
-| 3.4 | Heuristic Fallback: signed delay (персистентность `cur_dev_s`) | ✅ Done | `ml/src/models/fallback.py` |
-| 3.5 | ModelManager: достаточно regressor; hot-reload | ✅ Done | `ml/src/models/manager.py` |
-| 3.6 | REST API `/health`, `/predict`, `/predict/batch`, `/models/*` | ✅ Done | `ml/src/api/` |
-| 3.7 | Тесты под `tr_id` / `cur_dev_s` / signed delay (21 passed) | ✅ Done | `ml/tests/` |
-| 3.8 | Train pipeline: Huber + MAE, signed `target_delay_s` | ✅ Done | `ml/src/models/train.py` |
-| 3.9 | Baseline `.cbm` (синтетика; прод-обучение на `dataset/` — 7.1.x) | ✅ Done | `data/models/` |
-| 3.10 | API-контракты: MAE, submission `;`, official/legacy payload | ✅ Done | `docs/api_contracts.md` |
+| 3.1 | Модульная архитектура и `pydantic-settings` (v0.3.0, MAE target) | [DONE] Done | `ml/src/core/config.py` |
+| 3.2 | Pydantic v2: inference + **dataset CSV** (`TrafficPoint`/`LabelPoint`/…) | [DONE] Done | `ml/src/schemas/{features,dataset,prediction}.py` |
+| 3.3 | CatBoost delay regressor + TreeSHAP; classifier опционален (DSS) | [DONE] Done | `ml/src/models/catboost_model.py` |
+| 3.4 | Heuristic Fallback: signed delay (персистентность `cur_dev_s`) | [DONE] Done | `ml/src/models/fallback.py` |
+| 3.5 | ModelManager: достаточно regressor; hot-reload | [DONE] Done | `ml/src/models/manager.py` |
+| 3.6 | REST API `/health`, `/predict`, `/predict/batch`, `/models/*` | [DONE] Done | `ml/src/api/` |
+| 3.7 | Тесты под `tr_id` / `cur_dev_s` / signed delay (21 passed) | [DONE] Done | `ml/tests/` |
+| 3.8 | Train pipeline: Huber + MAE, signed `target_delay_s` | [DONE] Done | `ml/src/models/train.py` |
+| 3.9 | Baseline `.cbm` (синтетика; прод-обучение на `dataset/` — 7.1.x) | [DONE] Done | `data/models/` |
+| 3.10 | API-контракты: MAE, submission `;`, official/legacy payload | [DONE] Done | `docs/api_contracts.md` |
 
 ---
 
-## ✅ Фаза 4 — Data Engineering (DONE — демо-сценарий)
+## [DONE] Фаза 4 — Data Engineering (DONE — демо-сценарий)
 
 | # | Задача | Статус | Файл |
 |---|--------|--------|------|
-| 4.1 | Синтетический генератор маршрута М3 с инцидентом пачкования | ✅ Done | `data/sample/generate_m3.py` |
-| 4.2 | JSON-сценарий (93 KB, 240 тиков, 10 остановок, 3 борта) | ✅ Done | `data/sample/m3_scenario.json` |
+| 4.1 | Синтетический генератор маршрута М3 с инцидентом пачкования | [DONE] Done | `data/sample/generate_m3.py` |
+| 4.2 | JSON-сценарий (93 KB, 240 тиков, 10 остановок, 3 борта) | [DONE] Done | `data/sample/m3_scenario.json` |
 
 ---
 
-## ✅ Фаза 5 — Контейнеризация и DevOps (DONE)
+## [DONE] Фаза 5 — Контейнеризация и DevOps (DONE)
 
 | # | Задача | Статус | Файл |
 |---|--------|--------|------|
-| 5.1 | `docker-compose.yml` — трёхсервисная оркестрация | ✅ Done | `docker-compose.yml` |
-| 5.2 | Внутренняя сеть `mt-network` (bridge) | ✅ Done | docker-compose.yml |
-| 5.3 | Volume mounts: `data/` → `/app/data:ro` | ✅ Done | docker-compose.yml |
-| 5.4 | `ML_SERVICE_URL` → backend → ml service discovery | ✅ Done | docker-compose.yml |
+| 5.1 | `docker-compose.yml` — трёхсервисная оркестрация | [DONE] Done | `docker-compose.yml` |
+| 5.2 | Внутренняя сеть `mt-network` (bridge) | [DONE] Done | docker-compose.yml |
+| 5.3 | Volume mounts: `data/` → `/app/data:ro` | [DONE] Done | docker-compose.yml |
+| 5.4 | `ML_SERVICE_URL` → backend → ml service discovery | [DONE] Done | docker-compose.yml |
 
 ---
 
-## ✅ Фаза 6 — Документация (DONE)
+## [DONE] Фаза 6 — Документация (DONE)
 
 | # | Задача | Статус | Файл |
 |---|--------|--------|------|
-| 6.1 | Командный хэндбук (теория, математика, глоссарий) | ✅ Done | `docs/team_handbook.md` |
-| 6.2 | Архитектура (C4, потоки данных, Mermaid-диаграммы) | ✅ Done | `docs/architecture.md` |
-| 6.3 | API-контракты (REST, WebSocket JSON-схемы) | ✅ Done | `docs/api_contracts.md` |
-| 6.4 | Бизнес-ценность и метрики | ✅ Done | `docs/business_values.md` |
-| 6.5 | Продуктовый стресс-тест и бэклог (MoSCoW) | ✅ Done | `docs/product_attacks_and_backlog.md` |
-| 6.6 | Навигационный индекс документации | ✅ Done | `docs/index.md` |
+| 6.1 | Командный хэндбук (теория, математика, глоссарий) | [DONE] Done | `docs/team_handbook.md` |
+| 6.2 | Архитектура (C4, потоки данных, Mermaid-диаграммы) | [DONE] Done | `docs/architecture.md` |
+| 6.3 | API-контракты (REST, WebSocket JSON-схемы) | [DONE] Done | `docs/api_contracts.md` |
+| 6.4 | Бизнес-ценность и метрики | [DONE] Done | `docs/business_values.md` |
+| 6.5 | Продуктовый стресс-тест и бэклог (MoSCoW) | [DONE] Done | `docs/product_attacks_and_backlog.md` |
+| 6.6 | Навигационный индекс документации | [DONE] Done | `docs/index.md` |
 
 ---
 
-## 🎯 Фаза 7 — Детальная реализация кейса №3 (ACTIVE)
+## Фаза 7 — Детальная реализация кейса №3 (ACTIVE)
 
 > **Статус:** В активной разработке после публикации кейса и датасета (25 сентября 2026).  
 > **Цель:** Набрать **34–36 из 36 баллов** по официальным критериям оценивания.  
@@ -108,7 +108,7 @@
 
 ---
 
-### 🧠 7.1 — ML Models & Submit (Миша) · Критерий 1 (0–6 баллов)
+### 7.1 — ML Models & Submit (Миша) · Критерий 1 (0–6 баллов)
 
 #### **Задача 7.1.1 (P0): Генерация и отправка первого Baseline сабмита**
 * **Цель:** Закрепить стартовые **3 балла из 6** в лидерборде (score ≈ 0.40) и проверить валидность формата до начала сложного ML.
@@ -205,7 +205,7 @@
   * **Вывод:** На датасете из 4434 строк BiGRU не может конкурировать с CatBoost, получающим тщательно сконструированные агрегатные признаки. Нейросеть по сути переоткрывает `mean(speed)`, который CatBoost уже видит в `speed_mean_5m/10m`. PyTorch остаётся в стеке, но продуктовая модель — чистый CatBoost.
   * **Инференс:** p50=2.55мс, p99=5.86мс (батч 100 ТС) — в 8× рамках требования <20мс.
   * **Модель:** 27 169 параметров, сохранена в `data/models/competition/gru_sequence.pt`.
-* **DoD:** Тест `pytest ml/tests/test_pytorch_model.py` — **17 passed**, время инференса батча из 100 ТС = 2.55 мс на CPU (< 20 мс ✅).
+* **DoD:** Тест `pytest ml/tests/test_pytorch_model.py` — **17 passed**, время инференса батча из 100 ТС = 2.55 мс на CPU (< 20 мс [DONE]).
 
 ---
 
@@ -258,7 +258,7 @@
 
 ---
 
-### 🗺 7.2 — Data Engineering (Артём) · Критерии 2 и 3
+### 7.2 — Data Engineering (Артём) · Критерии 2 и 3
 
 #### **Задача 7.2.1 (P0): Очистка телеметрии и высокопроизводительный экстрактор фичей**
 * **Цель:** Обрабатывать сырую телеметрию без накопления очередей (Критерий 5: надежность и пропускная способность).
@@ -297,7 +297,7 @@
 
 ---
 
-### 👑 7.3 — Go Backend Core & Ingestion (Денис) · Критерии 3 и 5
+### 7.3 — Go Backend Core & Ingestion (Денис) · Критерии 3 и 5
 
 #### **Задача 7.3.1 (P0): NDTP TCP Ingestion Server (Порт :9201) [ВЫПОЛНЕНО]**
 * **Цель:** Принимать живой бинарный поток пакетов от эмулятора `ndtp-telemetry-emulator` по официальной спецификации [docs/ndtp_emulator_spec.md](ndtp_emulator_spec.md).
@@ -387,18 +387,18 @@
 
 ---
 
-### 🎨 7.4 — Диспетчерский BI-Дашборд (Кирилл) · Критерий 4 (0–6 баллов)
+### 7.4 — Диспетчерский BI-Дашборд (Кирилл) · Критерий 4 (0–6 баллов)
 
 #### **Задача 7.4.1 (P0): Карточка инцидента по стандарту ЦОДД**
 * **Цель:** Обеспечить понятность проблемной ситуации за 5 секунд без чтения инструкций (Критерий 4).
 * **Файл:** `frontend/src/components/Inspector.jsx`.
 * **Элементы карточки инцидента:**
-  1. **Индикатор горизонта упреждения:** Плашка с таймером обратного отсчета: `⏱ За 13 мин 20 с до сбоя (Окно прогноза: 10–15 мин)`.
+  1. **Индикатор горизонта упреждения:** Плашка с таймером обратного отсчета: `За 13 мин 20 с до сбоя (Окно прогноза: 10–15 мин)`.
   2. **Прогнозируемая задержка:** Цифровой бейдж: `+140 сек (+2.3 мин) на остановке "Метро Бауманская"`.
   3. **Причина задержки (SHAP-факторы):** Интерактивные горизонтальные полосы с процентным и секундным вкладом:
-     * 🔴 Затор на мосту: `+85 сек (60%)`.
-     * 🟡 Задержка посадки: `+35 сек (25%)`.
-     * 🟢 Светофорный цикл: `+20 сек (15%)`.
+     * [P0] Затор на мосту: `+85 сек (60%)`.
+     * [P1] Задержка посадки: `+35 сек (25%)`.
+     * [OK] Светофорный цикл: `+20 сек (15%)`.
   4. **Проблемный сегмент:** Подсветка перегона между остановками на карте.
 * **DoD:** При клике на алерт в радаре карта плавно центрируется (`flyTo`) на проблемном ТС, и справа разворачивается инспектор с актуальными данными.
 
@@ -408,9 +408,9 @@
 * **Цель:** Мгновенная цветовая идентификация состояния маршрутной сети.
 * **Файл:** `frontend/src/components/MapView.jsx` и `frontend/src/index.css`.
 * **Шкала риска:**
-  * 🟢 **Зеленый (#10B981):** Задержка $< 60$ сек, интервал в норме (отклонение $< 20\%$).
-  * 🟡 **Желтый (#F59E0B):** Задержка $60–180$ сек, риск пачкования $30–70\%$.
-  * 🔴 **Красный (#EF4444):** Задержка $> 180$ сек или риск пачкования $> 70\%$ (пульсирующий контур маркера).
+  * [OK] **Зеленый (#10B981):** Задержка $< 60$ сек, интервал в норме (отклонение $< 20\%$).
+  * [P1] **Желтый (#F59E0B):** Задержка $60–180$ сек, риск пачкования $30–70\%$.
+  * [P0] **Красный (#EF4444):** Задержка $> 180$ сек или риск пачкования $> 70\%$ (пульсирующий контур маркера).
 * **Связка пачкования:** Пульсирующая пунктирная линия между двумя критически сблизившимися автобусами на карте.
 * **DoD:** Визуальный тест: при загрузке страницы статус любого борта определяется за 1 взгляд по цвету маркера и бейджа.
 
@@ -420,12 +420,12 @@
 * **Цель:** Превратить систему из «пассивного мониторинга» в «активную СППР».
 * **Компонент:** Кнопка прямого действия в `Inspector.jsx`:
   ```
-  [ ✓ Применить Holding: Придержать борт №1043 на 2.5 мин на ост. "Метро Бауманская" ]
+  [ [OK] Применить Holding: Придержать борт №1043 на 2.5 мин на ост. "Метро Бауманская" ]
   ```
 * **Интерактивный график рейса:**
-  * 🔵 **Синий пунктир:** Нормативный график расписания.
-  * 🔴 **Красный пунктир:** Траектория без мер (прогноз CatBoost — автобус догоняет передний борт, интервал схлопывается в 0).
-  * 🟢 **Зеленая сплошная линия:** Траектория после Holding (интервал восстанавливается до плановых 8 минут).
+  * [INFO] **Синий пунктир:** Нормативный график расписания.
+  * [P0] **Красный пунктир:** Траектория без мер (прогноз CatBoost — автобус догоняет передний борт, интервал схлопывается в 0).
+  * [OK] **Зеленая сплошная линия:** Траектория после Holding (интервал восстанавливается до плановых 8 минут).
 * **DoD:** Нажатие кнопки шлет `POST /api/v1/recommendations/apply`, красная линия на графике анимированно трансформируется в зеленую, статус борта меняется на «Регулируется».
 
 ---
@@ -474,7 +474,7 @@
 
 ##### **7.4.5.7 (P1): Отображение Toast-уведомления при применении Holding**
 * **Файл:** `frontend/src/components/Toast.tsx`, `frontend/src/App.tsx`.
-* **Баг:** При нажатии кнопки `✓ Применить и передать в АСУ` всплывающий Toast не отображается на экране (перекрыт Leaflet `z-index`).
+* **Баг:** При нажатии кнопки `[OK] Применить и передать в АСУ` всплывающий Toast не отображается на экране (перекрыт Leaflet `z-index`).
 * **Решение:** Задать контейнеру тостов `z-index: 9999` (`z-50`) поверх всех плавающих панелей.
 
 ##### **7.4.5.8 (P0): Восстановление интерактивности («Ничего не нажимается»)**
@@ -499,31 +499,31 @@
 * **Дефект 4 (Слипшаяся типографика в таймлайне):** В нижней панели текст `МОДЕЛИРОВАНИЕ ВО ВРЕМЕНИОбычный срез / соответствие` слит без пробела.
   * *Решение:* Разнести теги, выровнять кернинг и отступы, добавить аккуратный glow-эффект на активную кнопку.
 ##### **7.4.5.10 (P0): Генерация тёмного эталонного экрана кокпита в Google Stitch (Альтернативная тема)**
-* **Статус:** ✅ Выполнено.
+* **Статус:** [DONE] Выполнено.
 * **ID экрана:** `23b9344f36484142a33b681018e06ce6` («Ситуационный центр ЦОДД — Кокпит диспетчера м3», Dark Mode).
  
 ##### **7.4.5.11 (P0): Редизайн в светлую тему (Light Mode — Основная тема)**
-* **Статус:** ✅ Выполнено в Google Stitch через StitchMCP.
+* **Статус:** [DONE] Выполнено в Google Stitch через StitchMCP.
 * **Проект в Stitch:** [Next-Gen Диспетчерская Транспорта (ID: 18146123695208314180)](https://stitch.google.com/projects/18146123695208314180)
 * **ID сгенерированного экрана:** `6744fd478290408d9c5411f68a18ad08` («Executive Situational Transit Command Dashboard (Light Theme)», Desktop 2560x2048)
 * **Новая дизайн-система:** `assets/fffd5335a614484c93b925a7aa37b5d9` («Executive Transit Command», Light Mode, `#FFFFFF`, `#F8FAFC`, `#0F172A`, `#E2E8F0`, `#DC2626`, `#059669`, `#D97706`).
 * **1-в-1 соответствие эталону:**
-  1. **Top Header (56px):** Красная квадратная кнопка меню, спираль «Московский транспорт», эмблема «ЦОДД Ситуационный Центр», часы `00:52:43 MSK`, статус `✓ 77% Punctuality` (зеленая пилюля), `⚠️ 1 Active Incidents` (красная пилюля), `• Telematics LIVE (18ms)`.
+  1. **Top Header (56px):** Красная квадратная кнопка меню, спираль «Московский транспорт», эмблема «ЦОДД Ситуационный Центр», часы `00:52:43 MSK`, статус `[OK] 77% Punctuality` (зеленая пилюля), `[WARN]️ 1 Active Incidents` (красная пилюля), `• Telematics LIVE (18ms)`.
   2. **Центральная карта (CartoDB Positron):** Светлая векторная подложка, полигональные секторы заторов (янтарный и красный Басманный перегон), траектория маршрута м3 изумрудной линией с направляющими стрелками и остановками, маркеры бортов №1043 (лидер) и №2198 (догоняющий с задержкой +12 мин) со связью схлопывания интервала.
   3. **AlertRadar (340px):** Белая парящая карточка со скруглением `rounded-2xl`, табами `Current alerts` (изумрудный индикатор) и `Analysis`, 3 алерта bus bunching с бейджами Medium и High.
-  4. **Inspector Card (380px):** Белая парящая карточка с бортом №1042/1043, координатный график Recharts (0–150 по Y, синяя линия «Без мер» vs зеленая «Holding»), график факторов SHAP (CatBoost ML) с градиентными синими столбцами, блок рекомендации Headway Holding Action (эффект 96%) и изумрудная кнопка `✓ Применить Holding`.
+  4. **Inspector Card (380px):** Белая парящая карточка с бортом №1042/1043, координатный график Recharts (0–150 по Y, синяя линия «Без мер» vs зеленая «Holding»), график факторов SHAP (CatBoost ML) с градиентными синими столбцами, блок рекомендации Headway Holding Action (эффект 96%) и изумрудная кнопка `[OK] Применить Holding`.
 ##### **7.4.5.12 (P0): Полная реализация светлого дизайна в React-фронтенде по экрану Stitch `0421ad97a7574577928440b26c2f307b`**
-* **Статус:** ✅ Выполнено.
+* **Статус:** [DONE] Выполнено.
 * **Референс Stitch:** [Экран 0421ad97a7574577928440b26c2f307b](https://stitch.google.com/projects/18146123695208314180?node-id=0421ad97a7574577928440b26c2f307b)
 * **Изменения в коде фронтенда:**
-  1. `frontend/src/components/TopBar.tsx`: Фирменная красная кнопка меню (`#DA251D`), эмблема Московского транспорта + текст «МОСКОВСКИЙ ТРАНСПОРТ», круглая эмблема ЦОДД «Ситуационный Центр», живые часы `МСК (UTC+3)` с зеленым биконом, динамические пилюли `✓ 94.8% ПУНКТУАЛЬНОСТЬ` и `⚠️ ИНЦИДЕНТЫ` со светофорной индикацией, контролы симуляции.
+  1. `frontend/src/components/TopBar.tsx`: Фирменная красная кнопка меню (`#DA251D`), эмблема Московского транспорта + текст «МОСКОВСКИЙ ТРАНСПОРТ», круглая эмблема ЦОДД «Ситуационный Центр», живые часы `МСК (UTC+3)` с зеленым биконом, динамические пилюли `[OK] 94.8% ПУНКТУАЛЬНОСТЬ` и `[WARN]️ ИНЦИДЕНТЫ` со светофорной индикацией, контролы симуляции.
   2. `frontend/src/components/AlertRadar.tsx`: Белая парящая карточка со скруглением `rounded-2xl`, табами `Текущие алерты (4)` и `Аналитика ML`, фильтры `Все`, `Критич.`, `Пачкование`, список алертов (включая активный алерт «Пачкование м3» с красной рамкой, бейджами HIGH/MEDIUM, уверенностью ML и таймлайном).
-  3. `frontend/src/components/Inspector.tsx`: Инспектор «Электробус '№1042'», бейдж маршрута «м3 (Семёновская ➔ Лужники)», график Recharts с чистыми осями (0–150 по Y, секунды отставания), гистограмма TreeSHAP с вертикальными градиентными синими столбцами (BUR, PHR, SSR, SRP, CFD, PET, FHR), блок рекомендации Headway Holding Action и крупная изумрудная кнопка `✓ ПРИМЕНИТЬ HOLDING / ЗАДЕРЖКУ 90 СЕК`.
+  3. `frontend/src/components/Inspector.tsx`: Инспектор «Электробус '№1042'», бейдж маршрута «м3 (Семёновская -> Лужники)», график Recharts с чистыми осями (0–150 по Y, секунды отставания), гистограмма TreeSHAP с вертикальными градиентными синими столбцами (BUR, PHR, SSR, SRP, CFD, PET, FHR), блок рекомендации Headway Holding Action и крупная изумрудная кнопка `[OK] ПРИМЕНИТЬ HOLDING / ЗАДЕРЖКУ 90 СЕК`.
   4. `frontend/src/components/MapView.tsx`: Бесшовный чистый слой Positron без ватермарок (с фильтром `clean-light-tiles`), цветные полигоны заторов Басманного перегона, изумрудная линия м3, маркеры догоняющего борта №1042 (с пульсирующим красным кольцом) и лидера №1043, нижняя парящая капсула горизонта прогноза с кнопками шагов и бейджем `T+15 min (Прогноз)`.
   5. `frontend/src/hooks/useTelemetry.ts`: Корректное объединение и сохранение входящих алертов.
 
 ##### **7.4.5.13 (P0): Комплексный пайплайн Google Stitch: Проектирование и внедрение Situational Matrix, Marey String Diagram, In-Cab Driver Terminal**
-* **Статус:** ✅ Выполнено.
+* **Статус:** [DONE] Выполнено.
 * **Проект Google Stitch:** `18146123695208314180` ("Next-Gen Диспетчерская Транспорта")
 * **Созданные эталонные экраны в Stitch:**
   1. `1d8af47d5d0543c08d9806baa30f33bb` — **Ситуационная матрица СППР: Альтернативные сценарии регулирования м3**.
@@ -531,11 +531,11 @@
   2. `d89555f1c8414b6489004b3688eacabc` — **Интервалограмма линии м3 — Пространственно-временная диаграмма Марея ЦОДД**.
      * Европейский диспетчерский стандарт Space-Time Trajectory: ось X (время 14:00–15:30), ось Y (10 ключевых остановок от Семёновской до Лужников), наклонные нитки графиков движения бортов, сближение ниток при пачковании (#1042 и #1043), горизонтальная площадка Holding на Бауманской, восстанавливающая параллельность и такт 7.5 мин.
   3. `cbc16ab5809648fabd9dacd0e9a43b0f` — **Бортовой терминал «Гранит-Навигатор v4.2» — Регулировочная стоянка м3**.
-     * Высококонтрастный промышленный планшет водителя электробуса (Cockpit Avionics): таймер обратного отсчета `02:18`, время отправления `14:47:30`, дельты интервалов, кнопка квитирования в перчатках `✓ ПОДТВЕРДИТЬ ПРИЕМ И ВЫПОЛНЕНИЕ`.
+     * Высококонтрастный промышленный планшет водителя электробуса (Cockpit Avionics): таймер обратного отсчета `02:18`, время отправления `14:47:30`, дельты интервалов, кнопка квитирования в перчатках `[OK] ПОДТВЕРДИТЬ ПРИЕМ И ВЫПОЛНЕНИЕ`.
 * **Реализованные компоненты React (`frontend/src/`):**
   * `frontend/src/components/MareyDiagram.tsx`: Полноэкранный SVG-холст интервалограммы Марея с переключением сетки плана, живым таймером, таблицей бортов и быстрым Holding.
   * `frontend/src/components/DriverTerminal.tsx`: Кабинный планшет водителя с тикающим LED-таймером, блокировкой хода [P] и квитированием.
-  * `frontend/src/components/TopBar.tsx`: Табы быстрого переключения режимов (`🗺 Карта GIS`, `📈 График Марея (м3)`, `📱 Терминал борта №1043`).
+  * `frontend/src/components/TopBar.tsx`: Табы быстрого переключения режимов (`Карта GIS`, `График Марея (м3)`, `Терминал борта №1043`).
   * `frontend/src/App.tsx`: Полная связка стейта диспетчера и водителя.
 
 ---
@@ -543,7 +543,7 @@
 
 
 
-### 🎤 7.5 — Питч, защита и демонстрация · Критерий 6 (0–10 баллов)
+### 7.5 — Питч, защита и демонстрация · Критерий 6 (0–10 баллов)
 
 #### **Задача 7.5.1: Презентация для защиты (5 минут, 8 слайдов)**
 * **Слайд 1 — Титульный:** Интеллектуальный ситуационный предиктор сбоев и интервалов движения наземного транспорта Москвы.
@@ -563,44 +563,44 @@
 
 ---
 
-## 📊 Матрица готовности задач Фазы 7
+## Матрица готовности задач Фазы 7
 
 | Модуль | Задача | Ответственный | Приоритет | Зависимости | Статус |
 |---|---|---|:---:|---|:---:|
-| **ML** | 7.1.1 Baseline Submit (~0.40 score) | Миша | 🔴 P0 | `validate/points.csv` | ✅ Готов (`submission_baseline.csv`) |
-| **ML** | 7.1.2 Feature Pipeline (train/labels) | Миша / Артём | 🔴 P0 | `train/traffic.csv` | ✅ Скрипт готов (`build_features.py`) |
-| **ML** | 7.1.3 CatBoost Regressor (.cbm) | Миша | 🔴 P0 | 7.1.2 | ✅ Обучен (`catboost_competition.cbm`, holdout MAE 53.2c) |
-| **ML** | 7.1.4 CatBoost Submit (score $\ge 0.55$) | Миша | 🔴 P0 | 7.1.3, `validate/` | ✅ Сдан на платформу (СКОР 1.0 / 6 из 6 баллов!) |
-| **ML** | 7.1.5 PyTorch Sequence Module | Миша | 🟡 P1 | 7.1.2 | ⏳ Отложено (необязательный стек по уточнению) |
-| **ML** | 7.1.6 TreeSHAP + FastAPI `/predict` | Миша | 🟡 P1 | 7.1.3 | ✅ Готов (XAI декомпозиция, 3 ключевых фактора) |
-| **ML** | 7.1.8 Документация кода PyDoc | Миша | 🔴 P0 | `ml/src/` | ✅ Выполнен (28 модулей, `docs/pydoc/index.html`, `pydoc.md`) |
-| **ML** | 7.1.9 Замеры производительности ML | Миша | 🔴 P0 | 7.1.3, 7.1.6 | ✅ Выполнен (`docs/ml_performance.md`, 70k+ ТС/с, 1.7 мс на м3) |
-| **Data** | 7.2.1 Экстрактор фичей телеметрии | Артём | 🔴 P0 | `traffic.csv` | ✅ Готов (`telemetry_cleaner.py`) |
-| **Data** | 7.2.2 Map-matching к остановкам | Артём | 🟡 P1 | `schedule.csv` | ✅ Готов (`schedule_matcher.py`) |
-| **Data** | 7.2.3 Расчет Headway и рисков | Артём / Денис | 🟡 P1 | 7.2.1 | ✅ Реализован (`engine/headway.go`, `build_features.py`) |
-| **Backend** | 7.3.1 NDTP TCP Listener (:9201) | Денис | 🔴 P0 | `ndtp_emulator_spec.md` | ✅ Реализован (пакеты, CRC, G6CellNav00, unitId) |
-| **Backend** | 7.3.2 Интеграция с ML + Fallback | Денис | 🔴 P0 | 7.1.6 | ✅ Реализован (debounced клиент, graceful fallback) |
-| **Backend** | 7.3.3 Swagger UI (`/swagger`) | Денис | 🔴 P0 | `backend/main.go` | ✅ Реализован (Swagger UI, /swagger/doc.json) |
-| **Backend** | 7.3.4 Docker Compose со стеком | Денис | 🟡 P1 | 7.3.1, 7.3.3 | ✅ Реализован (порты :8080, :9201, :8000, :5173, :18080) |
-| **Backend** | 7.3.5 Schedule, Headway & Alerts | Денис | 🔴 P0 | 7.3.1, 7.3.2 | ✅ Реализован (привязка к расписанию, интервалы, алерты, Holding) |
-| **Backend** | 7.3.6 What-If & Business KPIs | Денис | 🟡 P1 | 7.3.5 | ✅ Реализован (Welding formula, KPIs, NDTP 1-click, /stops) |
-| **Backend** | 7.3.7 Паспорт бэкенда и микробенчмарки | Денис | 🔴 P0 | `backend/internal/...` | ✅ Реализован (`docs/backend_and_telemetry_guide.md`, бенчмарки ns/op, 0 allocs) |
-| **Backend** | 7.3.8 Обогащение признаков Go $\to$ ML (`PredictEnriched`) | Денис | 🔴 P0 | 7.3.2, 7.3.5 | ✅ Реализован (`PredictRequest` + 24 features, `tracker`/`matcher` интеграция) |
-| **Frontend** | 7.4.1 Карточка инцидента по ТЗ | Кирилл | 🔴 P0 | `Inspector.tsx` | ✅ Реализован (таймер горизонта, SHAP-факторы, декомпозиция) |
-| **Frontend** | 7.4.2 Светофорная шкала рисков | Кирилл | 🔴 P0 | `MapView.tsx` | ✅ Реализован (светлая карта CartoDB Positron, цвета бортов, связка пачкования) |
-| **Frontend** | 7.4.3 Actionable UI (Holding) | Кирилл | 🟡 P1 | `Inspector.tsx` | ✅ Реализован (кнопка Holding, Recharts график План vs Без мер vs С ИИ) |
-| **Frontend** | 7.4.5 QA-стабилизация (7 дефектов) | Кирилл | 🔴 P0 | 7.4.1–7.4.4 | ✅ Выполнен (устранены опечатки, масштаб Recharts, SHAP, z-index Toast, адаптивность) |
-| **Frontend** | 7.4.6 Stitch UI/UX Pipeline (СППР Матрица, Марей, Терминал) | Кирилл | 🔴 P0 | StitchMCP | ✅ Выполнен (Google Stitch экраны: матрица 4 сценариев, график Марея m3, планшет водителя Granit-Navigator) |
-| **Frontend** | 7.4.7 Светлая тема по умолчанию и сессионная персистентность | Кирилл | 🔴 P0 | `storage.ts`, `App.tsx` | ✅ Выполнен (Light theme default, safe isolated storage ~100B, 24h TTL, без кэширования сырой телеметрии) |
-| **Frontend** | 7.4.8 GIS Map Tiles (Esri Canvas), Driver Terminal Day/Night & DSS Relevance, Interactive Timeline | Кирилл | 🔴 P0 | `MapView.tsx`, `DriverTerminal.tsx` | ✅ Выполнен (тайлы Esri Canvas без водяных знаков, день/ночь в терминале водителя, контекстный баннер СППР/NDTP, интерактивный таймлайн с автовоспроизведением и визуализацией пачкования на T+15 мин) |
+| **ML** | 7.1.1 Baseline Submit (~0.40 score) | Миша | [P0] | `validate/points.csv` | [DONE] Готов (`submission_baseline.csv`) |
+| **ML** | 7.1.2 Feature Pipeline (train/labels) | Миша / Артём | [P0] | `train/traffic.csv` | [DONE] Скрипт готов (`build_features.py`) |
+| **ML** | 7.1.3 CatBoost Regressor (.cbm) | Миша | [P0] | 7.1.2 | [DONE] Обучен (`catboost_competition.cbm`, holdout MAE 53.2c) |
+| **ML** | 7.1.4 CatBoost Submit (score $\ge 0.55$) | Миша | [P0] | 7.1.3, `validate/` | [DONE] Сдан на платформу (СКОР 1.0 / 6 из 6 баллов!) |
+| **ML** | 7.1.5 PyTorch Sequence Module | Миша | [P1] | 7.1.2 | [IN PROGRESS] Отложено (необязательный стек по уточнению) |
+| **ML** | 7.1.6 TreeSHAP + FastAPI `/predict` | Миша | [P1] | 7.1.3 | [DONE] Готов (XAI декомпозиция, 3 ключевых фактора) |
+| **ML** | 7.1.8 Документация кода PyDoc | Миша | [P0] | `ml/src/` | [DONE] Выполнен (28 модулей, `docs/pydoc/index.html`, `pydoc.md`) |
+| **ML** | 7.1.9 Замеры производительности ML | Миша | [P0] | 7.1.3, 7.1.6 | [DONE] Выполнен (`docs/ml_performance.md`, 70k+ ТС/с, 1.7 мс на м3) |
+| **Data** | 7.2.1 Экстрактор фичей телеметрии | Артём | [P0] | `traffic.csv` | [DONE] Готов (`telemetry_cleaner.py`) |
+| **Data** | 7.2.2 Map-matching к остановкам | Артём | [P1] | `schedule.csv` | [DONE] Готов (`schedule_matcher.py`) |
+| **Data** | 7.2.3 Расчет Headway и рисков | Артём / Денис | [P1] | 7.2.1 | [DONE] Реализован (`engine/headway.go`, `build_features.py`) |
+| **Backend** | 7.3.1 NDTP TCP Listener (:9201) | Денис | [P0] | `ndtp_emulator_spec.md` | [DONE] Реализован (пакеты, CRC, G6CellNav00, unitId) |
+| **Backend** | 7.3.2 Интеграция с ML + Fallback | Денис | [P0] | 7.1.6 | [DONE] Реализован (debounced клиент, graceful fallback) |
+| **Backend** | 7.3.3 Swagger UI (`/swagger`) | Денис | [P0] | `backend/main.go` | [DONE] Реализован (Swagger UI, /swagger/doc.json) |
+| **Backend** | 7.3.4 Docker Compose со стеком | Денис | [P1] | 7.3.1, 7.3.3 | [DONE] Реализован (порты :8080, :9201, :8000, :5173, :18080) |
+| **Backend** | 7.3.5 Schedule, Headway & Alerts | Денис | [P0] | 7.3.1, 7.3.2 | [DONE] Реализован (привязка к расписанию, интервалы, алерты, Holding) |
+| **Backend** | 7.3.6 What-If & Business KPIs | Денис | [P1] | 7.3.5 | [DONE] Реализован (Welding formula, KPIs, NDTP 1-click, /stops) |
+| **Backend** | 7.3.7 Паспорт бэкенда и микробенчмарки | Денис | [P0] | `backend/internal/...` | [DONE] Реализован (`docs/backend_and_telemetry_guide.md`, бенчмарки ns/op, 0 allocs) |
+| **Backend** | 7.3.8 Обогащение признаков Go $\to$ ML (`PredictEnriched`) | Денис | [P0] | 7.3.2, 7.3.5 | [DONE] Реализован (`PredictRequest` + 24 features, `tracker`/`matcher` интеграция) |
+| **Frontend** | 7.4.1 Карточка инцидента по ТЗ | Кирилл | [P0] | `Inspector.tsx` | [DONE] Реализован (таймер горизонта, SHAP-факторы, декомпозиция) |
+| **Frontend** | 7.4.2 Светофорная шкала рисков | Кирилл | [P0] | `MapView.tsx` | [DONE] Реализован (светлая карта CartoDB Positron, цвета бортов, связка пачкования) |
+| **Frontend** | 7.4.3 Actionable UI (Holding) | Кирилл | [P1] | `Inspector.tsx` | [DONE] Реализован (кнопка Holding, Recharts график План vs Без мер vs С ИИ) |
+| **Frontend** | 7.4.5 QA-стабилизация (7 дефектов) | Кирилл | [P0] | 7.4.1–7.4.4 | [DONE] Выполнен (устранены опечатки, масштаб Recharts, SHAP, z-index Toast, адаптивность) |
+| **Frontend** | 7.4.6 Stitch UI/UX Pipeline (СППР Матрица, Марей, Терминал) | Кирилл | [P0] | StitchMCP | [DONE] Выполнен (Google Stitch экраны: матрица 4 сценариев, график Марея m3, планшет водителя Granit-Navigator) |
+| **Frontend** | 7.4.7 Светлая тема по умолчанию и сессионная персистентность | Кирилл | [P0] | `storage.ts`, `App.tsx` | [DONE] Выполнен (Light theme default, safe isolated storage ~100B, 24h TTL, без кэширования сырой телеметрии) |
+| **Frontend** | 7.4.8 GIS Map Tiles (Esri Canvas), Driver Terminal Day/Night & DSS Relevance, Interactive Timeline | Кирилл | [P0] | `MapView.tsx`, `DriverTerminal.tsx` | [DONE] Выполнен (тайлы Esri Canvas без водяных знаков, день/ночь в терминале водителя, контекстный баннер СППР/NDTP, интерактивный таймлайн с автовоспроизведением и визуализацией пачкования на T+15 мин) |
 
-| **Питч** | 7.5.1 Слайды презентации (8 шт) | Денис / Все | 🔴 P0 | Результаты сабмитов | ⏳ В плане |
-| **Питч** | 7.5.2 Защита от атак жюри | Денис | 🔴 P0 | `product_attacks_and_backlog.md` | ✅ Готов (`docs/product_attacks_and_backlog.md`) |
-| **Питч** | 7.5.3 Видео скрипкаста (бэкап) | Кирилл | 🟡 P1 | Готовый UI | ⏳ В плане |
+| **Питч** | 7.5.1 Слайды презентации (8 шт) | Денис / Все | [P0] | Результаты сабмитов | [IN PROGRESS] В плане |
+| **Питч** | 7.5.2 Защита от атак жюри | Денис | [P0] | `product_attacks_and_backlog.md` | [DONE] Готов (`docs/product_attacks_and_backlog.md`) |
+| **Питч** | 7.5.3 Видео скрипкаста (бэкап) | Кирилл | [P1] | Готовый UI | [IN PROGRESS] В плане |
 
 ---
 
-## 🏗 Ключевые архитектурные инварианты
+## Ключевые архитектурные инварианты
 
 1. **Строгий горизонт 10–15 минут:** Прогноз строится строго в момент $T$ для остановки, плановое время которой попадает в интервал $(T+10 \text{ мин}, T+15 \text{ мин}]$. Заглядывание в телеметрию после $T$ запрещено.
 2. **Официальный target:** signed `target_delay_s` / `predicted_delay_sec` (сек; `+` опоздание, `−` опережение). Offline-метрика — **MAE**. DSS bunching/Holding — надстройка, не score.

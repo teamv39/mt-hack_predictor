@@ -24,6 +24,7 @@ services:
       dockerfile: Dockerfile
     container_name: mt-predictor-backend
     ports:
+      - "8080:8080"
       - "18081:8080"
       - "9201:9201"
     volumes:

@@ -286,7 +286,8 @@ function mapBackendAlert(ba: any): AlertItem {
 
 export function useTelemetry() {
   const initialPrefs = useMemo(() => loadPreferences(), []);
-  const dismissedAlertIds = useRef(new Set(initialPrefs.dismissedAlerts));
+  const initialDismissedSet = useMemo(() => new Set(initialPrefs.dismissedAlerts || []), [initialPrefs]);
+  const dismissedAlertIds = useRef(initialDismissedSet);
 
   const [appliedHoldingIds, setAppliedHoldingIds] = useState<string[]>(initialPrefs.appliedHoldingIds || []);
   const [, setAppliedScenarios] = useState<Record<string, string>>(initialPrefs.appliedScenarios || {});
@@ -300,7 +301,7 @@ export function useTelemetry() {
   });
 
   const [alerts, setAlerts] = useState<AlertItem[]>(() => {
-    return MOCK_ALERTS.filter((alt) => !dismissedAlertIds.current.has(alt.id)).map((alt) => {
+    return MOCK_ALERTS.filter((alt) => !initialDismissedSet.has(alt.id)).map((alt) => {
       const isHolding = initialPrefs.appliedHoldingIds?.includes(alt.id);
       const scenario = initialPrefs.appliedScenarios?.[alt.id];
       if (isHolding || scenario) {
@@ -382,9 +383,6 @@ export function useTelemetry() {
   useEffect(() => {
     if (dataMode !== "dataset") return;
     let cancelled = false;
-    setDatasetRoutes([]);
-    setVehicles([]);
-    setAlerts(MOCK_ALERTS.filter((alert) => !dismissedAlertIds.current.has(alert.id)));
     loadTracksFromDataset()
       .then((tracks) => {
         if (cancelled) return;
@@ -599,7 +597,7 @@ export function useTelemetry() {
         ws.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
-            if (data.type === "TELEMETRY_UPDATE") {
+            if (data.type === "TELEMETRY_UPDATE" || data.type === "HOLDING_APPLIED") {
               if (Array.isArray(data.vehicles) && data.vehicles.length > 0) {
                 setVehicles((prev) => {
                   const mapped: Vehicle[] = data.vehicles.map((bv: any) => {

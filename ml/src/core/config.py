@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
-from typing import List
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -37,7 +36,7 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
 
     # CORS settings
-    cors_origins: List[str] = ["*"]
+    cors_origins: list[str] = ["*"]
 
     # Paths
     repo_root: Path = _repo_root()

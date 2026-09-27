@@ -7,7 +7,6 @@ Optional head: bunching classifier for live DSS (loaded when .cbm present).
 from __future__ import annotations
 
 from pathlib import Path
-from typing import List, Optional
 
 import numpy as np
 
@@ -37,7 +36,7 @@ logger = setup_logger("catboost_predictor")
 class CatBoostPredictor(BasePredictor):
     """Predictor backed by CatBoostRegressor (+ optional Classifier)."""
 
-    def __init__(self, regressor_path: Path, classifier_path: Optional[Path] = None):
+    def __init__(self, regressor_path: Path, classifier_path: Path | None = None):
         self.settings = get_settings()
         self.regressor_path = Path(regressor_path)
         self.classifier_path = Path(classifier_path) if classifier_path else None
@@ -91,7 +90,7 @@ class CatBoostPredictor(BasePredictor):
     def predict_single(self, feature: FeatureVector) -> PredictionResponse:
         return self.predict_batch([feature])[0]
 
-    def predict_batch(self, features: List[FeatureVector]) -> List[PredictionResponse]:
+    def predict_batch(self, features: list[FeatureVector]) -> list[PredictionResponse]:
         if not features:
             return []
 
@@ -131,7 +130,7 @@ class CatBoostPredictor(BasePredictor):
                 logger.warning(f"TreeSHAP failed: {e}")
                 shap_values = None
 
-        responses: List[PredictionResponse] = []
+        responses: list[PredictionResponse] = []
         for i, fv in enumerate(features):
             # Official target is SIGNED — do not clip at zero (early arrivals exist).
             delay = float(pred_delays[i])
@@ -207,8 +206,8 @@ class CatBoostPredictor(BasePredictor):
     def _extract_shap_factors(
         self,
         sample_shap: np.ndarray,
-        feature_names: List[str],
-    ) -> List[SHAPFactor]:
+        feature_names: list[str],
+    ) -> list[SHAPFactor]:
         abs_weights = np.abs(sample_shap)
         total_weight = float(np.sum(abs_weights) or 1.0)
 

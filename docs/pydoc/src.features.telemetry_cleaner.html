@@ -20,15 +20,14 @@ and&nbsp;duplicate&nbsp;packets&nbsp;to&nbsp;prepare&nbsp;clean&nbsp;telemetry&n
     
 <tr><td class="decor pkg-content-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
 <td class="singlecolumn"><table><tr><td class="multicolumn"><a href="logging.html">logging</a><br>
-</td><td class="multicolumn"><a href="numpy.html">numpy</a><br>
 </td><td class="multicolumn"><a href="pandas.html">pandas</a><br>
-</td><td class="multicolumn"></td></tr></table></td></tr></table><p>
+</td><td class="multicolumn"></td><td class="multicolumn"></td></tr></table></td></tr></table><p>
 <table class="section">
 <tr class="decor functions-decor heading-text">
 <td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Functions</strong></td></tr>
     
 <tr><td class="decor functions-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
-<td class="singlecolumn"><dl><dt><a name="-clean_traffic_dataframe"><strong>clean_traffic_dataframe</strong></a>(df: 'pd.DataFrame', bbox: 'Optional[dict]' = None, max_speed: 'float' = 110.0, min_speed: 'float' = 0.0) -&gt; 'pd.DataFrame'</dt><dd><span class="code">Cleans&nbsp;a&nbsp;raw&nbsp;traffic&nbsp;telemetry&nbsp;DataFrame.<br>
+<td class="singlecolumn"><dl><dt><a name="-clean_traffic_dataframe"><strong>clean_traffic_dataframe</strong></a>(df: 'pd.DataFrame', bbox: 'dict | None' = None, max_speed: 'float' = 110.0, min_speed: 'float' = 0.0) -&gt; 'pd.DataFrame'</dt><dd><span class="code">Cleans&nbsp;a&nbsp;raw&nbsp;traffic&nbsp;telemetry&nbsp;DataFrame.<br>
 &nbsp;<br>
 Rules&nbsp;applied:<br>
 1.&nbsp;Filter&nbsp;out&nbsp;`location_valid&nbsp;==&nbsp;False`&nbsp;(and&nbsp;missing&nbsp;coordinates).<br>
@@ -36,7 +35,7 @@ Rules&nbsp;applied:<br>
 3.&nbsp;Filter&nbsp;out&nbsp;unrealistic&nbsp;speeds&nbsp;(negative&nbsp;or&nbsp;&gt;&nbsp;110&nbsp;km/h).<br>
 4.&nbsp;Convert&nbsp;`event_time`&nbsp;to&nbsp;datetime64&nbsp;and&nbsp;sort&nbsp;by&nbsp;`(tr_id,&nbsp;event_time)`.<br>
 5.&nbsp;Deduplicate&nbsp;identical&nbsp;timestamps&nbsp;for&nbsp;the&nbsp;same&nbsp;vehicle.</span></dd></dl>
- <dl><dt><a name="-load_and_clean_traffic"><strong>load_and_clean_traffic</strong></a>(file_path: 'Union[str, Path]', bbox: 'Optional[dict]' = None) -&gt; 'pd.DataFrame'</dt><dd><span class="code">Loads&nbsp;a&nbsp;traffic.csv&nbsp;file&nbsp;and&nbsp;returns&nbsp;cleaned&nbsp;DataFrame.</span></dd></dl>
+ <dl><dt><a name="-load_and_clean_traffic"><strong>load_and_clean_traffic</strong></a>(file_path: 'str | Path', bbox: 'dict | None' = None) -&gt; 'pd.DataFrame'</dt><dd><span class="code">Loads&nbsp;a&nbsp;traffic.csv&nbsp;file&nbsp;and&nbsp;returns&nbsp;cleaned&nbsp;DataFrame.</span></dd></dl>
 </td></tr></table><p>
 <table class="section">
 <tr class="decor data-decor heading-text">
@@ -46,7 +45,5 @@ Rules&nbsp;applied:<br>
 <td class="singlecolumn"><strong>MAX_BUS_SPEED_KMH</strong> = 110.0<br>
 <strong>MIN_BUS_SPEED_KMH</strong> = 0.0<br>
 <strong>MOSCOW_BBOX</strong> = {'lat_max': 57.0, 'lat_min': 54.5, 'lon_max': 40.5, 'lon_min': 35.0}<br>
-<strong>Optional</strong> = typing.Optional<br>
-<strong>Union</strong> = typing.Union<br>
 <strong>logger</strong> = &lt;Logger src.features.telemetry_cleaner (INFO)&gt;</td></tr></table>
 </body></html>

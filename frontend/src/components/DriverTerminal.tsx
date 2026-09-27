@@ -132,6 +132,13 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
   ];
 
   const [currentUnitId, setCurrentUnitId] = useState<string>(vehicleId || "1043");
+
+  useEffect(() => {
+    if (vehicleId) {
+      setCurrentUnitId(vehicleId);
+    }
+  }, [vehicleId]);
+
   const activeUnit = FLEET_TERMINALS.find((u) => u.id === currentUnitId) || FLEET_TERMINALS[0];
 
   return (

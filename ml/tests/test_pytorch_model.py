@@ -19,7 +19,6 @@ import pytest
 import torch
 
 from src.models.nn_sequence import (
-    BLEND_ALPHA,
     INPUT_SIZE,
     SEQ_LEN,
     DelayGRU,

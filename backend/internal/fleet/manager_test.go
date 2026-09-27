@@ -57,3 +57,23 @@ func TestFleetManager_UpsertAndMerge(t *testing.T) {
 		t.Fatalf("expected 2 merged vehicles, got %d", len(merged))
 	}
 }
+
+func TestFleetManager_MergeDemo_HoldingStatus(t *testing.T) {
+	mgr := NewManager()
+
+	demo := []models.Vehicle{
+		{ID: "1043", RouteID: "m3", Status: "ON_TIME"},
+	}
+
+	// Apply holding on vehicle 1043
+	mgr.ApplyHolding("1043", 120)
+
+	merged := mgr.MergeDemo(demo)
+	if len(merged) != 1 {
+		t.Fatalf("expected 1 merged vehicle, got %d", len(merged))
+	}
+	if merged[0].Status != "REGULATING" {
+		t.Fatalf("expected status REGULATING for held demo vehicle, got %s", merged[0].Status)
+	}
+}
+
