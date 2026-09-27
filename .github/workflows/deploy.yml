@@ -40,35 +40,52 @@ jobs:
           npm ci
           npm run build
 
-      - name: Configure SSH
+      - name: Configure SSH Multiplexing
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -p ${{ secrets.SERVER_PORT || 22 }} -H "${{ secrets.SERVER_HOST }}" >> ~/.ssh/known_hosts
 
+          cat <<'EOF' > ~/.ssh/config
+          Host target-server
+            HostName ${{ secrets.SERVER_HOST }}
+            User ${{ secrets.SERVER_USER }}
+            Port ${{ secrets.SERVER_PORT || 22 }}
+            IdentityFile ~/.ssh/id_ed25519
+            ControlMaster auto
+            ControlPath ~/.ssh/cm-%r@%h:%p
+            ControlPersist 15m
+            ServerAliveInterval 15
+            ServerAliveCountMax 3
+            StrictHostKeyChecking accept-new
+          EOF
+
+          echo "==> Establishing persistent SSH Master connection..."
+          for i in {1..5}; do
+            ssh -f -N target-server && echo "✅ SSH master connected!" && break || (echo "Retrying SSH connection in 3s..." && sleep 3)
+          done
+
       - name: Sync Artifacts to Server
         run: |
-          SSH_CMD="ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.SERVER_PORT || 22 }} -o StrictHostKeyChecking=accept-new"
-          TARGET="${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/${{ secrets.SERVER_USER }}/mt-hack_predictor"
+          TARGET="target-server:/home/${{ secrets.SERVER_USER }}/mt-hack_predictor"
 
           echo "==> Syncing Frontend bundle..."
-          rsync -avz -e "$SSH_CMD" --delete frontend/dist/ "${TARGET}/frontend/dist/"
+          rsync -avz --delete frontend/dist/ "${TARGET}/frontend/dist/"
 
           echo "==> Syncing Go server binary..."
-          rsync -avz -e "$SSH_CMD" backend/server "${TARGET}/backend/server"
+          rsync -avz backend/server "${TARGET}/backend/server"
 
           echo "==> Syncing ML code..."
-          rsync -avz -e "$SSH_CMD" --exclude='.venv' --exclude='__pycache__' ml/src/ "${TARGET}/ml/src/"
-          rsync -avz -e "$SSH_CMD" ml/pyproject.toml "${TARGET}/ml/pyproject.toml"
+          rsync -avz --exclude='.venv' --exclude='__pycache__' ml/src/ "${TARGET}/ml/src/"
+          rsync -avz ml/pyproject.toml "${TARGET}/ml/pyproject.toml"
 
           echo "==> Syncing Deploy Script..."
-          rsync -avz -e "$SSH_CMD" scripts/deploy.sh "${TARGET}/scripts/deploy.sh"
+          rsync -avz scripts/deploy.sh "${TARGET}/scripts/deploy.sh"
 
       - name: Run Remote Deployment
         run: |
-          ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.SERVER_PORT || 22 }} -o StrictHostKeyChecking=accept-new \
-            "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}" \
+          ssh target-server \
             "chmod +x /home/${{ secrets.SERVER_USER }}/mt-hack_predictor/scripts/deploy.sh && /home/${{ secrets.SERVER_USER }}/mt-hack_predictor/scripts/deploy.sh"
 
       - name: Health Check
