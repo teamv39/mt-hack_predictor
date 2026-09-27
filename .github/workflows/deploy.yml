@@ -100,6 +100,6 @@ jobs:
 
       - name: Health Check
         run: |
-          sleep 5
-          echo "==> Verifying Public Dashboard Status on :1234..."
-          curl -f --retry 5 --retry-delay 3 -s http://${{ secrets.SERVER_HOST }}:1234/api/v1/status | jq .
+          echo "==> Verifying Services Status via SSH..."
+          ssh target-server "curl -f -s http://127.0.0.1:1234/api/v1/status | jq ."
+          ssh target-server "sudo systemctl is-active mt-predictor-backend mt-predictor-ml nginx"
