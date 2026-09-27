@@ -28,7 +28,7 @@ export default function App() {
     selectedAlertId,
     selectedVehicleId,
     metrics,
-    route,
+    allRoutes,
     camera,
     timeStep,
     searchQuery,
@@ -102,11 +102,11 @@ export default function App() {
           />
         ) : activeTab === "terminal" ? (
           <DriverTerminal
-            vehicleId="1043"
-            routeNumber="м3"
-            isHoldingActive={true}
+            vehicleId={selectedVehicle?.id ? selectedVehicle.id.replace(/^P/, "") : "1043"}
+            routeNumber={selectedVehicle?.routeId || "м3"}
+            isHoldingActive={selectedAlert?.recommendation?.applied ?? true}
             onAcknowledge={() => {
-              applyHolding("alert_1042");
+              if (selectedAlertId) applyHolding(selectedAlertId);
             }}
             isDarkMode={isDarkMode}
           />
@@ -115,7 +115,7 @@ export default function App() {
             {/* Fullscreen Interactive Map */}
             <div className="absolute inset-0 w-full h-full z-0">
               <MapView
-                route={route}
+                routes={allRoutes}
                 vehicles={vehicles}
                 alert={selectedAlert}
                 selectedVehicleId={selectedVehicleId}

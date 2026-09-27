@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Check, CheckCircle2, Cpu, X, Star, Shield, ArrowRight } from "lucide-react";
+import { CheckCircle2, Cpu, X, Star } from "lucide-react";
 
 export interface ScenarioItem {
   id: string;
@@ -30,7 +30,7 @@ const SCENARIOS: ScenarioItem[] = [
     ],
     stars: 5,
     tagline: "Наивысшая эффективность • Мин. риски",
-    btnLabel: "Применить выбранный сценарий (Holding 90с)",
+    btnLabel: "Применить выбранный сценарий (Holding 150с • 2.5 мин)",
     theme: "emerald",
   },
   {

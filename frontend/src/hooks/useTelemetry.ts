@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   MOCK_SYSTEM_METRICS,
   MOCK_ROUTE_DATA,
   MOCK_VEHICLES,
   MOCK_ALERTS,
   MOCK_CAMERA,
+  MOCK_ALL_ROUTES,
   Vehicle,
   AlertItem,
   RouteData,
@@ -21,19 +22,31 @@ export interface ToastMessage {
   timestamp: string;
 }
 
+export function normalizeRouteId(id?: string): string {
+  if (!id) return "м3";
+  let s = id.trim();
+  if (/^m/i.test(s)) {
+    s = "м" + s.slice(1);
+  } else if (/^t/i.test(s)) {
+    s = "т" + s.slice(1);
+  }
+  return s;
+}
+
 function mapBackendVehicle(bv: any, prevVeh?: Vehicle): Vehicle {
   const normalizedId = bv.id?.startsWith("P") ? bv.id : `P${bv.id}`;
   const isDelayed = bv.status === "DELAYED" || (bv.delay_seconds && bv.delay_seconds > 180);
   const isBunching = bv.status === "BUNCHING_RISK";
   const status: "BUNCHING_RISK" | "NORMAL" | "DELAYED" = isBunching ? "BUNCHING_RISK" : isDelayed ? "DELAYED" : "NORMAL";
+  const routeId = normalizeRouteId(bv.route_id || prevVeh?.routeId || "м3");
 
   return {
     id: normalizedId,
-    badgeLabel: `${(bv.id || "").replace(/^P/, "")} · ${bv.route_id || "м3"}`,
+    badgeLabel: `${(bv.id || "").replace(/^P/, "")} · ${routeId}`,
     plateNumber: prevVeh?.plateNumber || (String(bv.id).includes("1042") ? "Е 742 КХ 799" : "М 104 ВВ 777"),
     model: prevVeh?.model || "ЛиАЗ-6213.65 (Гармошка)",
-    routeId: bv.route_id || "m3",
-    routeName: "Маршрут м3",
+    routeId,
+    routeName: prevVeh?.routeName || `Маршрут ${routeId}`,
     status,
     delaySeconds: Math.round(bv.delay_seconds || 0),
     predictedTerminalDelayMinutes: +(bv.delay_seconds ? (bv.delay_seconds / 60).toFixed(1) : 0),
@@ -47,12 +60,13 @@ function mapBackendVehicle(bv: any, prevVeh?: Vehicle): Vehicle {
 }
 
 function mapBackendAlert(ba: any): AlertItem {
+  const normRouteId = normalizeRouteId(ba.route_id || "м3");
   return {
     id: ba.id || "alert_1042",
     vehicleId: ba.vehicle_id ? (ba.vehicle_id.startsWith("P") ? ba.vehicle_id : `P${ba.vehicle_id}`) : "P1042",
     followingVehicleId: "P1043",
-    routeNumberBadge: "м3",
-    routeId: ba.route_id || "m3",
+    routeNumberBadge: normRouteId,
+    routeId: normRouteId,
     urgencyBadge: "T+15 мин",
     urgencyMinutes: 15,
     tag: ba.type === "BUS_BUNCHING" ? "Схлопывание интервала" : "Задержка рейса",
@@ -104,8 +118,8 @@ function mapBackendAlert(ba: any): AlertItem {
 export function useTelemetry() {
   const initialPrefs = useMemo(() => loadPreferences(), []);
 
-  const [appliedHoldingIds, setAppliedHoldingIds] = useState<string[]>(initialPrefs.appliedHoldingIds || []);
-  const [appliedScenarios, setAppliedScenarios] = useState<Record<string, string>>(initialPrefs.appliedScenarios || {});
+  const [, setAppliedHoldingIds] = useState<string[]>(initialPrefs.appliedHoldingIds || []);
+  const [, setAppliedScenarios] = useState<Record<string, string>>(initialPrefs.appliedScenarios || {});
 
   const [vehicles, setVehicles] = useState<Vehicle[]>(() => {
     if (initialPrefs.appliedHoldingIds && initialPrefs.appliedHoldingIds.length > 0) {
@@ -171,8 +185,6 @@ export function useTelemetry() {
     return MOCK_SYSTEM_METRICS;
   });
 
-  const prevVehiclesRef = useRef<Vehicle[]>(vehicles);
-  prevVehiclesRef.current = vehicles;
 
   const setActiveFilter = useCallback((filter: "all" | "critical" | "bunching") => {
     setActiveFilterState(filter);
@@ -306,13 +318,19 @@ export function useTelemetry() {
               const existing = prev.find((p) => p.id === (bv.id.startsWith("P") ? bv.id : `P${bv.id}`));
               return mapBackendVehicle(bv, existing);
             });
-            return mapped;
+            const incomingIds = new Set(mapped.map((v) => v.id));
+            const preserved = prev.filter((p) => !incomingIds.has(p.id));
+            return [...mapped, ...preserved];
           });
         }
 
         if (Array.isArray(alertRes) && alertRes.length > 0) {
           const mappedAlerts = alertRes.map(mapBackendAlert);
-          setAlerts(mappedAlerts);
+          setAlerts((prev) => {
+            const incomingIds = new Set(mappedAlerts.map((a) => a.id));
+            const preserved = prev.filter((p) => !incomingIds.has(p.id));
+            return [...mappedAlerts, ...preserved];
+          });
         }
 
         if (statRes) {
@@ -344,12 +362,15 @@ export function useTelemetry() {
             const data = JSON.parse(event.data);
             if (data.type === "TELEMETRY_UPDATE") {
               if (Array.isArray(data.vehicles) && data.vehicles.length > 0) {
-                setVehicles((prev) =>
-                  data.vehicles.map((bv: any) => {
+                setVehicles((prev) => {
+                  const mapped: Vehicle[] = data.vehicles.map((bv: any) => {
                     const existing = prev.find((p) => p.id === (bv.id.startsWith("P") ? bv.id : `P${bv.id}`));
                     return mapBackendVehicle(bv, existing);
-                  })
-                );
+                  });
+                  const incomingIds = new Set(mapped.map((v: Vehicle) => v.id));
+                  const preserved = prev.filter((p) => !incomingIds.has(p.id));
+                  return [...mapped, ...preserved];
+                });
               }
               if (data.alert) {
                 const newAlert = mapBackendAlert(data.alert);
@@ -489,7 +510,7 @@ export function useTelemetry() {
   }, [addToast, alerts]);
 
   const applyScenario = useCallback(
-    (scenarioId: string, title: string) => {
+    (scenarioId: string, _title?: string) => {
       setAppliedScenarios((prev) => {
         const next = { ...prev, [selectedAlertId]: scenarioId };
         savePreferences({ appliedScenarios: next });
@@ -517,7 +538,45 @@ export function useTelemetry() {
         })
       );
 
-      // 2. Adjust metrics
+      // 2. Adjust vehicle status & inject reserve bus if scenario is depot_reserve
+      const cleanVehId = selectedVehicleId.replace(/^P/, "");
+      setVehicles((prevVehs) => {
+        let updated = prevVehs.map((veh) => {
+          if (veh.id === selectedVehicleId || veh.id.replace(/^P/, "") === cleanVehId) {
+            return {
+              ...veh,
+              status: "NORMAL" as const,
+              delaySeconds: scenarioId === "skip_stop" ? 90 : 60,
+              predictedTerminalDelayMinutes: 1,
+            };
+          }
+          return veh;
+        });
+
+        if (scenarioId === "depot_reserve" && !updated.some((v) => v.id === "P3105")) {
+          const reserveVeh: Vehicle = {
+            id: "P3105",
+            badgeLabel: "3105 (Резерв)",
+            plateNumber: "В 315 ЕХ 777",
+            model: "ЛиАЗ-6274 (Электробус)",
+            routeId: "м3",
+            routeName: "м3 · Саратовская — Серебряный бор",
+            status: "NORMAL",
+            delaySeconds: 0,
+            predictedTerminalDelayMinutes: 0,
+            speedKmh: 32,
+            latitude: 55.7824,
+            longitude: 37.7056,
+            heading: 235,
+            currentStop: "Электрозаводский мост",
+            nextStop: "ул. Бакунинская",
+          };
+          updated = [...updated, reserveVeh];
+        }
+        return updated;
+      });
+
+      // 3. Adjust metrics
       setMetrics((prev) => ({
         ...prev,
         preventedIncidentsCount: prev.preventedIncidentsCount + 1,
@@ -525,8 +584,7 @@ export function useTelemetry() {
         punctualityRate: 96.8,
       }));
 
-      // 3. Provide scenario-specific dispatch toast
-      const cleanVehId = selectedVehicleId.replace(/^P/, "");
+      // 4. Provide scenario-specific dispatch toast
       if (scenarioId === "holding") {
         addToast({
           type: "success",
@@ -549,7 +607,7 @@ export function useTelemetry() {
         addToast({
           type: "success",
           title: "Ввод резерва из парка (Сценарий 4)",
-          description: `Резервный электробус вышел на маршрут для компенсации борта №${cleanVehId}.`,
+          description: `Резервный электробус №3105 вышел на маршрут м3 у м. Электрозаводская для закрытия интервала.`,
         });
       }
     },
@@ -585,6 +643,20 @@ export function useTelemetry() {
     []
   );
 
+  const effectiveMetrics = useMemo(() => {
+    const unappliedAlerts = alerts.filter((a) => !a.recommendation?.applied).length;
+    const appliedAlerts = alerts.filter((a) => a.recommendation?.applied).length;
+    const dynamicPrevented = MOCK_SYSTEM_METRICS.preventedIncidentsCount + appliedAlerts;
+    const dynamicPunctuality = appliedAlerts > 0 ? 96.8 : 94.8;
+
+    return {
+      ...metrics,
+      activeIncidentsCount: unappliedAlerts,
+      preventedIncidentsCount: dynamicPrevented,
+      punctualityRate: dynamicPunctuality,
+    };
+  }, [alerts, metrics]);
+
   return {
     vehicles,
     alerts,
@@ -592,8 +664,9 @@ export function useTelemetry() {
     selectedVehicle,
     selectedAlertId,
     selectedVehicleId,
-    metrics,
+    metrics: effectiveMetrics,
     route: MOCK_ROUTE_DATA as RouteData,
+    allRoutes: MOCK_ALL_ROUTES as RouteData[],
     camera: MOCK_CAMERA,
     timeStep,
     setTimeStep,

@@ -3,15 +3,12 @@ import {
   CheckCircle2,
   Check,
   Clock,
-  PhoneCall,
   AlertTriangle,
   Volume2,
   Users,
   RotateCcw,
   ArrowRight,
   Shield,
-  Radio,
-  SlidersHorizontal,
 } from "lucide-react";
 import { loadPreferences, savePreferences } from "../utils/storage";
 
@@ -43,7 +40,7 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
 
   const [isAcked, setIsAcked] = useState<boolean>(() => !!initialPrefs.isTerminalAcked);
   const [ackTime, setAckTime] = useState<string>(() => initialPrefs.ackTimeStr || "");
-  const [nowMs, setNowMs] = useState<number>(Date.now());
+  const [nowMs, setNowMs] = useState<number>(() => Date.now());
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -99,6 +96,44 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
     });
   }, []);
 
+  const FLEET_TERMINALS = [
+    {
+      route: "м3",
+      id: "1043",
+      role: "Лидер (Holding)",
+      directive: "Регулировочная стоянка (Холдинг)",
+      desc: "Остановка «Метро Бауманская» • Устранение пачкования, выравнивание такта до 7.5 мин",
+      isHold: true,
+    },
+    {
+      route: "м3",
+      id: "1042",
+      role: "Ведомый (Нагон)",
+      directive: "Следование по расписанию",
+      desc: "Лидер №1043 выдерживает такт на м. Бауманская • Вход в график через 1 перегон",
+      isHold: false,
+    },
+    {
+      route: "м7",
+      id: "2198",
+      role: "Задержка (Затор)",
+      directive: "Приоритетный коридор АСУДД",
+      desc: "Затор на Николоямской ул. • Продление фазы светофора на 18 сек для нагона",
+      isHold: false,
+    },
+    {
+      route: "т88",
+      id: "0814",
+      role: "Риск такта",
+      directive: "Динамическая увязка такта",
+      desc: "Сжатие интервала • Стабилизация отправления перед м. Лубянка",
+      isHold: false,
+    },
+  ];
+
+  const [currentUnitId, setCurrentUnitId] = useState<string>(vehicleId || "1043");
+  const activeUnit = FLEET_TERMINALS.find((u) => u.id === currentUnitId) || FLEET_TERMINALS[0];
+
   return (
     <div
       className={`w-full h-full flex flex-col font-sans select-none overflow-y-auto p-4 gap-3 transition-colors duration-200 ${
@@ -127,18 +162,28 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-base font-bold tracking-tight">
-                Регулировочная стоянка (Холдинг)
+                {activeUnit.directive}
               </h1>
-              <span className={`text-[10px] font-bold font-mono px-2 py-0.5 rounded border ${
-                isDarkMode
-                  ? "bg-[#222226] text-zinc-300 border-white/10"
-                  : "bg-zinc-100 text-zinc-800 border-zinc-200"
-              }`}>
-                {routeNumber} • БОРТ {vehicleId}
-              </span>
+              {/* Unit Selector */}
+              <select
+                value={currentUnitId}
+                onChange={(e) => setCurrentUnitId(e.target.value)}
+                className={`text-[10px] font-bold font-mono px-2 py-0.5 rounded border cursor-pointer outline-none ${
+                  isDarkMode
+                    ? "bg-[#222226] text-zinc-200 border-white/10 hover:border-white/20"
+                    : "bg-zinc-100 text-zinc-800 border-zinc-200 hover:border-zinc-300"
+                }`}
+                title="Переключить борт для мониторинга кабины"
+              >
+                {FLEET_TERMINALS.map((u) => (
+                  <option key={u.id} value={u.id} className={isDarkMode ? "bg-[#18181b]" : "bg-white"}>
+                    {u.route} • БОРТ {u.id} ({u.role})
+                  </option>
+                ))}
+              </select>
             </div>
             <p className={`text-xs mt-0.5 ${isDarkMode ? "text-zinc-400" : "text-zinc-600"}`}>
-              Остановка «Метро Бауманская» • Устранение пачкования, выравнивание такта до 7.5 мин
+              {activeUnit.desc}
             </p>
           </div>
         </div>
@@ -180,7 +225,9 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
           }`}
         >
           <div>
-            <div className="flex items-center justify-between pb-2.5 border-b border-zinc-100 dark:border-white/10">
+            <div className={`flex items-center justify-between pb-2.5 border-b ${
+              isDarkMode ? "border-white/10" : "border-zinc-100"
+            }`}>
               <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 Маршрут {routeNumber}
@@ -195,7 +242,9 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
                 isDarkMode ? "bg-[#222226] border-white/5 text-zinc-400" : "bg-zinc-50 border-zinc-200 text-zinc-500"
               }`}>
                 <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-zinc-200 dark:bg-zinc-800 text-[10px] font-mono font-bold flex items-center justify-center">
+                  <span className={`w-5 h-5 rounded-full text-[10px] font-mono font-bold flex items-center justify-center ${
+                    isDarkMode ? "bg-zinc-800 text-zinc-300" : "bg-zinc-200 text-zinc-700"
+                  }`}>
                     13
                   </span>
                   <div>
@@ -221,7 +270,9 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
                       <span>м. Бауманская</span>
                       <span className="text-[9px] px-1 py-0.2 rounded bg-amber-500 text-white font-bold">ТЕКУЩАЯ</span>
                     </div>
-                    <div className="text-[10px] font-mono font-semibold text-amber-600 dark:text-amber-400">
+                    <div className={`text-[10px] font-mono font-semibold ${
+                      isDarkMode ? "text-amber-400" : "text-amber-600"
+                    }`}>
                       Стоянка: {timerDisplay}
                     </div>
                   </div>
@@ -234,7 +285,9 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
                 isDarkMode ? "bg-[#222226] border-white/5 text-zinc-300" : "bg-zinc-50 border-zinc-200 text-zinc-700"
               }`}>
                 <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-zinc-200 dark:bg-zinc-800 text-[10px] font-mono font-bold flex items-center justify-center">
+                  <span className={`w-5 h-5 rounded-full text-[10px] font-mono font-bold flex items-center justify-center ${
+                    isDarkMode ? "bg-zinc-800 text-zinc-300" : "bg-zinc-200 text-zinc-700"
+                  }`}>
                     15
                   </span>
                   <div>
@@ -242,7 +295,9 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
                     <div className="text-[9px] font-mono text-zinc-400">Расчетное: 14:51:00</div>
                   </div>
                 </div>
-                <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                <span className={`text-[10px] font-mono font-bold ${
+                  isDarkMode ? "text-emerald-400" : "text-emerald-600"
+                }`}>
                   Δ 7.5 мин
                 </span>
               </div>
@@ -252,7 +307,9 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
                 isDarkMode ? "bg-[#222226] border-white/5 text-zinc-300" : "bg-zinc-50 border-zinc-200 text-zinc-700"
               }`}>
                 <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-zinc-200 dark:bg-zinc-800 text-[10px] font-mono font-bold flex items-center justify-center">
+                  <span className={`w-5 h-5 rounded-full text-[10px] font-mono font-bold flex items-center justify-center ${
+                    isDarkMode ? "bg-zinc-800 text-zinc-300" : "bg-zinc-200 text-zinc-700"
+                  }`}>
                     16
                   </span>
                   <div>
@@ -266,7 +323,9 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
           </div>
 
           {/* Cabin Telemetry Sensor Capsules */}
-          <div className="mt-3 pt-3 border-t border-zinc-100 dark:border-white/10 grid grid-cols-2 gap-2 text-xs">
+          <div className={`mt-3 pt-3 border-t grid grid-cols-2 gap-2 text-xs ${
+            isDarkMode ? "border-white/10" : "border-zinc-100"
+          }`}>
             <div className={`p-2 rounded-lg border ${
               isDarkMode ? "bg-[#222226] border-white/5" : "bg-zinc-50 border-zinc-200"
             }`}>
@@ -336,7 +395,9 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
                   <span>Выдержка интервала</span>
                   <span>{progressPercent}%</span>
                 </div>
-                <div className="w-full bg-zinc-200 dark:bg-zinc-800 h-2 rounded-full overflow-hidden">
+                <div className={`w-full h-2 rounded-full overflow-hidden ${
+                  isDarkMode ? "bg-zinc-800" : "bg-zinc-200"
+                }`}>
                   <div
                     className="bg-amber-500 h-full rounded-full transition-all duration-1000"
                     style={{ width: `${progressPercent}%` }}
@@ -353,19 +414,29 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
                   isDarkMode ? "bg-[#18181b] border-white/10" : "bg-white border-zinc-200 shadow-2xs"
                 }`}
               >
-                <div className="flex items-center justify-between text-xs text-zinc-400">
-                  <span className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-zinc-300 dark:text-zinc-200">
+                <div className={`flex items-center justify-between text-xs ${
+                  isDarkMode ? "text-zinc-400" : "text-zinc-500"
+                }`}>
+                  <span className={`flex items-center gap-1.5 font-bold uppercase tracking-wider ${
+                    isDarkMode ? "text-zinc-200" : "text-zinc-700"
+                  }`}>
                     <Clock size={13} />
                     Расчетное отправление
                   </span>
                 </div>
                 <div className="my-2 flex items-baseline gap-2">
-                  <span className="text-3xl font-mono font-bold text-zinc-100 dark:text-white">
+                  <span className={`text-3xl font-mono font-bold ${
+                    isDarkMode ? "text-white" : "text-zinc-900"
+                  }`}>
                     {departureTimeStr}
                   </span>
-                  <span className="text-xs font-mono text-zinc-400 font-semibold">МСК</span>
+                  <span className={`text-xs font-mono font-semibold ${
+                    isDarkMode ? "text-zinc-400" : "text-zinc-500"
+                  }`}>МСК</span>
                 </div>
-                <div className="text-[10px] font-mono text-zinc-400">
+                <div className={`text-[10px] font-mono ${
+                  isDarkMode ? "text-zinc-400" : "text-zinc-500"
+                }`}>
                   Синхронизация АСУ-РДС ±0.1 с
                 </div>
               </div>
@@ -376,7 +447,9 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
                   isDarkMode ? "bg-[#18181b] border-white/10" : "bg-white border-zinc-200 shadow-2xs"
                 }`}
               >
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-zinc-300">
+                <div className={`flex items-center gap-1.5 text-xs font-semibold ${
+                  isDarkMode ? "text-zinc-200" : "text-zinc-800"
+                }`}>
                   <Volume2 size={13} />
                   <span>Автоинформатор в салоне</span>
                 </div>
@@ -385,7 +458,9 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
                 }`}>
                   «Уважаемые пассажиры, технологическая регулировка интервала движения».
                 </div>
-                <div className="text-[10px] text-emerald-400 font-semibold mt-1 flex items-center gap-1">
+                <div className={`text-[10px] font-semibold mt-1 flex items-center gap-1 ${
+                  isDarkMode ? "text-emerald-400" : "text-emerald-600"
+                }`}>
                   <Check size={11} />
                   <span>Оповещение воспроизведено</span>
                 </div>
@@ -400,11 +475,13 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
             }`}
           >
             <div className="flex items-center justify-between text-xs font-mono">
-              <span className="font-bold text-zinc-300 flex items-center gap-1.5">
+              <span className={`font-bold flex items-center gap-1.5 ${isDarkMode ? "text-zinc-300" : "text-zinc-800"}`}>
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                 Схема перегона: «Бауманская → Бакунинская»
               </span>
-              <span className="text-amber-400 font-semibold text-[11px]">
+              <span className={`font-semibold text-[11px] ${
+                isDarkMode ? "text-amber-400" : "text-amber-600"
+              }`}>
                 Дистанция: 480 м (увеличивается)
               </span>
             </div>
@@ -414,20 +491,26 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
               isDarkMode ? "bg-[#141416] border-white/5" : "bg-zinc-50 border-zinc-200"
             }`}>
               <div className="flex items-center gap-2">
-                <span className="w-7 h-7 rounded-full bg-zinc-700 text-white font-bold flex items-center justify-center text-[10px]">
+                <span className={`w-7 h-7 rounded-full text-white font-bold flex items-center justify-center text-[10px] ${
+                  isDarkMode ? "bg-zinc-700" : "bg-zinc-600"
+                }`}>
                   1042
                 </span>
                 <div>
-                  <div className="font-bold text-xs">Лидер #1042</div>
-                  <div className="text-[10px] text-zinc-400">Впереди • +3.2 мин</div>
+                  <div className={`font-bold text-xs ${isDarkMode ? "text-zinc-200" : "text-zinc-800"}`}>Ведомый #1042</div>
+                  <div className={`text-[10px] ${isDarkMode ? "text-zinc-400" : "text-zinc-500"}`}>Сзади • сокращает разрыв</div>
                 </div>
               </div>
 
               <div className="flex-1 flex flex-col items-center px-4">
-                <span className="text-[10px] text-emerald-400 font-semibold mb-1">
+                <span className={`text-[10px] font-semibold mb-1 ${
+                  isDarkMode ? "text-emerald-400" : "text-emerald-600"
+                }`}>
                   Разрыв восстанавливается → Такт 7.5 мин
                 </span>
-                <div className="w-full h-1.5 bg-zinc-300 dark:bg-zinc-700 rounded-full relative flex items-center">
+                <div className={`w-full h-1.5 rounded-full relative flex items-center ${
+                  isDarkMode ? "bg-zinc-700" : "bg-zinc-300"
+                }`}>
                   <div className="h-full bg-emerald-500 rounded-full w-2/3" />
                   <ArrowRight size={12} className="absolute right-0 text-emerald-500" />
                 </div>
@@ -435,8 +518,12 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
 
               <div className="flex items-center gap-2">
                 <div>
-                  <div className="font-bold text-xs text-right text-emerald-400">Ваш борт #1043</div>
-                  <div className="text-[10px] text-zinc-400 text-right">На стоянке</div>
+                  <div className={`font-bold text-xs text-right ${
+                    isDarkMode ? "text-emerald-400" : "text-emerald-600"
+                  }`}>Ваш борт #1043 (Лидер)</div>
+                  <div className={`text-[10px] text-right ${
+                    isDarkMode ? "text-zinc-400" : "text-zinc-500"
+                  }`}>На стоянке • выдержка такта</div>
                 </div>
                 <span className="w-7 h-7 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center text-[10px]">
                   1043
@@ -475,13 +562,15 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
         <div className={`p-2.5 rounded-lg border flex items-center gap-2.5 ${
           isDarkMode ? "bg-[#18181b] border-white/10" : "bg-white border-zinc-200"
         }`}>
-          <div className="w-8 h-8 rounded-md bg-zinc-200 dark:bg-zinc-800 flex flex-col items-center justify-center font-mono font-bold text-xs">
+          <div className={`w-8 h-8 rounded-md flex flex-col items-center justify-center font-mono font-bold text-xs ${
+            isDarkMode ? "bg-zinc-800 text-zinc-200" : "bg-zinc-200 text-zinc-700"
+          }`}>
             <span>0</span>
             <span className="text-[8px] opacity-75 font-normal">км/ч</span>
           </div>
           <div>
             <div className="text-[10px] text-zinc-400">Скорость ТС</div>
-            <div className="font-bold text-amber-400 font-mono">Ручной тормоз [P]</div>
+            <div className="font-bold text-amber-500 font-mono">Ручной тормоз [P]</div>
           </div>
         </div>
 
@@ -490,11 +579,11 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
         }`}>
           <div>
             <div className="text-[10px] text-zinc-400">Сзади #1042</div>
-            <div className="font-bold font-mono text-rose-400">
-              1.4 мин → <span className="text-emerald-400">7.5 мин</span>
+            <div className="font-bold font-mono text-rose-500">
+              1.4 мин → <span className="text-emerald-500">7.5 мин</span>
             </div>
           </div>
-          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20">
             СХЛОПЫВАНИЕ
           </span>
         </div>
@@ -504,9 +593,9 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
         }`}>
           <div>
             <div className="text-[10px] text-zinc-400">Впереди #1041</div>
-            <div className="font-bold font-mono text-emerald-400">8.2 мин</div>
+            <div className="font-bold font-mono text-emerald-500">8.2 мин</div>
           </div>
-          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
             НОРМА
           </span>
         </div>
@@ -516,11 +605,15 @@ export const DriverTerminal: React.FC<DriverTerminalProps> = ({
         }`}>
           <div>
             <div className="text-[10px] text-zinc-400">Тяга (SOC) 650V</div>
-            <div className="font-bold font-mono text-zinc-200 dark:text-zinc-100">84% • 142 км</div>
+            <div className={`font-bold font-mono ${isDarkMode ? "text-zinc-100" : "text-zinc-900"}`}>
+              84% • 142 км
+            </div>
           </div>
           <div className="text-right">
             <div className="text-[10px] text-zinc-400">Диспетчер</div>
-            <div className="font-semibold text-[11px] text-zinc-300">Сектор «Центр»</div>
+            <div className={`font-semibold text-[11px] ${isDarkMode ? "text-zinc-300" : "text-zinc-700"}`}>
+              Сектор «Центр»
+            </div>
           </div>
         </div>
       </footer>

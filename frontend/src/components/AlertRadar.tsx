@@ -1,14 +1,5 @@
 import React, { useState } from "react";
-import {
-  AlertTriangle,
-  Search,
-  Cpu,
-  Radio,
-  Layers,
-  BarChart3,
-  TrendingDown,
-  Clock,
-} from "lucide-react";
+import { Search, Cpu } from "lucide-react";
 import { AlertItem } from "../mock/telemetry";
 
 interface AlertRadarProps {
@@ -198,7 +189,8 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
           <div className="flex-1 p-2.5 overflow-y-auto flex flex-col gap-2">
             {filteredAlerts.map((item) => {
               const isSelected = item.id === selectedAlertId;
-              const isHigh = item.tagType === "bunching" || item.category === "critical";
+              const isApplied = item.recommendation?.applied;
+              const isHigh = !isApplied && (item.tagType === "bunching" || item.category === "critical");
 
               return (
                 <div
@@ -227,15 +219,25 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
                       </span>
                     </div>
 
-                    <span
-                      className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded border ${
-                        isHigh
-                          ? "bg-rose-500/10 text-rose-400 border-rose-500/30"
-                          : "bg-amber-500/10 text-amber-400 border-amber-500/30"
-                      }`}
-                    >
-                      {isHigh ? "HIGH" : "MEDIUM"}
-                    </span>
+                    {isApplied ? (
+                      <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded border bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30">
+                        {item.recommendation?.action === "DEPOT_RESERVE_APPLIED"
+                          ? "РЕЗЕРВ"
+                          : item.recommendation?.action === "SKIP_STOP_APPLIED"
+                          ? "SKIP-STOP"
+                          : "HOLDING"}
+                      </span>
+                    ) : (
+                      <span
+                        className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded border ${
+                          isHigh
+                            ? "bg-rose-500/10 text-rose-500 dark:text-rose-400 border-rose-500/30"
+                            : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30"
+                        }`}
+                      >
+                        {isHigh ? "HIGH" : "MEDIUM"}
+                      </span>
+                    )}
                   </div>
 
                   {/* Description */}

@@ -22,6 +22,7 @@ export interface Recommendation {
   text: string;
   infoText: string;
   applied: boolean;
+  action?: string;
 }
 
 export interface Vehicle {
@@ -81,6 +82,7 @@ export interface StopPoint {
 export interface RouteData {
   routeId: string;
   name: string;
+  color: string;
   routeGeometry: [number, number][];
   congestionSegment: [number, number][];
   stops: StopPoint[];
@@ -117,6 +119,7 @@ export const MOCK_STOPS: StopPoint[] = [
 export const MOCK_ROUTE_DATA: RouteData = {
   routeId: "м3",
   name: "Серебряный бор — Семёновская",
+  color: "#10b981",
   routeGeometry: [
     [37.6497, 55.7588], // ул. Покровка
     [37.6598, 55.7585], // Лялин пер.
@@ -240,6 +243,147 @@ export const MOCK_VEHICLES: Vehicle[] = [
     heading: 240,
     currentStop: "Доброслободская ул.",
     nextStop: "Старая Басманная ул.",
+  },
+  // --- Маршрут м7: доп. борт ---
+  {
+    id: "P2200",
+    badgeLabel: "P2200 (в норме)",
+    plateNumber: "К 200 ВА 777",
+    model: "ЛиАЗ-6213.65 (Гармошка)",
+    routeId: "м7",
+    routeName: "Карачарово — 138-й кв. Выхина",
+    status: "NORMAL",
+    delaySeconds: 30,
+    predictedTerminalDelayMinutes: 1,
+    speedKmh: 35,
+    latitude: 55.7435,
+    longitude: 37.6880,
+    heading: 90,
+    currentStop: "Рогожский вал",
+    nextStop: "Площадь Ильича",
+  },
+  // --- Маршрут т88: доп. борт ---
+  {
+    id: "P0816",
+    badgeLabel: "P0816 (в норме)",
+    plateNumber: "Н 816 ТР 799",
+    model: "ЛиАЗ-6274 (Электробус)",
+    routeId: "т88",
+    routeName: "Комсомольская пл. — м. Лубянка",
+    status: "NORMAL",
+    delaySeconds: 20,
+    predictedTerminalDelayMinutes: 1,
+    speedKmh: 32,
+    latitude: 55.7570,
+    longitude: 37.6380,
+    heading: 220,
+    currentStop: "Красные Ворота",
+    nextStop: "Мясницкая",
+  },
+  // --- Маршрут м3: доп. борт ---
+  {
+    id: "P1044",
+    badgeLabel: "P1044 (в норме)",
+    plateNumber: "М 044 КХ 799",
+    model: "ЛиАЗ-6274 (Электробус)",
+    routeId: "м3",
+    routeName: "Серебряный бор — Семёновская",
+    status: "NORMAL",
+    delaySeconds: 10,
+    predictedTerminalDelayMinutes: 0.5,
+    speedKmh: 40,
+    latitude: 55.7588,
+    longitude: 37.6510,
+    heading: 60,
+    currentStop: "ул. Покровка",
+    nextStop: "Лялин пер.",
+  },
+  // --- Маршрут 24: три борта ---
+  {
+    id: "P3501",
+    badgeLabel: "P3501 (в норме)",
+    plateNumber: "А 501 МК 777",
+    model: "ЛиАЗ-5292 (Дизель)",
+    routeId: "24",
+    routeName: "Курский вокзал — Елоховская",
+    status: "NORMAL",
+    delaySeconds: 45,
+    predictedTerminalDelayMinutes: 1.5,
+    speedKmh: 28,
+    latitude: 55.7610,
+    longitude: 37.6650,
+    heading: 45,
+    currentStop: "Земляной вал",
+    nextStop: "Чкаловская",
+  },
+  {
+    id: "P3502",
+    badgeLabel: "P3502 (в норме)",
+    plateNumber: "Е 502 МК 777",
+    model: "ЛиАЗ-5292 (Дизель)",
+    routeId: "24",
+    routeName: "Курский вокзал — Елоховская",
+    status: "NORMAL",
+    delaySeconds: 20,
+    predictedTerminalDelayMinutes: 1,
+    speedKmh: 33,
+    latitude: 55.7680,
+    longitude: 37.6760,
+    heading: 40,
+    currentStop: "Бауманская ул.",
+    nextStop: "Бауманская д.58",
+  },
+  {
+    id: "P3503",
+    badgeLabel: "P3503 - 4м",
+    plateNumber: "С 503 МК 777",
+    model: "ЛиАЗ-5292 (Дизель)",
+    routeId: "24",
+    routeName: "Курский вокзал — Елоховская",
+    status: "DELAYED",
+    delaySeconds: 240,
+    predictedTerminalDelayMinutes: 4,
+    speedKmh: 15,
+    latitude: 55.7760,
+    longitude: 37.6960,
+    heading: 35,
+    currentStop: "Елоховская",
+    nextStop: "Разгуляй",
+  },
+  // --- Маршрут 40к: два борта ---
+  {
+    id: "P4001",
+    badgeLabel: "P4001 - 5м",
+    plateNumber: "Р 001 НН 799",
+    model: "КамАЗ-6282 (Электробус)",
+    routeId: "40к",
+    routeName: "Сокольники — Лефортово",
+    status: "DELAYED",
+    delaySeconds: 300,
+    predictedTerminalDelayMinutes: 5,
+    speedKmh: 12,
+    latitude: 55.7850,
+    longitude: 37.6810,
+    heading: 180,
+    currentStop: "Русаковская",
+    nextStop: "Бакунинская ул.",
+  },
+  {
+    id: "P4002",
+    badgeLabel: "P4002 (в норме)",
+    plateNumber: "В 002 НН 799",
+    model: "КамАЗ-6282 (Электробус)",
+    routeId: "40к",
+    routeName: "Сокольники — Лефортово",
+    status: "NORMAL",
+    delaySeconds: 15,
+    predictedTerminalDelayMinutes: 0.5,
+    speedKmh: 38,
+    latitude: 55.7750,
+    longitude: 37.6900,
+    heading: 180,
+    currentStop: "Спартаковская",
+    nextStop: "Денисовский пер.",
   },
 ];
 
@@ -416,3 +560,126 @@ export const MOCK_CAMERA = {
   status: "LIVE",
   footerText: "Загрузка событий, Бауманская",
 };
+
+// ---- MULTI-ROUTE DEFINITIONS ----
+
+const MOCK_STOPS_M7: StopPoint[] = [
+  { id: "s_m7_1", name: "Яузские Ворота", lat: 55.7520, lon: 37.6400, color: "#3b82f6" },
+  { id: "s_m7_2", name: "ул. Николоямская", lat: 55.7540, lon: 37.6550, color: "#71717a" },
+  { id: "s_m7_3", name: "Николоямская д.84", lat: 55.7512, lon: 37.6621, color: "#f97316" },
+  { id: "s_m7_4", name: "Таганская пл.", lat: 55.7465, lon: 37.6695, color: "#f97316" },
+  { id: "s_m7_5", name: "Марксистская", lat: 55.7440, lon: 37.6785, color: "#71717a" },
+  { id: "s_m7_6", name: "Рогожский вал", lat: 55.7435, lon: 37.6880, color: "#71717a" },
+  { id: "s_m7_7", name: "Площадь Ильича", lat: 55.7455, lon: 37.6940, color: "#10b981" },
+];
+
+export const MOCK_ROUTE_M7: RouteData = {
+  routeId: "м7",
+  name: "Карачарово — 138-й кв. Выхина",
+  color: "#3b82f6",
+  routeGeometry: [
+    [37.6400, 55.7520],
+    [37.6465, 55.7502],
+    [37.6550, 55.7540],
+    [37.6621, 55.7512],
+    [37.6695, 55.7465],
+    [37.6785, 55.7440],
+    [37.6880, 55.7435],
+    [37.6940, 55.7455],
+  ],
+  congestionSegment: [
+    [37.6550, 55.7540],
+    [37.6621, 55.7512],
+    [37.6695, 55.7465],
+  ],
+  stops: MOCK_STOPS_M7,
+};
+
+const MOCK_STOPS_T88: StopPoint[] = [
+  { id: "s_t88_1", name: "Комсомольская пл.", lat: 55.7760, lon: 37.6580, color: "#8b5cf6" },
+  { id: "s_t88_2", name: "Новая Басманная", lat: 55.7720, lon: 37.6545, color: "#71717a" },
+  { id: "s_t88_3", name: "Доброслободская ул.", lat: 55.7645, lon: 37.6530, color: "#71717a" },
+  { id: "s_t88_4", name: "Старая Басманная", lat: 55.7612, lon: 37.6475, color: "#f97316" },
+  { id: "s_t88_5", name: "Красные Ворота", lat: 55.7570, lon: 37.6380, color: "#71717a" },
+  { id: "s_t88_6", name: "Лубянка", lat: 55.7555, lon: 37.6260, color: "#10b981" },
+];
+
+export const MOCK_ROUTE_T88: RouteData = {
+  routeId: "т88",
+  name: "Комсомольская пл. — м. Лубянка",
+  color: "#8b5cf6",
+  routeGeometry: [
+    [37.6580, 55.7760],
+    [37.6545, 55.7720],
+    [37.6530, 55.7645],
+    [37.6475, 55.7612],
+    [37.6430, 55.7590],
+    [37.6380, 55.7570],
+    [37.6320, 55.7560],
+    [37.6260, 55.7555],
+  ],
+  congestionSegment: [
+    [37.6530, 55.7645],
+    [37.6475, 55.7612],
+    [37.6430, 55.7590],
+  ],
+  stops: MOCK_STOPS_T88,
+};
+
+const MOCK_STOPS_24: StopPoint[] = [
+  { id: "s_24_1", name: "Курский вокзал", lat: 55.7580, lon: 37.6610, color: "#06b6d4" },
+  { id: "s_24_2", name: "Земляной вал", lat: 55.7610, lon: 37.6650, color: "#71717a" },
+  { id: "s_24_3", name: "Чкаловская", lat: 55.7640, lon: 37.6700, color: "#71717a" },
+  { id: "s_24_4", name: "Бауманская ул.", lat: 55.7680, lon: 37.6760, color: "#71717a" },
+  { id: "s_24_5", name: "Бауманская д.58", lat: 55.7720, lon: 37.6850, color: "#71717a" },
+  { id: "s_24_6", name: "Елоховская", lat: 55.7760, lon: 37.6960, color: "#06b6d4" },
+];
+
+export const MOCK_ROUTE_24: RouteData = {
+  routeId: "24",
+  name: "Курский вокзал — Елоховская",
+  color: "#06b6d4",
+  routeGeometry: [
+    [37.6610, 55.7580],
+    [37.6650, 55.7610],
+    [37.6700, 55.7640],
+    [37.6760, 55.7680],
+    [37.6850, 55.7720],
+    [37.6960, 55.7760],
+  ],
+  congestionSegment: [],
+  stops: MOCK_STOPS_24,
+};
+
+const MOCK_STOPS_40K: StopPoint[] = [
+  { id: "s_40k_1", name: "Сокольники", lat: 55.7900, lon: 37.6800, color: "#f59e0b" },
+  { id: "s_40k_2", name: "Русаковская", lat: 55.7850, lon: 37.6810, color: "#f97316" },
+  { id: "s_40k_3", name: "Бакунинская ул.", lat: 55.7800, lon: 37.6850, color: "#71717a" },
+  { id: "s_40k_4", name: "Спартаковская", lat: 55.7750, lon: 37.6900, color: "#71717a" },
+  { id: "s_40k_5", name: "Денисовский пер.", lat: 55.7700, lon: 37.6950, color: "#71717a" },
+  { id: "s_40k_6", name: "Лефортово", lat: 55.7650, lon: 37.7000, color: "#f59e0b" },
+];
+
+export const MOCK_ROUTE_40K: RouteData = {
+  routeId: "40к",
+  name: "Сокольники — Лефортово",
+  color: "#f59e0b",
+  routeGeometry: [
+    [37.6800, 55.7900],
+    [37.6810, 55.7850],
+    [37.6850, 55.7800],
+    [37.6900, 55.7750],
+    [37.6950, 55.7700],
+    [37.7000, 55.7650],
+  ],
+  congestionSegment: [],
+  stops: MOCK_STOPS_40K,
+};
+
+export const MOCK_ALL_ROUTES: RouteData[] = [
+  MOCK_ROUTE_DATA,
+  MOCK_ROUTE_M7,
+  MOCK_ROUTE_T88,
+  MOCK_ROUTE_24,
+  MOCK_ROUTE_40K,
+];

@@ -7,9 +7,6 @@ import {
   Clock,
   MapPin,
   Grid2x2,
-  ArrowRight,
-  TrendingDown,
-  Sparkles,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -87,38 +84,60 @@ export const Inspector: React.FC<InspectorProps> = ({
     `Придержать лидер ${targetVehId} на остановке «м. Бауманская» на 2.5 мин.`;
   const recInfoText =
     recommendation?.infoText || "Интервал восстановится с 1.4 мин до 8.0 мин.";
+  const actionType = recommendation?.action || (isApplied ? "HOLDING_APPLIED" : "");
+  const appliedLabel = !isApplied
+    ? `Применить Holding (${targetVehId})`
+    : actionType === "DEPOT_RESERVE_APPLIED"
+    ? "Резерв №3105 введён на линию"
+    : actionType === "SKIP_STOP_APPLIED"
+    ? "Режим Skip-Stop активирован"
+    : actionType === "SHORT_TURNING_APPLIED"
+    ? "Оперативный разворот санкционирован"
+    : `Holding применён • Команда на ${targetVehId}`;
+
+  const appliedHeader = !isApplied
+    ? "СППР: Рекомендация Holding"
+    : actionType === "DEPOT_RESERVE_APPLIED"
+    ? "СППР: Ввод резерва"
+    : actionType === "SKIP_STOP_APPLIED"
+    ? "СППР: Режим Skip-Stop"
+    : actionType === "SHORT_TURNING_APPLIED"
+    ? "СППР: Оперативный разворот"
+    : "СППР: Рекомендация Holding";
 
   return (
     <aside
-      className={`w-[350px] max-h-[calc(100vh-80px)] overflow-y-auto rounded-xl border shadow-lg p-3.5 flex flex-col gap-3 z-20 pointer-events-auto shrink-0 select-none scrollbar-thin backdrop-blur-xl transition-colors duration-200 ${
+      className={`w-[350px] max-h-full overflow-y-auto rounded-xl border shadow-lg p-3.5 flex flex-col gap-2.5 z-20 pointer-events-auto shrink-0 select-none scrollbar-thin backdrop-blur-xl transition-colors duration-200 ${
         isDarkMode
           ? "bg-[#18181b]/95 border-white/10 text-zinc-200 shadow-black/50"
           : "bg-white/95 border-zinc-200 text-zinc-800 shadow-xs"
       }`}
     >
-      {/* 1. Header: Inspector Title and Close */}
+      {/* 1. Header: Inspector Title and Close (Sticky) */}
       <div
-        className={`flex items-center justify-between pb-2 border-b ${
-          isDarkMode ? "border-white/10 text-zinc-400" : "border-zinc-100 text-zinc-600"
+        className={`sticky -top-3.5 -mx-3.5 px-3.5 pt-3.5 pb-2 border-b z-20 backdrop-blur-md ${
+          isDarkMode ? "bg-[#18181b]/95 border-white/10 text-zinc-400" : "bg-white/95 border-zinc-100 text-zinc-600"
         }`}
       >
-        <div className="flex items-center gap-1.5">
-          <GitBranch size={14} className="opacity-70" />
-          <span className={`text-xs font-bold uppercase tracking-wider ${isDarkMode ? "text-zinc-300" : "text-zinc-800"}`}>
-            Инспектор СППР
-          </span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <GitBranch size={14} className="opacity-70" />
+            <span className={`text-xs font-bold uppercase tracking-wider ${isDarkMode ? "text-zinc-300" : "text-zinc-800"}`}>
+              Инспектор СППР
+            </span>
+          </div>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className={`p-1 rounded-md transition-colors cursor-pointer ${
+                isDarkMode ? "hover:bg-white/10 text-zinc-400 hover:text-white" : "hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900"
+              }`}
+              title="Свернуть инспектор"
+            >
+              <X size={14} />
+            </button>
+          )}
         </div>
-        {onClose && (
-          <button
-            onClick={onClose}
-            className={`p-1 rounded-md transition-colors cursor-pointer ${
-              isDarkMode ? "hover:bg-white/10 text-zinc-400 hover:text-white" : "hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900"
-            }`}
-            title="Свернуть инспектор"
-          >
-            <X size={14} />
-          </button>
-        )}
       </div>
 
       {/* 2. Unit Title, Route Badge, and Telemetry Capsules */}
@@ -305,7 +324,7 @@ export const Inspector: React.FC<InspectorProps> = ({
           <span className={`text-xs font-bold uppercase tracking-wider ${
             isDarkMode ? "text-zinc-100" : "text-zinc-900"
           }`}>
-            СППР: Рекомендация Holding
+            {appliedHeader}
           </span>
           <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold font-mono border ${
             isDarkMode ? "bg-emerald-950/60 text-emerald-400 border-emerald-800/60" : "bg-emerald-50 text-emerald-800 border-emerald-200"
@@ -332,11 +351,7 @@ export const Inspector: React.FC<InspectorProps> = ({
           }`}
         >
           <CheckCircle2 size={14} />
-          <span>
-            {isApplied
-              ? `Holding применён • Команда на ${targetVehId}`
-              : `Применить Holding (${targetVehId})`}
-          </span>
+          <span>{appliedLabel}</span>
         </button>
 
         {/* Secondary: Scenarios Matrix */}

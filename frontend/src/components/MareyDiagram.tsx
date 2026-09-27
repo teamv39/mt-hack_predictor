@@ -2,11 +2,8 @@ import React, { useState } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
-  Cpu,
   Grid2x2,
   ChevronDown,
-  Activity,
-  SlidersHorizontal,
 } from "lucide-react";
 
 interface MareyDiagramProps {
