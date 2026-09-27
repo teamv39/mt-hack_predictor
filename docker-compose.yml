@@ -62,7 +62,9 @@ services:
       dockerfile: Dockerfile
     container_name: mt-predictor-frontend
     ports:
+      - "5173:80"
       - "1234:80"
+      - "80:80"
     depends_on:
       - backend
       - tileserver
@@ -70,10 +72,12 @@ services:
     networks:
       - mt-network
 
-  # Vector Tile Builder (Planetiler auto-init: downloads OSM and builds mbtiles if missing)
+  # Vector Tile Builder (Planetiler: used for initial tile build if needed)
   map-builder:
     image: ghcr.io/onthegomap/planetiler:latest
     container_name: mt-predictor-map-builder
+    profiles:
+      - builder
     restart: "no"
     volumes:
       - ./map-service/data:/data
@@ -139,9 +143,12 @@ services:
       - ./map-service/styles:/data/styles
       - ./map-service/config.json:/data/config.json
     command: ["--config", "/data/config.json", "-p", "80"]
-    depends_on:
-      map-builder:
-        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:80/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
     deploy:
       resources:
         limits:

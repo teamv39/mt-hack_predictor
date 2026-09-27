@@ -5,8 +5,8 @@ FROM python:3.12-slim
 RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install uv from official binary image for fast dependency resolution
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+# Install uv via pip
+RUN pip install --no-cache-dir uv
 
 WORKDIR /app
 
