@@ -221,6 +221,17 @@ func (s *TrackStore) PointCount() int {
 	return count
 }
 
+// GetAllTracks returns a copy of all loaded GPS tracks mapped by tr_id.
+func (s *TrackStore) GetAllTracks() map[int][]GPSPoint {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	res := make(map[int][]GPSPoint, len(s.tracks))
+	for k, v := range s.tracks {
+		res[k] = v
+	}
+	return res
+}
+
 // RegisterTrackRoutes mounts all GPS track endpoints on a chi-compatible router.
 func RegisterTrackRoutes(r interface {
 	Get(pattern string, handlerFn http.HandlerFunc)
@@ -251,6 +262,17 @@ func (s *TrackStore) handleList(w http.ResponseWriter, r *http.Request) {
 		if n, err := strconv.Atoi(l); err == nil && n > 0 && n < len(tracks) {
 			tracks = tracks[:n]
 		}
+	}
+
+	if r.URL.Query().Get("full") == "true" {
+		fullTracks := make([]TrackResponse, 0, len(tracks))
+		for _, tr := range tracks {
+			if pts, ok := s.pointsFor(tr.TrID); ok {
+				fullTracks = append(fullTracks, makeTrackResponse(tr.TrID, pts))
+			}
+		}
+		writeJSON(w, http.StatusOK, fullTracks)
+		return
 	}
 
 	writeJSON(w, http.StatusOK, tracks)

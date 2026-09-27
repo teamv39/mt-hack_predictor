@@ -113,6 +113,19 @@ type PredictResponse struct {
 	Error                    string       `json:"error,omitempty"`
 }
 
+// BatchPredictRequest wraps multiple vehicle prediction requests.
+type BatchPredictRequest struct {
+	Vehicles []PredictRequest `json:"vehicles"`
+}
+
+// BatchPredictResponse represents the response from ML /predict/batch.
+type BatchPredictResponse struct {
+	Predictions     []PredictResponse `json:"predictions"`
+	Total           int               `json:"total"`
+	InferenceTimeMs float64           `json:"inference_time_ms"`
+	ModelVersion    string            `json:"model_version"`
+}
+
 // Client calls the FastAPI ML service with debounce and graceful degradation.
 type Client struct {
 	baseURL  string
@@ -331,6 +344,74 @@ func (c *Client) Predict(ctx context.Context, req PredictRequest) PredictRespons
 	c.lastPred[id] = resp
 	c.mu.Unlock()
 	return resp
+}
+
+// PredictBatch sends a batch prediction request to ML /predict/batch for multiple vehicles.
+func (c *Client) PredictBatch(ctx context.Context, reqs []PredictRequest) ([]PredictResponse, error) {
+	if len(reqs) == 0 {
+		return nil, nil
+	}
+
+	body, err := json.Marshal(BatchPredictRequest{Vehicles: reqs})
+	if err != nil {
+		return nil, err
+	}
+
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+"/predict/batch", bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("Accept", "application/json")
+
+	res, err := c.http.Do(httpReq)
+	if err != nil {
+		c.mu.Lock()
+		c.fallbackCount += uint64(len(reqs))
+		now := time.Now()
+		fallbacks := make([]PredictResponse, len(reqs))
+		for i, r := range reqs {
+			fb := fallbackFrom(r, err.Error())
+			fallbacks[i] = fb
+			id := r.VehicleID
+			if id == "" {
+				id = r.TrID
+			}
+			c.lastCall[id] = now
+			c.lastPred[id] = fb
+		}
+		c.mu.Unlock()
+		return fallbacks, err
+	}
+	defer res.Body.Close()
+
+	raw, err := io.ReadAll(io.LimitReader(res.Body, 5<<20))
+	if err != nil {
+		return nil, err
+	}
+	if res.StatusCode >= 300 {
+		return nil, fmt.Errorf("ml status %d: %s", res.StatusCode, truncate(string(raw), 200))
+	}
+
+	var batchResp BatchPredictResponse
+	if err := json.Unmarshal(raw, &batchResp); err != nil {
+		return nil, err
+	}
+
+	c.mu.Lock()
+	c.okCount += uint64(len(batchResp.Predictions))
+	now := time.Now()
+	for _, p := range batchResp.Predictions {
+		id := p.VehicleID
+		if id == "" {
+			id = p.TrID
+		}
+		c.lastCall[id] = now
+		c.lastPred[id] = p
+	}
+	c.mu.Unlock()
+
+	return batchResp.Predictions, nil
 }
 
 func (c *Client) doPredict(ctx context.Context, req PredictRequest) (PredictResponse, error) {
