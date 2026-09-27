@@ -433,20 +433,20 @@ export const MapView: React.FC<MapViewProps> = ({
     let fallbackTriggered = false;
 
     const initMapWithCheck = async () => {
-      let localOk = false;
+      let localOk = true;
       try {
         const ctrl = new AbortController();
-        const tid = setTimeout(() => ctrl.abort(), 2000);
+        const tid = setTimeout(() => ctrl.abort(), 6000);
         const res = await fetch(TILESERVER_LIGHT, { signal: ctrl.signal });
         clearTimeout(tid);
-        if (res.ok) {
-          const contentType = res.headers.get("content-type") || "";
-          if (contentType.includes("json")) {
-            localOk = true;
-          }
+        if (!res.ok && res.status >= 500) {
+          localOk = false;
         }
       } catch {
-        localOk = false;
+        // Keep localOk = true on latency / probe timeout.
+        // The runtime map.on("error") watchdog below will smoothly activate
+        // CartoDB fallback if TileServer GL is genuinely unreachable.
+        localOk = true;
       }
 
       if (isDestroyed || !mapContainerRef.current) return;
@@ -472,9 +472,6 @@ export const MapView: React.FC<MapViewProps> = ({
         attributionControl: false,
         renderWorldCopies: false,
         transformRequest: (url: string) => {
-          if (!isTileServerAvailableRef.current) {
-            return { url };
-          }
           try {
             const parsed = new URL(url, window.location.origin);
             const pathname = parsed.pathname;

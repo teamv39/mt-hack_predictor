@@ -90,6 +90,8 @@ jobs:
             backend/server \
             ml/src \
             ml/pyproject.toml \
+            map-service/config.json \
+            map-service/styles \
             scripts/deploy.sh
 
           echo "==> Uploading bundle..."
@@ -103,4 +105,5 @@ jobs:
           echo "==> Verifying Services Status via SSH..."
           ssh target-server "curl -f -s http://127.0.0.1:1234/api/v1/status | jq ."
           ssh target-server "curl -f -s http://127.0.0.1:1234/tiles/styles/transport/style.json > /dev/null && echo '==> [OK] TileServer GL is serving vector map styles'"
+          ssh target-server "curl -s -I http://127.0.0.1:1234/assets/maplibre-gl-worker.mjs | grep -iq 'application/javascript' && echo '==> [OK] Nginx serves .mjs as application/javascript'"
           ssh target-server "sudo systemctl is-active mt-predictor-backend mt-predictor-ml nginx"
