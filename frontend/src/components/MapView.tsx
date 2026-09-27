@@ -237,7 +237,7 @@ export const MapView: React.FC<MapViewProps> = ({
   useEffect(() => {
     let cancelled = false;
 
-    if (dataMode !== "dataset" || datasetLoadError || routes.length === 0) {
+    if (dataMode === "dataset" || datasetLoadError || routes.length === 0) {
       setTrackGeoJson({});
       return () => {
         cancelled = true;
@@ -400,8 +400,25 @@ export const MapView: React.FC<MapViewProps> = ({
   // Function to initialize situational vector overlay layers on MapLibre
   const setupSituationalLayers = useCallback(
     (map: maplibregl.Map) => {
-      // Keep route sources in sync without resetting the basemap style.
-      Object.keys(map.getStyle().sources).filter((id) => id.startsWith("route-")).forEach((srcId) => {
+      // In dataset mode, remove all route lines completely per user requirement
+      const routeSourceIds = Object.keys(map.getStyle().sources).filter((id) => id.startsWith("route-"));
+      if (dataMode === "dataset") {
+        routeSourceIds.forEach((srcId) => {
+          [`${srcId}-line`, `${srcId}-casing`].forEach((layerId) => {
+            if (map.getLayer(layerId)) map.removeLayer(layerId);
+          });
+          map.removeSource(srcId);
+        });
+        ["congestion-amber-fill", "congestion-amber-line", "congestion-red-fill", "congestion-red-line", "headway-connector-line"].forEach((layerId) => {
+          if (map.getLayer(layerId)) map.removeLayer(layerId);
+        });
+        ["congestion-zones", "headway-connector"].forEach((sourceId) => {
+          if (map.getSource(sourceId)) map.removeSource(sourceId);
+        });
+        return;
+      }
+
+      routeSourceIds.forEach((srcId) => {
         if (routes.some((route) => `route-${normalizeRouteId(route.routeId)}` === srcId && route.routeGeometry.length >= 2)) return;
         [`${srcId}-line`, `${srcId}-casing`].forEach((layerId) => {
           if (map.getLayer(layerId)) map.removeLayer(layerId);
@@ -487,17 +504,6 @@ export const MapView: React.FC<MapViewProps> = ({
         } catch {
           /* */
         }
-      }
-
-      const overlaySources = ["congestion-zones", "headway-connector"];
-      if (dataMode === "dataset" && !datasetLoadError) {
-        ["congestion-amber-fill", "congestion-amber-line", "congestion-red-fill", "congestion-red-line", "headway-connector-line"].forEach((layerId) => {
-          if (map.getLayer(layerId)) map.removeLayer(layerId);
-        });
-        overlaySources.forEach((sourceId) => {
-          if (map.getSource(sourceId)) map.removeSource(sourceId);
-        });
-        return;
       }
 
       // B. Congestion zones — dynamically populated based on active alerts and visible routes

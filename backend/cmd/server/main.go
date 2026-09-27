@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -27,8 +28,9 @@ import (
 )
 
 type SimulationControlRequest struct {
-	Action string  `json:"action"` // "play", "pause", "speed", "reset"
+	Action string  `json:"action"` // "play", "pause", "speed", "reset", "set_mode"
 	Speed  float64 `json:"speed,omitempty"`
+	Mode   string  `json:"mode,omitempty"` // "gps", "scenario"
 }
 
 type TelemetryWSMessage struct {
@@ -37,6 +39,7 @@ type TelemetryWSMessage struct {
 	Vehicles  []models.Vehicle    `json:"vehicles"`
 	Alert     *models.Alert       `json:"alert,omitempty"`
 	Timestamp string              `json:"timestamp"`
+	SimTime   string              `json:"sim_time,omitempty"`
 }
 
 func computePunctuality(vehicles []models.Vehicle) float64 {
@@ -224,56 +227,84 @@ func main() {
 		log.Println("[INFO] Loaded m3 route scenario successfully")
 	}
 
+	// 7.1. Initialize GPS Feeder for real-time historical dataset replay
+	var gpsFeeder *feeder.GPSFeeder
+	if trackStore != nil && trackStore.TrackCount() > 0 {
+		gpsFeeder = feeder.NewGPSFeeder(trackStore.GetAllTracks(), schedMatcher, headwayCalc, alertMgr, mlCli)
+		log.Printf("[INFO] Initialized GPSFeeder with %d tracks", trackStore.TrackCount())
+	}
+
+	var (
+		feederModeMu sync.RWMutex
+		feederMode   = "scenario" // "scenario" or "gps"
+	)
+
 	// 8. Initialize WebSocket Hub
 	hub := ws.NewHub()
 	go hub.Run()
 
-	// 9. Broadcast loop (1 Hz)
+	// 9. Broadcast loop (1-2 Hz)
 	go func() {
 		for {
-			speed := 1.0
-			if f != nil {
-				speed = f.GetSpeed()
-			}
-			interval := time.Duration(float64(time.Second) / speed)
-			time.Sleep(interval)
+			feederModeMu.RLock()
+			mode := feederMode
+			feederModeMu.RUnlock()
 
 			var vehicles []models.Vehicle
 			var alert *models.Alert
 			var status models.SystemStatus
+			simTimeStr := ""
 
-			if f != nil {
-				f.AdvanceTick()
-				vehicles, alert, status = f.GetState()
-			}
+			if mode == "gps" && gpsFeeder != nil {
+				// 500ms interval for smooth 2 Hz stream
+				tickInterval := 500 * time.Millisecond
+				time.Sleep(tickInterval)
 
-			// Merge live NDTP units with scenario vehicles
-			allVehicles := fleetMgr.MergeDemo(vehicles)
-
-			// Merge live DSS alerts
-			liveAlerts := alertMgr.GetAll()
-			if len(liveAlerts) > 0 {
-				alert = &liveAlerts[0]
-			}
-
-			status.ActiveVehiclesCount = len(allVehicles)
-			status.ActiveAlertsCount = len(liveAlerts)
-			if f != nil {
-				_, scAlert, _ := f.GetState()
-				if scAlert != nil && len(liveAlerts) == 0 {
-					alert = scAlert
-					status.ActiveAlertsCount++
+				gpsFeeder.AdvanceTick(tickInterval)
+				vehicles, alert, status = gpsFeeder.GetState()
+				simTimeStr = gpsFeeder.GetSimTime().Format("15:04:05")
+			} else {
+				speed := 1.0
+				if f != nil {
+					speed = f.GetSpeed()
 				}
+				interval := time.Duration(float64(time.Second) / speed)
+				time.Sleep(interval)
+
+				if f != nil {
+					f.AdvanceTick()
+					vehicles, alert, status = f.GetState()
+				}
+
+				// Merge live NDTP units with scenario vehicles
+				vehicles = fleetMgr.MergeDemo(vehicles)
+
+				// Merge live DSS alerts
+				liveAlerts := alertMgr.GetAll()
+				if len(liveAlerts) > 0 {
+					alert = &liveAlerts[0]
+				}
+
+				status.ActiveVehiclesCount = len(vehicles)
+				status.ActiveAlertsCount = len(liveAlerts)
+				if f != nil {
+					_, scAlert, _ := f.GetState()
+					if scAlert != nil && len(liveAlerts) == 0 {
+						alert = scAlert
+						status.ActiveAlertsCount++
+					}
+				}
+				status.PreventedIncidents = alertMgr.PreventedCount()
+				status.PunctualityRate = computePunctuality(vehicles)
 			}
-			status.PreventedIncidents = alertMgr.PreventedCount()
-			status.PunctualityRate = computePunctuality(allVehicles)
 
 			msg := TelemetryWSMessage{
 				Type:      "TELEMETRY_UPDATE",
 				Status:    status,
-				Vehicles:  allVehicles,
+				Vehicles:  vehicles,
 				Alert:     alert,
 				Timestamp: time.Now().Format(time.RFC3339),
+				SimTime:   simTimeStr,
 			}
 
 			if data, err := json.Marshal(msg); err == nil {
@@ -356,6 +387,17 @@ func main() {
 
 		// System status
 		r.Get("/status", func(w http.ResponseWriter, r *http.Request) {
+			feederModeMu.RLock()
+			mode := feederMode
+			feederModeMu.RUnlock()
+
+			if mode == "gps" && gpsFeeder != nil {
+				_, _, status := gpsFeeder.GetState()
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(status)
+				return
+			}
+
 			var status models.SystemStatus
 			var demoVehicles []models.Vehicle
 			if f != nil {
@@ -381,8 +423,19 @@ func main() {
 			json.NewEncoder(w).Encode(status)
 		})
 
-		// Vehicles list (demo + live NDTP)
+		// Vehicles list (demo / GPS + live NDTP)
 		r.Get("/vehicles", func(w http.ResponseWriter, r *http.Request) {
+			feederModeMu.RLock()
+			mode := feederMode
+			feederModeMu.RUnlock()
+
+			if mode == "gps" && gpsFeeder != nil {
+				vehicles, _, _ := gpsFeeder.GetState()
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(vehicles)
+				return
+			}
+
 			var demoVehicles []models.Vehicle
 			if f != nil {
 				demoVehicles, _, _ = f.GetState()
@@ -392,8 +445,50 @@ func main() {
 			json.NewEncoder(w).Encode(allVehicles)
 		})
 
+		// Real-time CatBoost ML inference & SHAP explanation on demand for any vehicle
+		r.Get("/vehicles/{id}/prediction", func(w http.ResponseWriter, r *http.Request) {
+			vehID := chi.URLParam(r, "id")
+			feederModeMu.RLock()
+			mode := feederMode
+			feederModeMu.RUnlock()
+
+			var veh *models.Vehicle
+			if mode == "gps" && gpsFeeder != nil {
+				veh = gpsFeeder.GetVehicle(vehID)
+			} else {
+				if v, ok := fleetMgr.Get(vehID); ok {
+					veh = &v
+				}
+			}
+
+			if veh == nil {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusNotFound)
+				json.NewEncoder(w).Encode(map[string]any{"error": "Vehicle not found", "id": vehID})
+				return
+			}
+
+			ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+			defer cancel()
+
+			pred := mlCli.PredictForVehicle(ctx, *veh)
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(pred)
+		})
+
 		// Alerts list
 		r.Get("/alerts", func(w http.ResponseWriter, r *http.Request) {
+			feederModeMu.RLock()
+			mode := feederMode
+			feederModeMu.RUnlock()
+
+			if mode == "gps" && gpsFeeder != nil {
+				alerts := gpsFeeder.GetAlerts()
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(alerts)
+				return
+			}
+
 			alerts := alertMgr.GetAll()
 			if f != nil {
 				_, alert, _ := f.GetState()
@@ -415,6 +510,14 @@ func main() {
 				log.Printf("[INFO] Applied Holding via DSS: vehicle=%s, duration=%d sec", targetVeh, holdSec)
 			}
 
+			feederModeMu.RLock()
+			mode := feederMode
+			feederModeMu.RUnlock()
+
+			if mode == "gps" && gpsFeeder != nil {
+				gpsFeeder.ApplyHolding(targetVeh, holdSec)
+			}
+
 			if f != nil {
 				f.ApplyHolding(true)
 				if targetVeh == "" {
@@ -431,26 +534,34 @@ func main() {
 			var demoVehicles []models.Vehicle
 			var alert *models.Alert
 			var status models.SystemStatus
-			if f != nil {
-				demoVehicles, alert, status = f.GetState()
-			}
-			allVehicles := fleetMgr.MergeDemo(demoVehicles)
-			liveAlerts := alertMgr.GetAll()
-			if len(liveAlerts) > 0 {
-				alert = &liveAlerts[0]
-			}
+			simTimeStr := ""
 
-			status.ActiveVehiclesCount = len(allVehicles)
-			status.ActiveAlertsCount = len(liveAlerts)
-			status.PreventedIncidents = alertMgr.PreventedCount()
-			status.PunctualityRate = computePunctuality(allVehicles)
+			if mode == "gps" && gpsFeeder != nil {
+				demoVehicles, alert, status = gpsFeeder.GetState()
+				simTimeStr = gpsFeeder.GetSimTime().Format("15:04:05")
+			} else {
+				if f != nil {
+					demoVehicles, alert, status = f.GetState()
+				}
+				demoVehicles = fleetMgr.MergeDemo(demoVehicles)
+				liveAlerts := alertMgr.GetAll()
+				if len(liveAlerts) > 0 {
+					alert = &liveAlerts[0]
+				}
+
+				status.ActiveVehiclesCount = len(demoVehicles)
+				status.ActiveAlertsCount = len(liveAlerts)
+				status.PreventedIncidents = alertMgr.PreventedCount()
+				status.PunctualityRate = computePunctuality(demoVehicles)
+			}
 
 			msg := TelemetryWSMessage{
 				Type:      "HOLDING_APPLIED",
 				Status:    status,
-				Vehicles:  allVehicles,
+				Vehicles:  demoVehicles,
 				Alert:     alert,
 				Timestamp: time.Now().Format(time.RFC3339),
+				SimTime:   simTimeStr,
 			}
 			if data, err := json.Marshal(msg); err == nil {
 				hub.Broadcast(data)
@@ -468,7 +579,7 @@ func main() {
 			})
 		})
 
-		// Simulation control (play/pause/speed/reset)
+		// Simulation control (play/pause/speed/reset/set_mode)
 		r.Post("/simulation/control", func(w http.ResponseWriter, r *http.Request) {
 			var req SimulationControlRequest
 			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -476,7 +587,32 @@ func main() {
 				return
 			}
 
-			if f != nil {
+			if req.Action == "set_mode" {
+				feederModeMu.Lock()
+				if req.Mode == "gps" || req.Mode == "scenario" {
+					feederMode = req.Mode
+				}
+				feederModeMu.Unlock()
+			}
+
+			feederModeMu.RLock()
+			mode := feederMode
+			feederModeMu.RUnlock()
+
+			if mode == "gps" && gpsFeeder != nil {
+				switch req.Action {
+				case "play":
+					gpsFeeder.SetPlaying(true)
+				case "pause":
+					gpsFeeder.SetPlaying(false)
+				case "speed":
+					if req.Speed > 0 {
+						gpsFeeder.SetSpeed(req.Speed)
+					}
+				case "reset":
+					gpsFeeder.Reset()
+				}
+			} else if f != nil {
 				switch req.Action {
 				case "play":
 					f.SetPlaying(true)
@@ -492,9 +628,10 @@ func main() {
 			}
 
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]string{
+			json.NewEncoder(w).Encode(map[string]any{
 				"status": "ok",
 				"action": req.Action,
+				"mode":   mode,
 			})
 		})
 

@@ -290,7 +290,16 @@ export const TopBar: React.FC<TopBarProps> = ({
           </button>
 
           <button
-            onClick={() => onControl && onControl("speed", simSpeed === 1 ? 2 : simSpeed === 2 ? 5 : 1)}
+            onClick={() => {
+              if (!onControl) return;
+              if (dataMode === "dataset") {
+                const next = simSpeed === 1 ? 10 : simSpeed === 10 ? 30 : simSpeed === 30 ? 60 : 1;
+                onControl("speed", next);
+              } else {
+                const next = simSpeed === 1 ? 2 : simSpeed === 2 ? 5 : 1;
+                onControl("speed", next);
+              }
+            }}
             className={`px-2 py-1 rounded-md text-xs font-mono font-bold transition-colors cursor-pointer ${
               isDarkMode
                 ? "hover:bg-white/10 text-zinc-300 hover:text-white"

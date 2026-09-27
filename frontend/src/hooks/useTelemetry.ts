@@ -14,7 +14,7 @@ import { demoEngine } from "../simulation/gpsDemoEngine";
 import { loadPreferences, savePreferences } from "../utils/storage";
 
 const API_BASE = "/api/v1";
-const DATASET_TRACK_LIMIT = 12;
+const DATASET_TRACK_LIMIT = 50;
 const DATASET_ROUTE_COLORS = [
   "#2a78d6", "#eb6834", "#1baf7a", "#eda100",
   "#e87ba4", "#008300", "#4a3aa7", "#e34948",
@@ -109,7 +109,7 @@ function toGPSTrack(track: TrackReference): GPSTrack {
 }
 
 export async function loadTracksFromDataset(): Promise<GPSTrack[]> {
-  const listResponse = await fetch(`${API_BASE}/tracks?limit=${DATASET_TRACK_LIMIT}`);
+  const listResponse = await fetch(`${API_BASE}/tracks?limit=${DATASET_TRACK_LIMIT}&full=true`);
   if (!listResponse.ok) throw new Error(`Track list request failed: ${listResponse.status}`);
   const references = getTrackReferences(await listResponse.json()).slice(0, DATASET_TRACK_LIMIT);
   if (references.length === 0) throw new Error("Track list is empty or invalid");
@@ -163,21 +163,11 @@ export function mapTrackToVehicle(track: GPSTrack): Vehicle {
 }
 
 function mapTrackToRoute(track: GPSTrack, index: number): RouteData {
-  const hasNonSVO = track.points.some((p) => !isSVOSpoofingPoint(p.lat, p.lon));
-  const cleanPoints = hasNonSVO
-    ? track.points.filter((p) => !isSVOSpoofingPoint(p.lat, p.lon))
-    : track.points;
-
-  const points = [...cleanPoints].sort((left, right) => {
-    const leftTime = Date.parse(left.event_time);
-    const rightTime = Date.parse(right.event_time);
-    return Number.isNaN(leftTime) || Number.isNaN(rightTime) ? 0 : leftTime - rightTime;
-  });
   return {
     routeId: String(track.tr_id),
     name: `GPS-трек ${track.tr_id}`,
     color: index < DATASET_ROUTE_COLORS.length ? DATASET_ROUTE_COLORS[index] : OTHER_TRACK_COLOR,
-    routeGeometry: points.map((point) => [point.lon, point.lat]),
+    routeGeometry: [], // User requirement: Clean vector street map without historical bus track polylines
     congestionSegment: [],
     stops: [],
   };
@@ -340,6 +330,7 @@ export function useTelemetry() {
     setFlyToTarget(null);
     setTimeStepState("Сейчас");
     if (mode === "mock") {
+      setSimSpeedState(1.0);
       setDatasetRoutes([]);
       const state = demoEngine.getState();
       setVehicles(state.vehicles);
@@ -347,12 +338,34 @@ export function useTelemetry() {
       setSelectedAlertId(state.alerts[0]?.id || "alert_1042");
       setSelectedVehicleId("P1042");
     } else if (mode === "dataset") {
+      setSimSpeedState(1.0);
       setVehicles([]);
       setAlerts(MOCK_ALERTS.filter((alert) => !dismissedAlertIds.current.has(alert.id)));
+      fetch(`${API_BASE}/simulation/control`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "set_mode", mode: "gps" }),
+      }).catch(() => {});
+      fetch(`${API_BASE}/simulation/control`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "speed", speed: 1.0 }),
+      }).catch(() => {});
     } else {
+      setSimSpeedState(1.0);
       setDatasetRoutes([]);
       setVehicles(MOCK_VEHICLES);
       setAlerts(MOCK_ALERTS.filter((alert) => !dismissedAlertIds.current.has(alert.id)));
+      fetch(`${API_BASE}/simulation/control`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "set_mode", mode: "scenario" }),
+      }).catch(() => {});
+      fetch(`${API_BASE}/simulation/control`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "speed", speed: 1 }),
+      }).catch(() => {});
     }
   }, []);
 
@@ -523,6 +536,81 @@ export function useTelemetry() {
     const newAlertId = linkedAlert ? linkedAlert.id : selectedAlertId;
     if (linkedAlert) {
       setSelectedAlertId(linkedAlert.id);
+    } else {
+      fetch(`${API_BASE}/vehicles/${encodeURIComponent(vehId)}/prediction`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((pred) => {
+          if (!pred) return;
+          const isBunching = (pred.bunching_risk_probability || 0) >= 0.65;
+          const delaySec = Math.round(pred.predicted_delay_sec || 0);
+          const holdSec = pred.recommendation_hold_sec || (isBunching ? 120 : 0);
+          const v = vehicles.find((item) => item.id === vehId || item.id.replace(/^P/, "") === cleanId);
+
+          const syntheticAlert: AlertItem = {
+            id: `pred_${cleanId}`,
+            vehicleId: vehId.startsWith("P") ? vehId : `P${cleanId}`,
+            followingVehicleId: "",
+            routeNumberBadge: cleanId,
+            routeId: cleanId,
+            urgencyBadge: isBunching ? "T+15 мин" : delaySec > 180 ? "Задержка" : "Норма",
+            urgencyMinutes: Math.max(1, Math.round(Math.abs(delaySec) / 60)),
+            tag: isBunching ? "Схлопывание интервала" : "Прогноз графика",
+            tagType: isBunching ? "bunching" : "delay",
+            title: isBunching
+              ? `Риск пачкования борта №${cleanId}`
+              : `Прогноз движения борта №${cleanId}`,
+            delayLabel: `${delaySec >= 0 ? "+" : ""}${(delaySec / 60).toFixed(1)} мин`,
+            description: isBunching
+              ? `CatBoost ML выявил сокращение интервала движения. Рекомендуется регулировочная задержка.`
+              : `CatBoost ML: прогнозируемое отклонение от графика составляет ${delaySec} с.`,
+            confidence: Math.round((pred.bunching_risk_probability || 0.85) * 100),
+            locationName: v?.nextStop || "По маршруту",
+            latitude: v?.latitude || 55.7724,
+            longitude: v?.longitude || 37.6791,
+            category: isBunching || delaySec > 180 ? "critical" : "info",
+            shapFactors: Array.isArray(pred.factors) && pred.factors.length > 0
+              ? pred.factors.map((f: any, idx: number) => ({
+                  title: f.title || f.feature,
+                  delayMinutes: +(f.impact_score ? (f.impact_score / 60).toFixed(1) : 0.8),
+                  percent: Math.round(f.weight || (idx === 0 ? 50 : 25)),
+                  color: idx === 0 ? "#ef4444" : idx === 1 ? "#f59e0b" : "#3b82f6",
+                }))
+              : [
+                  { title: "Текущее отклонение от графика", delayMinutes: +(delaySec / 60).toFixed(1), percent: 65, color: "#ef4444" },
+                  { title: "Скоростной режим на перегоне", delayMinutes: 0.5, percent: 35, color: "#3b82f6" },
+                ],
+            delayChartData: [
+              { stop: "Тек. точка", plan: 0, withoutAction: delaySec, withHolding: delaySec },
+              { stop: "След. ост.", plan: 4, withoutAction: delaySec + 25, withHolding: Math.max(0, delaySec - 20) },
+              { stop: "Целевая", plan: 8, withoutAction: delaySec + 55, withHolding: Math.max(0, delaySec - 45) },
+              { stop: "Конечная", plan: 14, withoutAction: delaySec + 80, withHolding: 15 },
+            ],
+            recommendation: {
+              id: `rec_${cleanId}`,
+              targetVehicleId: vehId.startsWith("P") ? vehId : `P${cleanId}`,
+              durationSeconds: holdSec > 0 ? holdSec : 120,
+              durationMinutes: +(holdSec > 0 ? (holdSec / 60).toFixed(1) : 2.0),
+              stopName: v?.nextStop || "Ближайшая остановка",
+              effectPercent: Math.round((pred.bunching_risk_probability || 0.85) * 100),
+              text: `Придержать борт №${cleanId} на ${holdSec > 0 ? (holdSec / 60).toFixed(1) : 2.0} мин для стабилизации такта.`,
+              infoText: "Выравнивает интервал движения по формуле Велдинга.",
+              applied: false,
+            },
+            metrics: {
+              headway_collapse_sec: 120,
+            },
+          };
+
+          setAlerts((prev) => {
+            const exists = prev.some((a) => a.id === syntheticAlert.id);
+            if (exists) {
+              return prev.map((a) => (a.id === syntheticAlert.id ? syntheticAlert : a));
+            }
+            return [syntheticAlert, ...prev];
+          });
+          setSelectedAlertId(syntheticAlert.id);
+        })
+        .catch(() => {});
     }
     savePreferences({ selectedVehicleId: vehId, selectedAlertId: newAlertId });
     const veh = vehicles.find((v) => v.id === vehId || v.id.replace(/^P/, "") === cleanId);
@@ -533,7 +621,7 @@ export function useTelemetry() {
 
   // Live Go Backend Synchronization (WebSocket + Polling fallback)
   useEffect(() => {
-    if (dataMode !== "live") return;
+    if (dataMode !== "live" && dataMode !== "dataset") return;
     let cancelled = false;
     let ws: WebSocket | null = null;
     let pollTimer: ReturnType<typeof setInterval> | null = null;
@@ -554,6 +642,9 @@ export function useTelemetry() {
               const existing = prev.find((p) => p.id === (bv.id.startsWith("P") ? bv.id : `P${bv.id}`));
               return mapBackendVehicle(bv, existing);
             });
+            if (dataMode === "dataset") {
+              return mapped;
+            }
             const incomingIds = new Set(mapped.map((v) => v.id));
             const preserved = prev.filter((p) => !incomingIds.has(p.id));
             return [...mapped, ...preserved];
@@ -604,6 +695,9 @@ export function useTelemetry() {
                     const existing = prev.find((p) => p.id === (bv.id.startsWith("P") ? bv.id : `P${bv.id}`));
                     return mapBackendVehicle(bv, existing);
                   });
+                  if (dataMode === "dataset") {
+                    return mapped;
+                  }
                   const incomingIds = new Set(mapped.map((v: Vehicle) => v.id));
                   const preserved = prev.filter((p) => !incomingIds.has(p.id));
                   return [...mapped, ...preserved];
@@ -1003,8 +1097,6 @@ export function useTelemetry() {
       return {
         ...metrics,
         vehiclesOnLine: vehicles.length,
-        activeIncidentsCount: 0,
-        preventedIncidentsCount: 0,
       };
     }
     const unappliedAlerts = alerts.filter((a) => !a.recommendation?.applied).length;
