@@ -23,19 +23,40 @@ sudo systemctl restart mt-predictor-backend
 sudo systemctl restart mt-predictor-ml
 sudo systemctl reload nginx
 
+# Ensure TileServer GL container is running
+echo "==> [INFO] Checking TileServer GL container..."
+if ! docker ps --format '{{.Names}}' | grep -q "^mt-predictor-tileserver$"; then
+    echo "==> [INFO] Starting mt-predictor-tileserver container..."
+    docker rm -f mt-predictor-tileserver 2>/dev/null || true
+    docker run -d --name mt-predictor-tileserver \
+      --restart unless-stopped \
+      -p 8085:80 \
+      -v "$APP_DIR/map-service/data:/data" \
+      -v "$APP_DIR/map-service/styles:/data/styles" \
+      -v "$APP_DIR/map-service/config.json:/data/config.json" \
+      maptiler/tileserver-gl:latest --config /data/config.json -p 80 || true
+fi
+
 # Health check
 sleep 2
 echo "==> Checking health..."
 if curl -s -f http://127.0.0.1:1234/api/v1/status > /dev/null; then
-    echo "✅ Backend API: ONLINE"
+    echo "==> [OK] Backend API: ONLINE"
 else
-    echo "⚠️ Backend API returned non-200"
+    echo "==> [WARN] Backend API returned non-200"
 fi
 
 if curl -s -f http://127.0.0.1:8000/health > /dev/null; then
-    echo "✅ ML Service: ONLINE"
+    echo "==> [OK] ML Service: ONLINE"
 else
-    echo "⚠️ ML Service returned non-200"
+    echo "==> [WARN] ML Service returned non-200"
 fi
 
-echo "🚀 Deployment successfully finished!"
+if curl -s -f http://127.0.0.1:1234/tiles/styles/transport/style.json > /dev/null; then
+    echo "==> [OK] TileServer GL: ONLINE"
+else
+    echo "==> [WARN] TileServer GL returned non-200"
+fi
+
+echo "==> [INFO] Deployment successfully finished!"
+
