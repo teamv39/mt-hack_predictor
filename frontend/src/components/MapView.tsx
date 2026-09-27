@@ -175,6 +175,8 @@ interface MapViewProps {
   onTimeStepChange: (step: string) => void;
   camera?: any;
   isDarkMode: boolean;
+  isRadarOpen?: boolean;
+  isInspectorOpen?: boolean;
 }
 
 export const MapView: React.FC<MapViewProps> = ({
@@ -189,6 +191,8 @@ export const MapView: React.FC<MapViewProps> = ({
   timeStep,
   onTimeStepChange,
   isDarkMode,
+  isRadarOpen = true,
+  isInspectorOpen = true,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<maplibregl.Map | null>(null);
@@ -197,6 +201,39 @@ export const MapView: React.FC<MapViewProps> = ({
   useEffect(() => {
     onSelectVehicleRef.current = onSelectVehicle;
   }, [onSelectVehicle]);
+
+  const routeScrollRef = useRef<HTMLDivElement | null>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState<boolean>(false);
+  const [canScrollRight, setCanScrollRight] = useState<boolean>(false);
+
+  const checkScroll = useCallback(() => {
+    const el = routeScrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }, []);
+
+  useEffect(() => {
+    checkScroll();
+    const el = routeScrollRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(checkScroll);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [routes, checkScroll]);
+
+  const handleRouteWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (e.deltaY !== 0 && routeScrollRef.current) {
+      routeScrollRef.current.scrollLeft += e.deltaY;
+      checkScroll();
+    }
+  };
+
+  const scrollRoutes = (direction: "left" | "right") => {
+    if (!routeScrollRef.current) return;
+    const delta = direction === "left" ? -180 : 180;
+    routeScrollRef.current.scrollBy({ left: delta, behavior: "smooth" });
+  };
 
   const vehicleMarkersRef = useRef<{ [id: string]: maplibregl.Marker }>({});
   const stopMarkersRef = useRef<maplibregl.Marker[]>([]);
@@ -218,12 +255,35 @@ export const MapView: React.FC<MapViewProps> = ({
   const activeRouteNormId = selectedRouteId || (alert?.routeId ? normalizeRouteId(alert.routeId) : null);
 
   useEffect(() => {
+    if (!selectedVehicleId) return;
+    const cleanId = selectedVehicleId.replace(/^P/, "");
+    const veh = vehicles.find(
+      (v) => v.id === selectedVehicleId || v.id.replace(/^P/, "") === cleanId
+    );
+    if (veh?.routeId) {
+      const norm = normalizeRouteId(veh.routeId);
+      setSelectedRouteId(norm);
+      setVisibleRouteIds((prev) => (prev.includes(norm) ? prev : [...prev, norm]));
+    }
+  }, [selectedVehicleId, vehicles]);
+
+  useEffect(() => {
     if (alert?.routeId) {
       const norm = normalizeRouteId(alert.routeId);
       setSelectedRouteId(norm);
       setVisibleRouteIds((prev) => (prev.includes(norm) ? prev : [...prev, norm]));
     }
   }, [alert?.id, alert?.routeId]);
+
+  useEffect(() => {
+    if (!selectedRouteId || !routeScrollRef.current) return;
+    const chip = routeScrollRef.current.querySelector(
+      `[data-route-id="${selectedRouteId}"]`
+    ) as HTMLElement | null;
+    if (chip) {
+      chip.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    }
+  }, [selectedRouteId]);
 
   useEffect(() => {
     setVisibleRouteIds((previous) => {
@@ -1567,18 +1627,26 @@ export const MapView: React.FC<MapViewProps> = ({
       <div ref={mapContainerRef} className="absolute inset-0 w-full h-full z-0" />
 
       {/* 2. Top Situational HUD Bar: Sleek Unified Navigation & Live Status */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 pointer-events-auto flex items-center">
+      <div
+        className="absolute top-3 left-1/2 -translate-x-1/2 z-20 pointer-events-auto flex items-center justify-center transition-all"
+        style={{
+          maxWidth:
+            isRadarOpen || isInspectorOpen
+              ? "min(1100px, calc(100vw - 750px))"
+              : "min(1200px, calc(100vw - 320px))",
+        }}
+      >
         <div
-          className={`flex items-center gap-1.5 p-1 rounded-xl border backdrop-blur-xl shadow-2xl transition-all ${
+          className={`flex items-center gap-1.5 p-1 rounded-xl border backdrop-blur-xl shadow-2xl transition-all min-w-0 max-w-full ${
             isDarkMode
               ? "border-white/10 bg-[#141416]/90 text-zinc-200 shadow-black/40"
               : "border-zinc-200/90 bg-white/95 text-zinc-800 shadow-zinc-400/25"
           }`}
         >
           {/* Active Status Badge */}
-          <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-zinc-500/10 text-xs">
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-zinc-500/10 text-xs shrink-0 select-none">
             <span
-              className={`w-2 h-2 rounded-full ${
+              className={`w-2 h-2 rounded-full shrink-0 ${
                 isGpsMode
                   ? "bg-sky-400 animate-pulse"
                   : isHoldingApplied
@@ -1586,7 +1654,7 @@ export const MapView: React.FC<MapViewProps> = ({
                   : "bg-rose-500 animate-pulse"
               }`}
             />
-            <span className="font-mono font-semibold">
+            <span className="font-mono font-semibold whitespace-nowrap">
               {isGpsMode ? (
                 `GPS: ${displayedVehicles.length} ТС`
               ) : isHoldingApplied ? (
@@ -1595,18 +1663,18 @@ export const MapView: React.FC<MapViewProps> = ({
                 <span className="text-rose-500 dark:text-rose-400 font-bold">Риск пачкования</span>
               )}
             </span>
-            <span className="text-zinc-400 dark:text-zinc-500 font-mono text-[11px]">
+            <span className="text-zinc-400 dark:text-zinc-500 font-mono text-[11px] whitespace-nowrap hidden sm:inline">
               {displayedVehicles.length} ТС
             </span>
           </div>
 
-          <div className="h-4 w-px bg-zinc-300 dark:bg-white/10 mx-0.5" />
+          <div className="h-4 w-px bg-zinc-300 dark:bg-white/10 mx-0.5 shrink-0" />
 
-          {/* Quick Route Focus Chips */}
-          <div className="flex items-center gap-1 text-xs font-semibold">
+          {/* Quick Route Focus Chips with Scroll Controls */}
+          <div className="flex items-center gap-1 min-w-0 flex-1 overflow-hidden">
             <button
               onClick={handleFocusNetwork}
-              className={`px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shrink-0 text-xs font-semibold ${
                 !selectedRouteId
                   ? isDarkMode
                     ? "bg-white/15 text-white shadow-xs"
@@ -1621,65 +1689,109 @@ export const MapView: React.FC<MapViewProps> = ({
               <span>Сеть</span>
             </button>
 
-            {routes.map((r) => {
-              const normId = normalizeRouteId(r.routeId);
-              const isSelected = activeRouteNormId === normId;
-              const hasAlert =
-                (alert?.routeId && normalizeRouteId(alert.routeId) === normId) ||
-                vehicles.some(
-                  (v) =>
-                    normalizeRouteId(v.routeId) === normId &&
-                    (v.status === "BUNCHING_RISK" || v.status === "DELAYED")
-                );
-
-              const stopName =
-                r.stops && r.stops.length > 0
-                  ? r.stops[Math.floor(r.stops.length / 2)]?.name
-                      .replace(/^м\.\s*|^Метро\s*«?/i, "")
-                      .replace(/»$/, "")
-                  : "";
-
-              return (
+            <div className="flex items-center min-w-0 flex-1 overflow-hidden gap-0.5">
+              {canScrollLeft && (
                 <button
-                  key={normId}
-                  onClick={() => handleSelectRoute(normId)}
-                  className={`px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer border ${
-                    isSelected
-                      ? isDarkMode
-                        ? "bg-white/15 text-white border-white/20 shadow-xs"
-                        : "bg-zinc-100 text-zinc-900 border-zinc-300 shadow-xs"
-                      : isDarkMode
-                      ? "border-transparent hover:bg-white/5 text-zinc-300 hover:text-white"
-                      : "border-transparent hover:bg-zinc-100 text-zinc-700 hover:text-zinc-900"
+                  type="button"
+                  onClick={() => scrollRoutes("left")}
+                  aria-label="Прокрутить маршруты влево"
+                  className={`h-6 w-5 shrink-0 rounded-md flex items-center justify-center transition-colors cursor-pointer ${
+                    isDarkMode
+                      ? "bg-white/10 hover:bg-white/20 text-zinc-300 shadow-xs"
+                      : "bg-zinc-100 hover:bg-zinc-200 text-zinc-700 shadow-xs"
                   }`}
-                  title={`Маршрут ${normId} (${r.name || stopName})`}
+                  title="Влево"
                 >
-                  <span
-                    className="w-2.5 h-2.5 rounded-full shrink-0 shadow-2xs"
-                    style={{ backgroundColor: r.color }}
-                  />
-                  <span>{normId}</span>
-                  {stopName && (
-                    <span className="text-[10px] text-zinc-400 font-normal hidden sm:inline max-w-[85px] truncate">
-                      {stopName}
-                    </span>
-                  )}
-                  {hasAlert && (
-                    <span
-                      className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shrink-0"
-                      title="Активный риск на маршруте"
-                    />
-                  )}
+                  <ChevronLeft size={13} />
                 </button>
-              );
-            })}
+              )}
+
+              <div
+                ref={routeScrollRef}
+                onScroll={checkScroll}
+                onWheel={handleRouteWheel}
+                className="flex items-center gap-1 text-xs font-semibold overflow-x-auto scroll-smooth scrollbar-none px-0.5 py-0.2 min-w-0 flex-1"
+              >
+                {routes.map((r) => {
+                  const normId = normalizeRouteId(r.routeId);
+                  const isSelected = activeRouteNormId === normId;
+                  const hasAlert =
+                    (alert?.routeId && normalizeRouteId(alert.routeId) === normId) ||
+                    vehicles.some(
+                      (v) =>
+                        normalizeRouteId(v.routeId) === normId &&
+                        (v.status === "BUNCHING_RISK" || v.status === "DELAYED")
+                    );
+
+                  const stopName =
+                    r.stops && r.stops.length > 0
+                      ? r.stops[Math.floor(r.stops.length / 2)]?.name
+                          .replace(/^м\.\s*|^Метро\s*«?/i, "")
+                          .replace(/»$/, "")
+                      : "";
+
+                  return (
+                    <button
+                      key={normId}
+                      data-route-id={normId}
+                      onClick={() => handleSelectRoute(normId)}
+                      className={`px-2 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer border shrink-0 ${
+                        isSelected
+                          ? isDarkMode
+                            ? "bg-white/15 text-white border-white/20 shadow-xs"
+                            : "bg-zinc-100 text-zinc-900 border-zinc-300 shadow-xs"
+                          : isDarkMode
+                          ? "border-transparent hover:bg-white/5 text-zinc-300 hover:text-white"
+                          : "border-transparent hover:bg-zinc-100 text-zinc-700 hover:text-zinc-900"
+                      }`}
+                      title={`Маршрут ${normId} (${r.name || stopName})`}
+                    >
+                      <span
+                        className="w-2.5 h-2.5 rounded-full shrink-0 shadow-2xs"
+                        style={{ backgroundColor: r.color }}
+                      />
+                      <span className="font-mono">{normId}</span>
+                      {stopName && (
+                        <span className="text-[10px] text-zinc-400 font-normal hidden lg:inline max-w-[85px] truncate">
+                          {stopName}
+                        </span>
+                      )}
+                      {hasAlert && (
+                        <span
+                          className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shrink-0"
+                          title="Активный риск на маршруте"
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {canScrollRight && (
+                <button
+                  type="button"
+                  onClick={() => scrollRoutes("right")}
+                  aria-label="Прокрутить маршруты вправо"
+                  className={`h-6 w-5 shrink-0 rounded-md flex items-center justify-center transition-colors cursor-pointer ${
+                    isDarkMode
+                      ? "bg-white/10 hover:bg-white/20 text-zinc-300 shadow-xs"
+                      : "bg-zinc-100 hover:bg-zinc-200 text-zinc-700 shadow-xs"
+                  }`}
+                  title="Вправо"
+                >
+                  <ChevronRight size={13} />
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* 3. Floating Map Tools (Right side of left panel) */}
+      {/* 3. Floating Map Tools */}
       <div
-        className={`absolute top-5 left-[365px] z-20 flex flex-col gap-1 p-1.5 rounded-xl border shadow-xl pointer-events-auto backdrop-blur-xl transition-all ${
+        className={`absolute top-[68px] z-20 flex flex-col gap-1 p-1.5 rounded-xl border shadow-xl pointer-events-auto backdrop-blur-xl transition-all ${
+          isRadarOpen ? "left-[356px]" : "left-4"
+        } ${
           isDarkMode
             ? "border-white/10 bg-[#18181b]/95 text-zinc-200 shadow-black/25"
             : "border-zinc-200 bg-white/95 text-zinc-700 shadow-zinc-300/40"
@@ -1741,7 +1853,11 @@ export const MapView: React.FC<MapViewProps> = ({
 
       {/* Layer Visibility Menu */}
       {isLayerMenuOpen && (
-        <div className="absolute top-5 left-[415px] z-20 pointer-events-auto">
+        <div
+          className={`absolute top-[68px] z-20 pointer-events-auto transition-all ${
+            isRadarOpen ? "left-[402px]" : "left-[60px]"
+          }`}
+        >
           <div
             className={`rounded-xl border backdrop-blur-xl shadow-2xl p-2 min-w-[160px] flex flex-col gap-1 text-xs ${
               isDarkMode
@@ -1812,7 +1928,11 @@ export const MapView: React.FC<MapViewProps> = ({
       )}
 
       {/* 4. Route Filter Panel */}
-      <div className="absolute top-[205px] left-[365px] z-20 pointer-events-auto">
+      <div
+        className={`absolute top-[248px] z-20 pointer-events-auto transition-all ${
+          isRadarOpen ? "left-[356px]" : "left-4"
+        }`}
+      >
         {isRoutesCollapsed ? (
           <button
             onClick={() => setIsRoutesCollapsed(false)}
@@ -1960,8 +2080,8 @@ export const MapView: React.FC<MapViewProps> = ({
                       className={`group flex items-center justify-between px-1.5 py-0.5 rounded text-left transition-all cursor-pointer select-none border ${
                         isSelected
                           ? isDarkMode
-                            ? "bg-white/10 border-white/20 text-white shadow-xs"
-                            : "bg-zinc-100 border-zinc-300 text-zinc-900 shadow-xs"
+                            ? "bg-sky-950/70 border-sky-500/40 text-sky-200 shadow-xs"
+                            : "bg-sky-50 border-sky-300 text-sky-950 shadow-xs"
                           : isVis
                           ? isDarkMode
                             ? "border-transparent text-zinc-100 hover:bg-zinc-800/80"
@@ -1986,7 +2106,9 @@ export const MapView: React.FC<MapViewProps> = ({
                         <span
                           className={`text-[10.5px] font-semibold tracking-tight truncate ${
                             isSelected
-                              ? "font-bold text-white"
+                              ? isDarkMode
+                                ? "font-bold text-sky-200"
+                                : "font-bold text-sky-950"
                               : isVis
                               ? isDarkMode
                                 ? "text-zinc-100"
@@ -2009,7 +2131,13 @@ export const MapView: React.FC<MapViewProps> = ({
                       <div className="flex items-center gap-1 shrink-0">
                         <span
                           className={`text-[9.5px] font-mono ${
-                            isDarkMode ? "text-zinc-400" : "text-zinc-500"
+                            isSelected
+                              ? isDarkMode
+                                ? "text-sky-300"
+                                : "text-sky-800 font-medium"
+                              : isDarkMode
+                              ? "text-zinc-400"
+                              : "text-zinc-500"
                           }`}
                         >
                           {count} ТС
@@ -2024,7 +2152,11 @@ export const MapView: React.FC<MapViewProps> = ({
                             );
                           }}
                           className={`p-0.5 rounded transition-all cursor-pointer outline-none focus:outline-none ${
-                            isVis
+                            isSelected
+                              ? isDarkMode
+                                ? "text-sky-300 hover:text-white"
+                                : "text-sky-700 hover:text-zinc-900"
+                              : isVis
                               ? isDarkMode
                                 ? "text-zinc-400 hover:text-white"
                                 : "text-zinc-500 hover:text-zinc-900"
@@ -2073,7 +2205,7 @@ export const MapView: React.FC<MapViewProps> = ({
           </div>
         )}
 
-        <div className="rounded-2xl border border-white/10 shadow-2xl shadow-black/35 px-4 py-2.5 flex items-center gap-3 w-[460px] max-w-[calc(100vw-750px)] backdrop-blur-xl bg-[#18181b]/95 text-zinc-200 transition-colors">
+        <div className="rounded-2xl border border-white/10 shadow-2xl shadow-black/35 px-4 py-2.5 flex items-center gap-3 w-[460px] max-w-[calc(100vw-32px)] backdrop-blur-xl bg-[#18181b]/95 text-zinc-200 transition-colors">
           {/* Play/Pause Button */}
           <button
             onClick={() => setIsPlaying(!isPlaying)}

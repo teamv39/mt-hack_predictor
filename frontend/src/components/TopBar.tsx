@@ -98,8 +98,8 @@ export const TopBar: React.FC<TopBarProps> = ({
       data-purpose="top-navigation-bar"
     >
       {/* 1. BRAND LOCKUP & VIEW SELECTOR */}
-      <div className="flex items-center gap-4 lg:gap-6">
-        <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2.5 lg:gap-3 xl:gap-5 min-w-0">
+        <div className="flex items-center gap-2">
           {/* Moscow Transport Ring Emblem */}
           <div className="w-8 h-8 rounded-lg bg-[#D32F2F] flex items-center justify-center text-white shadow-xs shrink-0">
             <svg className="w-4 h-4 fill-current" viewBox="0 0 100 100">
@@ -115,9 +115,9 @@ export const TopBar: React.FC<TopBarProps> = ({
             </svg>
           </div>
 
-          <div className="flex flex-col leading-tight">
+          <div className="flex flex-col leading-tight min-w-0">
             <div className="flex items-center gap-1.5">
-              <span className={`text-[12px] font-bold tracking-tight uppercase ${isDarkMode ? "text-white" : "text-zinc-900"}`}>
+              <span className={`text-[12px] font-bold tracking-tight uppercase whitespace-nowrap ${isDarkMode ? "text-white" : "text-zinc-900"}`}>
                 Московский Транспорт
               </span>
               <span className={`text-xs font-bold px-1.5 py-0.5 rounded font-mono ${
@@ -126,18 +126,18 @@ export const TopBar: React.FC<TopBarProps> = ({
                 ЦОДД
               </span>
             </div>
-            <span className={`text-sm font-medium tracking-tight ${isDarkMode ? "text-zinc-400" : "text-zinc-500"}`}>
-              Ситуационный Центр • СППР Headway DSS
+            <span className={`text-xs font-medium tracking-tight truncate ${isDarkMode ? "text-zinc-400" : "text-zinc-500"}`}>
+              <span className="hidden 2xl:inline">Ситуационный Центр • </span>СППР Headway DSS
             </span>
           </div>
         </div>
 
         {/* Divider */}
-        <div className={`h-5 w-px hidden md:block ${isDarkMode ? "bg-white/10" : "bg-zinc-200"}`} />
+        <div className={`h-5 w-px hidden md:block shrink-0 ${isDarkMode ? "bg-white/10" : "bg-zinc-200"}`} />
 
         {/* Segmented View Controls */}
         <nav
-          className={`flex items-center p-0.5 rounded-lg border gap-0.5 ${
+          className={`flex items-center p-0.5 rounded-lg border gap-0.5 shrink-0 ${
             isDarkMode
               ? "bg-[#222226] border-white/10"
               : "bg-zinc-100 border-zinc-200"
@@ -145,7 +145,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         >
           <button
             onClick={() => setActiveTab && setActiveTab("hall")}
-            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-2.5 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
               activeTab === "hall" || activeTab === "map"
                 ? isDarkMode
                   ? "bg-zinc-700 text-white shadow-xs"
@@ -156,12 +156,13 @@ export const TopBar: React.FC<TopBarProps> = ({
             }`}
           >
             <Layers size={13} className="opacity-80" />
-            <span>Карта GIS</span>
+            <span className="hidden 2xl:inline">Карта GIS</span>
+            <span className="2xl:hidden">Карта</span>
           </button>
 
           <button
             onClick={() => setActiveTab && setActiveTab("marey")}
-            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-2.5 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
               activeTab === "marey"
                 ? isDarkMode
                   ? "bg-zinc-700 text-white shadow-xs"
@@ -172,12 +173,13 @@ export const TopBar: React.FC<TopBarProps> = ({
             }`}
           >
             <Activity size={13} className="opacity-80" />
-            <span>График Марея</span>
+            <span className="hidden 2xl:inline">График Марея</span>
+            <span className="2xl:hidden">Марей</span>
           </button>
 
           <button
             onClick={() => setActiveTab && setActiveTab("terminal")}
-            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-2.5 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
               activeTab === "terminal"
                 ? isDarkMode
                   ? "bg-zinc-700 text-white shadow-xs"
@@ -188,13 +190,14 @@ export const TopBar: React.FC<TopBarProps> = ({
             }`}
           >
             <Radio size={13} className="opacity-80" />
-            <span>Терминал борта</span>
+            <span className="hidden 2xl:inline">Терминал борта</span>
+            <span className="2xl:hidden">Терминал</span>
           </button>
         </nav>
       </div>
 
       {/* 2. CENTER TELEMETRY & LIVE CLOCK */}
-      <div className="hidden lg:flex items-center gap-2.5">
+      <div className="hidden lg:flex items-center gap-1.5 xl:gap-2 shrink-0">
         {onDataModeChange && (
           <div
             className={`flex items-center gap-0.5 p-0.5 rounded-lg border ${
@@ -240,7 +243,7 @@ export const TopBar: React.FC<TopBarProps> = ({
 
         {/* Punctuality Badge */}
         <div
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-medium ${
+          className={`hidden 2xl:flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-medium ${
             isDarkMode
               ? "bg-[#222226] border-white/10 text-zinc-200"
               : "bg-zinc-100 border-zinc-200 text-zinc-700"
@@ -254,7 +257,7 @@ export const TopBar: React.FC<TopBarProps> = ({
 
         {/* Risk Alerts Counter */}
         <div
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-medium ${
+          className={`hidden 2xl:flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-medium ${
             isDarkMode
               ? "bg-[#222226] border-white/10 text-zinc-200"
               : "bg-zinc-100 border-zinc-200 text-zinc-700"
@@ -268,7 +271,7 @@ export const TopBar: React.FC<TopBarProps> = ({
       </div>
 
       {/* 3. SIMULATION CONTROLS & UTILITY TOOLBAR */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5 shrink-0">
         {/* Play/Pause & Sim speed controls */}
         <div
           className={`flex items-center p-0.5 rounded-lg border gap-0.5 ${
@@ -335,7 +338,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             title="Экскурсия по системе для жюри"
           >
             <Compass size={13} />
-            <span className="hidden sm:inline">Гайд жюри</span>
+            <span className="hidden xl:inline">Гайд жюри</span>
           </button>
         )}
 
@@ -357,7 +360,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         {/* Audio Mute Toggle */}
         <button
           onClick={() => setIsMuted(!isMuted)}
-          className={`p-1.5 rounded-lg border transition-colors cursor-pointer hidden sm:flex ${
+          className={`p-1.5 rounded-lg border transition-colors cursor-pointer hidden xl:flex ${
             isDarkMode
               ? "bg-[#222226] hover:bg-white/10 border-white/10 text-zinc-300 hover:text-white"
               : "bg-zinc-100 hover:bg-zinc-200 border-zinc-200 text-zinc-700 hover:text-zinc-900"
@@ -370,7 +373,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         {/* Fullscreen Toggle */}
         <button
           onClick={handleToggleFullscreen}
-          className={`p-1.5 rounded-lg border transition-colors cursor-pointer hidden md:flex ${
+          className={`p-1.5 rounded-lg border transition-colors cursor-pointer hidden xl:flex ${
             isDarkMode
               ? "bg-[#222226] hover:bg-white/10 border-white/10 text-zinc-300 hover:text-white"
               : "bg-zinc-100 hover:bg-zinc-200 border-zinc-200 text-zinc-700 hover:text-zinc-900"

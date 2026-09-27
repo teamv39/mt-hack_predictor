@@ -530,13 +530,16 @@ export function useTelemetry() {
   const handleSelectVehicle = useCallback((vehId: string) => {
     setSelectedVehicleId(vehId);
     const cleanId = vehId.replace(/^P/, "");
+    const v = vehicles.find((item) => item.id === vehId || item.id.replace(/^P/, "") === cleanId);
     const linkedAlert = alerts.find(
       (a) => a.vehicleId === vehId || a.vehicleId.replace(/^P/, "") === cleanId
     );
-    const newAlertId = linkedAlert ? linkedAlert.id : selectedAlertId;
     if (linkedAlert) {
       setSelectedAlertId(linkedAlert.id);
+      savePreferences({ selectedVehicleId: vehId, selectedAlertId: linkedAlert.id });
     } else {
+      setSelectedAlertId(null);
+      savePreferences({ selectedVehicleId: vehId, selectedAlertId: undefined });
       fetch(`${API_BASE}/vehicles/${encodeURIComponent(vehId)}/prediction`)
         .then((res) => (res.ok ? res.json() : null))
         .then((pred) => {
@@ -544,14 +547,15 @@ export function useTelemetry() {
           const isBunching = (pred.bunching_risk_probability || 0) >= 0.65;
           const delaySec = Math.round(pred.predicted_delay_sec || 0);
           const holdSec = pred.recommendation_hold_sec || (isBunching ? 120 : 0);
-          const v = vehicles.find((item) => item.id === vehId || item.id.replace(/^P/, "") === cleanId);
+          const currentV = vehicles.find((item) => item.id === vehId || item.id.replace(/^P/, "") === cleanId) || v;
+          const routeId = currentV?.routeId || cleanId;
 
           const syntheticAlert: AlertItem = {
             id: `pred_${cleanId}`,
             vehicleId: vehId.startsWith("P") ? vehId : `P${cleanId}`,
             followingVehicleId: "",
-            routeNumberBadge: cleanId,
-            routeId: cleanId,
+            routeNumberBadge: currentV?.routeNumber || routeId,
+            routeId: routeId,
             urgencyBadge: isBunching ? "T+15 мин" : delaySec > 180 ? "Задержка" : "Норма",
             urgencyMinutes: Math.max(1, Math.round(Math.abs(delaySec) / 60)),
             tag: isBunching ? "Схлопывание интервала" : "Прогноз графика",
@@ -612,12 +616,11 @@ export function useTelemetry() {
         })
         .catch(() => {});
     }
-    savePreferences({ selectedVehicleId: vehId, selectedAlertId: newAlertId });
     const veh = vehicles.find((v) => v.id === vehId || v.id.replace(/^P/, "") === cleanId);
     if (veh) {
       setFlyToTarget({ lat: veh.latitude, lon: veh.longitude, zoom: 14 });
     }
-  }, [alerts, vehicles, selectedAlertId]);
+  }, [alerts, vehicles]);
 
   // Live Go Backend Synchronization (WebSocket + Polling fallback)
   useEffect(() => {

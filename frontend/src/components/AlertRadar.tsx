@@ -15,6 +15,7 @@ interface AlertRadarProps {
   activeFilter: "all" | "critical" | "bunching";
   setActiveFilter: (filter: "all" | "critical" | "bunching") => void;
   isDarkMode?: boolean;
+  onClose?: () => void;
 }
 
 export const AlertRadar: React.FC<AlertRadarProps> = ({
@@ -28,6 +29,7 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
   activeFilter,
   setActiveFilter,
   isDarkMode = false,
+  onClose,
 }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const dismissTimers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
@@ -125,6 +127,18 @@ export const AlertRadar: React.FC<AlertRadarProps> = ({
           }`}>
             LIVE FEED
           </span>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className={`p-1 rounded transition-colors cursor-pointer outline-none ${
+                isDarkMode ? "hover:bg-white/10 text-zinc-400 hover:text-white" : "hover:bg-zinc-200 text-zinc-500 hover:text-zinc-900"
+              }`}
+              title="Свернуть AlertRadar"
+              aria-label="Свернуть AlertRadar"
+            >
+              <X size={14} />
+            </button>
+          )}
         </div>
       </div>
 

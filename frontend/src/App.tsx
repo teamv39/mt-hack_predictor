@@ -19,6 +19,7 @@ export default function App() {
   const [isGuideOpen, setIsGuideOpen] = useState<boolean>(!initialPrefs.hasCompletedGuide);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(initialPrefs.theme === "dark");
   const [isInspectorOpen, setIsInspectorOpen] = useState<boolean>(initialPrefs.isInspectorOpen);
+  const [isRadarOpen, setIsRadarOpen] = useState<boolean>(true);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", isDarkMode);
@@ -139,24 +140,52 @@ export default function App() {
                 onTimeStepChange={(step) => controlSimulation("step", step)}
                 camera={camera}
                 isDarkMode={isDarkMode}
+                isRadarOpen={isRadarOpen}
+                isInspectorOpen={isInspectorOpen}
               />
             </div>
 
             {/* Floating Left Panel (Alert Radar) */}
-            <div className="absolute top-4 bottom-4 left-4 z-10 pointer-events-none flex flex-col">
-              <AlertRadar
-                alerts={alerts}
-                selectedAlertId={selectedAlertId}
-                onSelectAlert={handleAlertClick}
-                onDismissAlert={dismissAlert}
-                appliedHoldingIds={appliedHoldingIds}
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                activeFilter={activeFilter}
-                setActiveFilter={setActiveFilter}
-                isDarkMode={isDarkMode}
-              />
-            </div>
+            {isRadarOpen ? (
+              <div className="absolute top-4 bottom-4 left-4 z-10 pointer-events-none flex flex-col animate-fade-in">
+                <AlertRadar
+                  alerts={alerts}
+                  selectedAlertId={selectedAlertId}
+                  onSelectAlert={handleAlertClick}
+                  onDismissAlert={dismissAlert}
+                  appliedHoldingIds={appliedHoldingIds}
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  activeFilter={activeFilter}
+                  setActiveFilter={setActiveFilter}
+                  isDarkMode={isDarkMode}
+                  onClose={() => setIsRadarOpen(false)}
+                />
+              </div>
+            ) : (
+              /* Collapsed AlertRadar Button */
+              <div className="absolute top-4 left-4 z-10 pointer-events-auto">
+                <button
+                  onClick={() => setIsRadarOpen(true)}
+                  className={`px-3 py-1.5 rounded-lg border shadow-md flex items-center gap-2 text-xs font-semibold transition-all cursor-pointer backdrop-blur-md ${
+                    isDarkMode
+                      ? "bg-[#18181b]/95 hover:bg-[#27272a] border-white/10 text-zinc-200 shadow-black/40"
+                      : "bg-white/95 hover:bg-zinc-50 border-zinc-200 text-zinc-800 shadow-xs"
+                  }`}
+                  title="Развернуть AlertRadar СППР"
+                >
+                  <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse shrink-0" />
+                  <span>AlertRadar</span>
+                  <span
+                    className={`px-1.5 py-0.2 rounded font-mono text-[10px] font-bold ${
+                      isDarkMode ? "bg-white/10 text-zinc-300" : "bg-zinc-100 text-zinc-700"
+                    }`}
+                  >
+                    {alerts.length}
+                  </span>
+                </button>
+              </div>
+            )}
 
             {/* Floating Right Panel (Inspector) */}
             {isInspectorOpen ? (

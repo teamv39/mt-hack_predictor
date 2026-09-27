@@ -452,15 +452,15 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
           <div className="h-5 w-px bg-zinc-200 dark:bg-white/10" />
 
           {/* Current Route Title */}
-          <div className="flex flex-col">
+          <div className="flex flex-col min-w-0 max-w-[180px] lg:max-w-[280px] xl:max-w-md">
             <span
-              className={`text-xs font-bold tracking-tight uppercase ${
+              className={`text-xs font-bold tracking-tight uppercase truncate ${
                 isDarkMode ? "text-white" : "text-zinc-900"
               }`}
             >
               {routeConfig.name}
             </span>
-            <span className="text-[10px] font-medium text-zinc-400 font-mono">
+            <span className="text-[10px] font-medium text-zinc-400 font-mono truncate hidden sm:inline">
               {routeConfig.subTitle}
             </span>
           </div>
