@@ -15,7 +15,7 @@ interface MareyDiagramProps {
   selectedRouteId?: string;
   onApplyHolding?: (alertId: string) => void;
   onOpenScenarios?: () => void;
-  appliedHoldingIds?: Set<string>;
+  appliedHoldingIds?: string[] | Set<string>;
   isApplied?: boolean;
   isDarkMode?: boolean;
 }
@@ -376,7 +376,13 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
   }, [activeRouteId]);
 
   const isRouteApplied = useMemo(() => {
-    if (appliedHoldingIds && appliedHoldingIds.has(routeConfig.alertId)) return true;
+    if (appliedHoldingIds) {
+      if (Array.isArray(appliedHoldingIds)) {
+        if (appliedHoldingIds.includes(routeConfig.alertId)) return true;
+      } else if (typeof (appliedHoldingIds as any).has === "function") {
+        if ((appliedHoldingIds as any).has(routeConfig.alertId)) return true;
+      }
+    }
     if (activeRouteId === "м3" && isApplied) return true;
     return false;
   }, [appliedHoldingIds, routeConfig.alertId, activeRouteId, isApplied]);
