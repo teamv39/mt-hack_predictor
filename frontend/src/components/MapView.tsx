@@ -35,6 +35,59 @@ if (typeof window !== "undefined") {
 const TILESERVER_LIGHT = "/tiles/styles/transport/style.json";
 const TILESERVER_DARK = "/tiles/styles/transport-dark/style.json";
 
+// CartoDB Positron (Light) & Dark Matter (Dark) resilient fallbacks
+const CARTO_LIGHT_STYLE: maplibregl.StyleSpecification = {
+  version: 8,
+  sources: {
+    "carto-raster": {
+      type: "raster",
+      tiles: [
+        "https://a.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}@2x.png",
+        "https://b.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}@2x.png",
+        "https://c.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}@2x.png",
+        "https://d.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}@2x.png",
+      ],
+      tileSize: 256,
+      attribution: "© OpenStreetMap contributors, © CARTO",
+    },
+  },
+  layers: [
+    {
+      id: "carto-raster-layer",
+      type: "raster",
+      source: "carto-raster",
+      minzoom: 0,
+      maxzoom: 20,
+    },
+  ],
+};
+
+const CARTO_DARK_STYLE: maplibregl.StyleSpecification = {
+  version: 8,
+  sources: {
+    "carto-raster": {
+      type: "raster",
+      tiles: [
+        "https://a.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}@2x.png",
+        "https://b.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}@2x.png",
+        "https://c.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}@2x.png",
+        "https://d.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}@2x.png",
+      ],
+      tileSize: 256,
+      attribution: "© OpenStreetMap contributors, © CARTO",
+    },
+  },
+  layers: [
+    {
+      id: "carto-raster-layer",
+      type: "raster",
+      source: "carto-raster",
+      minzoom: 0,
+      maxzoom: 20,
+    },
+  ],
+};
+
 const HORIZONS = ["Сейчас", "+15 мин", "+30 мин", "+45 мин"];
 
 interface MapViewProps {
@@ -72,6 +125,7 @@ export const MapView: React.FC<MapViewProps> = ({
   const vehicleMarkersRef = useRef<{ [id: string]: maplibregl.Marker }>({});
   const stopMarkersRef = useRef<maplibregl.Marker[]>([]);
   const headwayMarkerRef = useRef<maplibregl.Marker | null>(null);
+  const isTileServerAvailableRef = useRef<boolean>(true);
 
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isTileServerAvailable, setIsTileServerAvailable] = useState<boolean>(true);
@@ -361,53 +415,111 @@ export const MapView: React.FC<MapViewProps> = ({
     [isDarkMode, routes]
   );
 
-  // 3. Initialize MapLibre GL Map
+  const getStyleForTheme = useCallback(
+    (dark: boolean, useLocalTiles: boolean): string | maplibregl.StyleSpecification => {
+      if (useLocalTiles) {
+        return dark ? TILESERVER_DARK : TILESERVER_LIGHT;
+      }
+      return dark ? CARTO_DARK_STYLE : CARTO_LIGHT_STYLE;
+    },
+    []
+  );
+
+  // 3. Initialize MapLibre GL Map with auto-probe and fallback
   useEffect(() => {
     if (!mapContainerRef.current || mapInstanceRef.current) return;
 
-    const initialCenter: [number, number] = [37.684, 55.772];
-    const initialZoom = 13;
-    const targetStyle = isDarkMode ? TILESERVER_DARK : TILESERVER_LIGHT;
+    let isDestroyed = false;
+    let fallbackTriggered = false;
 
-    const map = new maplibregl.Map({
-      container: mapContainerRef.current!,
-      style: targetStyle,
-      center: initialCenter,
-      zoom: initialZoom,
-      minZoom: 10,
-      maxZoom: 17,
-      maxBounds: [
-        [36.8, 55.1],
-        [38.2, 56.1],
-      ],
-      attributionControl: false,
-      renderWorldCopies: false,
-      transformRequest: (url: string) => {
-        const match = url.match(/^https?:\/\/[^/]+(\/(?:data|fonts|styles|sprites)\/.*)$/);
-        if (match) {
-          return { url: `/tiles${match[1]}` };
+    const initMapWithCheck = async () => {
+      let localOk = false;
+      try {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 600);
+        const res = await fetch(TILESERVER_LIGHT, { signal: ctrl.signal });
+        clearTimeout(tid);
+        if (res.ok) {
+          const contentType = res.headers.get("content-type") || "";
+          if (contentType.includes("json")) {
+            localOk = true;
+          }
         }
-        return { url };
-      },
-    });
+      } catch {
+        localOk = false;
+      }
 
-    map.on("error", (e) => {
-      console.warn("[MapLibre] Tile/resource error (non-fatal):", e?.error?.message);
-    });
+      if (isDestroyed || !mapContainerRef.current) return;
 
-    map.on("load", () => {
-      setIsTileServerAvailable(true);
-      setupSituationalLayers(map);
-      map.resize();
-    });
+      isTileServerAvailableRef.current = localOk;
+      setIsTileServerAvailable(localOk);
 
-    mapInstanceRef.current = map;
-    setTimeout(() => map.resize(), 200);
+      const initialCenter: [number, number] = [37.684, 55.772];
+      const initialZoom = 13;
+      const targetStyle = getStyleForTheme(isDarkMode, localOk);
+
+      const map = new maplibregl.Map({
+        container: mapContainerRef.current,
+        style: targetStyle,
+        center: initialCenter,
+        zoom: initialZoom,
+        minZoom: 10,
+        maxZoom: 18,
+        maxBounds: [
+          [36.8, 55.1],
+          [38.2, 56.1],
+        ],
+        attributionControl: false,
+        renderWorldCopies: false,
+        transformRequest: (url: string) => {
+          const match = url.match(/^https?:\/\/[^/]+(\/(?:data|fonts|styles|sprites)\/.*)$/);
+          if (match && isTileServerAvailableRef.current) {
+            return { url: `/tiles${match[1]}` };
+          }
+          return { url };
+        },
+      });
+
+      // Runtime error watchdog: if local TileServer style/tiles fail, switch to fallback
+      map.on("error", (e) => {
+        console.warn("[MapLibre] Tile/resource error:", e?.error?.message);
+        const errEvt = e as { status?: number; error?: { message?: string } };
+        if (
+          !fallbackTriggered &&
+          isTileServerAvailableRef.current &&
+          (errEvt?.error?.message?.includes("tiles") ||
+            errEvt?.error?.message?.includes("Failed to fetch") ||
+            errEvt?.error?.message?.includes("404") ||
+            errEvt?.status === 404)
+        ) {
+          fallbackTriggered = true;
+          isTileServerAvailableRef.current = false;
+          setIsTileServerAvailable(false);
+          console.warn("[MapLibre] Local TileServer unavailable, activating CartoDB fallback...");
+          map.setStyle(getStyleForTheme(isDarkMode, false));
+        }
+      });
+
+      map.on("load", () => {
+        setupSituationalLayers(map);
+        map.resize();
+      });
+
+      map.on("style.load", () => {
+        setupSituationalLayers(map);
+      });
+
+      mapInstanceRef.current = map;
+      setTimeout(() => map.resize(), 200);
+    };
 
     const handleResize = () => mapInstanceRef.current?.resize();
     window.addEventListener("resize", handleResize);
 
+    initMapWithCheck();
+
     return () => {
+      isDestroyed = true;
       window.removeEventListener("resize", handleResize);
       Object.values(vehicleMarkersRef.current).forEach((m) => m.remove());
       vehicleMarkersRef.current = {};
@@ -435,13 +547,13 @@ export const MapView: React.FC<MapViewProps> = ({
     const map = mapInstanceRef.current;
     if (!map) return;
 
-    const targetStyle = isDarkMode ? TILESERVER_DARK : TILESERVER_LIGHT;
+    const targetStyle = getStyleForTheme(isDarkMode, isTileServerAvailableRef.current);
     map.setStyle(targetStyle);
 
     map.once("style.load", () => {
       setupSituationalLayers(map);
     });
-  }, [isDarkMode, setupSituationalLayers]);
+  }, [isDarkMode, getStyleForTheme, setupSituationalLayers]);
 
   // 4. Render Stop Points Markers with clear hierarchy (Key/Metro vs Intermediate Stops)
   useEffect(() => {
@@ -1513,7 +1625,7 @@ export const MapView: React.FC<MapViewProps> = ({
         >
           {isTileServerAvailable
             ? "Автономная векторная карта Москвы (TileServer GL • Planetiler) • СППР Мосгортранс"
-            : "Резервная карта (TileServer GL offline) • СППР Мосгортранс"}
+            : "Резервная карта CartoDB Positron (TileServer GL offline) • СППР Мосгортранс"}
         </div>
       </div>
     </div>

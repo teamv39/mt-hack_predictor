@@ -75,6 +75,7 @@ catboost_info/
 *.mbtiles
 map-service/data/*.osm.pbf
 map-service/data/*.mbtiles
+!map-service/data/moscow_transport.mbtiles
 map-service/data/sources/
 map-service/data/tmp/
 map-service/data/*.tsv.gz
