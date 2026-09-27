@@ -12,14 +12,14 @@
 
 ### Вариант 1: Запуск для жюри в Docker (всё одной командой)
 
-Решение упаковано в изолированные микросервисы согласно официальным требованиям хакатона:
+Решение упаковано в изолированные микросервисы согласно официальным требованиям хакатона. Включает официальный Docker-образ NDTP-эмулятора (`dataset/ndtp-telemetry-emulator.tar`), развернутый TileServer GL с векторными тайлами Москвы и пакетный ML-инференс:
 
 ```bash
 # Клонировать репозиторий и перейти в директорию
 git clone https://github.com/teamv39/mt-hack_predictor.git
 cd mt-hack_predictor
 
-# Собрать и запустить все сервисы (Frontend + Backend + ML + TileServer)
+# Собрать и запустить все сервисы (Frontend + Backend + ML + TileServer + NDTP Emulator)
 docker compose up --build
 ```
 
@@ -27,8 +27,10 @@ docker compose up --build
 * **Ситуационный BI-дашборд диспетчера:** [http://localhost:80](http://localhost:80) (или [http://localhost:5173](http://localhost:5173))
 * **Работающий стенд в облаке (Live Demo):** [http://213.171.24.68:1234/](http://213.171.24.68:1234/)
 * **Интерактивный Swagger UI Go-бэкенда:** [http://localhost:8080/swagger](http://localhost:8080/swagger)
+* **Пакетный CatBoost ML Inference API:** [http://localhost:8080/predict/batch](http://localhost:8080/predict/batch)
 * **FastAPI ML Inference Service:** [http://localhost:8000/docs](http://localhost:8000/docs)
-* **TCP Ingestion NDTP сервер:** `0.0.0.0:9201` (прием телеметрии терминалов)
+* **HTTP API NDTP-эмулятора телеметрии:** [http://localhost:18080/api/cells](http://localhost:18080/api/cells)
+* **TCP Ingestion NDTP сервер:** `0.0.0.0:9201` (прием телеметрии терминалов в реальном времени)
 * **PyDoc HTML-портал документации кода:** [docs/pydoc/index.html](docs/pydoc/index.html)
 * **Готовый пакет для формы сдачи:** [docs/SUBMISSION_FORM.md](docs/SUBMISSION_FORM.md)
 
@@ -164,6 +166,10 @@ mt-hack_predictor/
 │   ├── src/api/server.py      # FastAPI сервер предиктов
 │   ├── src/features/          # Генерация 24 признаков и валидация
 │   └── Dockerfile             # Dockerfile на базе python:3.12-slim с uv
+├── dataset/                   # Официальные датасеты и NDTP-эмулятор
+│   ├── ndtp-telemetry-emulator.tar # Docker-образ официального эмулятора (Git LFS)
+│   ├── train/ / test/         # Расписания и треки трафика
+│   └── sample_submission.csv  # Эталонный формат сабмита
 ├── map-service/               # Автономный картографический сервис TileServer GL (:8085)
 └── docs/                      # Исчерпывающая база знаний и документация
     ├── index.md               # Навигатор по всей документации
