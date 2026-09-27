@@ -745,11 +745,25 @@ export function useTelemetry() {
     const stopName = currentAlert?.recommendation?.stopName || "«Метро Бауманская»";
     const duration = currentAlert?.recommendation?.durationMinutes || 2.5;
 
-    addToast({
-      type: "success",
-      title: "Команда Holding успешно передана в АСУ-РДС",
-      description: `Борт ${targetVehName} придержан на ${duration} мин на остановке ${stopName}. Интервал восстанавливается до планового.`,
-    });
+    if (alertId === "alert_2198" || alertId.includes("2198")) {
+      addToast({
+        type: "success",
+        title: "Зелёный коридор активирован в АСУ-ДД ЦОДД",
+        description: "Адаптивная фаза на узле Таганская площадь включена. Борт №2198 ускорен, отставание ликвидировано.",
+      });
+    } else if (alertId === "alert_0814" || alertId.includes("0814")) {
+      addToast({
+        type: "success",
+        title: "Команда Skip-Stop передана в АСУ-РДС",
+        description: "Борт №0814 следует в экспресс-режиме без остановки «Садовая-Черногрязская». Такт стабилизирован.",
+      });
+    } else {
+      addToast({
+        type: "success",
+        title: "Команда Holding успешно передана в АСУ-РДС",
+        description: `Борт ${targetVehName} придержан на ${duration} мин на остановке ${stopName}. Интервал восстанавливается до планового.`,
+      });
+    }
   }, [addToast, alerts]);
 
   const applyScenario = useCallback(

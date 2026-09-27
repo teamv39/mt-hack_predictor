@@ -195,10 +195,7 @@ export default function App() {
         isOpen={isScenariosOpen}
         onClose={() => setIsScenariosOpen(false)}
         onApplyScenario={(id, title) => applyScenario(id, title)}
-        incidentId={selectedAlert?.id ? `#${selectedAlert.id}` : "#1042-м3"}
-        vehicleId={selectedVehicle?.id ? `№${selectedVehicle.id.replace("P", "")}` : "№1042"}
-        leaderId={selectedAlert?.recommendation?.targetVehicleId || "№1043"}
-        intervalSec={selectedAlert?.metrics?.headway_collapse_sec ?? 96}
+        alert={selectedAlert}
         isDarkMode={isDarkMode}
       />
 

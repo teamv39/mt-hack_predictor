@@ -73,6 +73,17 @@ interface PrecomputedRoute {
   totalLengthKm: number;
 }
 
+export function normalizeRouteId(id?: string): string {
+  if (!id) return "м3";
+  let s = id.trim();
+  if (/^m/i.test(s)) {
+    s = "м" + s.slice(1);
+  } else if (/^t/i.test(s)) {
+    s = "т" + s.slice(1);
+  }
+  return s;
+}
+
 // Precompute cumulative distances along each route polyline
 function precomputeRoutes(routes: RouteData[]): Map<string, PrecomputedRoute> {
   const map = new Map<string, PrecomputedRoute>();
@@ -85,12 +96,15 @@ function precomputeRoutes(routes: RouteData[]): Map<string, PrecomputedRoute> {
       const curr = pts[i];
       cum.push(cum[i - 1] + haversineKm(prev[1], prev[0], curr[1], curr[0]));
     }
-    map.set(r.routeId, {
-      routeId: r.routeId,
+    const normId = normalizeRouteId(r.routeId);
+    const entry: PrecomputedRoute = {
+      routeId: normId,
       points: pts,
       cumDistances: cum,
       totalLengthKm: cum[cum.length - 1] || 1,
-    });
+    };
+    map.set(normId, entry);
+    map.set(r.routeId, entry);
   }
   return map;
 }
@@ -135,19 +149,19 @@ const VEHICLE_CONFIGS: {
   { id: "P1042", routeId: "м3", baseProgress: 0.38, speedMultiplier: 1.0 }, // Trailing bus that gets jammed
   { id: "P1043", routeId: "м3", baseProgress: 0.52, speedMultiplier: 1.0 }, // Leader bus to be held
   { id: "P1044", routeId: "м3", baseProgress: 0.85, speedMultiplier: 0.95 },
-  // Route m7: 2 buses
-  { id: "P2198", routeId: "m7", baseProgress: 0.25, speedMultiplier: 1.05 },
-  { id: "P2199", routeId: "m7", baseProgress: 0.70, speedMultiplier: 1.0 },
-  // Route t88: 2 buses
-  { id: "P0814", routeId: "t88", baseProgress: 0.15, speedMultiplier: 0.98 },
-  { id: "P0815", routeId: "t88", baseProgress: 0.65, speedMultiplier: 1.02 },
+  // Route м7: 2 buses
+  { id: "P2198", routeId: "м7", baseProgress: 0.25, speedMultiplier: 1.05 },
+  { id: "P2199", routeId: "м7", baseProgress: 0.70, speedMultiplier: 1.0 },
+  // Route т88: 2 buses
+  { id: "P0814", routeId: "т88", baseProgress: 0.15, speedMultiplier: 0.98 },
+  { id: "P0815", routeId: "т88", baseProgress: 0.65, speedMultiplier: 1.02 },
   // Route 24: 3 buses
   { id: "P3501", routeId: "24", baseProgress: 0.10, speedMultiplier: 1.0 },
   { id: "P3502", routeId: "24", baseProgress: 0.45, speedMultiplier: 1.0 },
   { id: "P3503", routeId: "24", baseProgress: 0.80, speedMultiplier: 0.95 },
-  // Route 40k: 2 buses
-  { id: "P4001", routeId: "40k", baseProgress: 0.20, speedMultiplier: 1.05 },
-  { id: "P4002", routeId: "40k", baseProgress: 0.70, speedMultiplier: 1.0 },
+  // Route 40к: 2 buses
+  { id: "P4001", routeId: "40к", baseProgress: 0.20, speedMultiplier: 1.05 },
+  { id: "P4002", routeId: "40к", baseProgress: 0.70, speedMultiplier: 1.0 },
 ];
 
 export class GPSDemoEngine {
@@ -157,6 +171,8 @@ export class GPSDemoEngine {
   private isHoldingApplied: boolean = false;
   private holdingRemainingSec: number = 150;
   private appliedScenarioId: string | null = null;
+  private appliedAlertIds: Set<string> = new Set();
+  private appliedScenarios: Map<string, string> = new Map();
   private dismissedAlertIds: Set<string> = new Set();
 
   private precomputedRoutes: Map<string, PrecomputedRoute>;
@@ -226,21 +242,32 @@ export class GPSDemoEngine {
     this.isHoldingApplied = false;
     this.holdingRemainingSec = 150;
     this.appliedScenarioId = null;
+    this.appliedAlertIds.clear();
+    this.appliedScenarios.clear();
     this.dismissedAlertIds.clear();
     this.notify();
   }
 
   public applyHolding(alertId?: string): void {
-    this.isHoldingApplied = true;
-    this.holdingRemainingSec = 150;
-    this.appliedScenarioId = "holding";
+    const id = alertId || "alert_1042";
+    this.appliedAlertIds.add(id);
+    if (id === "alert_1042") {
+      this.isHoldingApplied = true;
+      this.holdingRemainingSec = 150;
+      this.appliedScenarioId = "holding";
+    }
     this.notify();
   }
 
   public applyScenario(scenarioId: string, alertId?: string): void {
-    this.isHoldingApplied = true;
-    this.holdingRemainingSec = 150;
-    this.appliedScenarioId = scenarioId;
+    const id = alertId || "alert_1042";
+    this.appliedAlertIds.add(id);
+    this.appliedScenarios.set(id, scenarioId);
+    if (id === "alert_1042") {
+      this.isHoldingApplied = true;
+      this.holdingRemainingSec = 150;
+      this.appliedScenarioId = scenarioId;
+    }
     this.notify();
   }
 
@@ -273,7 +300,7 @@ export class GPSDemoEngine {
       const cfg = VEHICLE_CONFIGS.find((c) => c.id === baseVeh.id);
       if (!cfg) return baseVeh;
 
-      const route = this.precomputedRoutes.get(cfg.routeId);
+      const route = this.precomputedRoutes.get(normalizeRouteId(cfg.routeId));
       if (!route) return baseVeh;
 
       // Base progress moves 1 full loop over 360 seconds
@@ -286,16 +313,17 @@ export class GPSDemoEngine {
       // --- SCRIPTED INCIDENTS LOGIC ---
       if (baseVeh.id === "P1042") {
         // Trailing bus that encounters congestion between 75s and 270s
+        const isM3Applied = isHolding || this.appliedAlertIds.has("alert_1042");
         if (t >= 75 && t < 240) {
           // Slows down significantly due to traffic on Bakuninskaya
           loopProgress *= 0.65;
-          speedKmh = isHolding ? 24 : 12;
+          speedKmh = isM3Applied ? 24 : 12;
           delaySeconds = Math.round(60 + (t - 75) * 1.2);
-          status = isHolding ? "NORMAL" : "BUNCHING_RISK";
+          status = isM3Applied ? "NORMAL" : "BUNCHING_RISK";
         } else if (t >= 240) {
           // Clears traffic, recovers speed
           speedKmh = 32;
-          delaySeconds = isHolding ? 45 : 180;
+          delaySeconds = isM3Applied ? 45 : 180;
           status = "NORMAL";
         }
       } else if (baseVeh.id === "P1043") {
@@ -311,15 +339,25 @@ export class GPSDemoEngine {
           status = "NORMAL";
         }
       } else if (baseVeh.id === "P2198") {
-        // Route m7 congestion alert
-        if (t >= 110 && t < 300) {
+        // Route м7 congestion alert
+        const isM7Applied = this.appliedAlertIds.has("alert_2198");
+        if (isM7Applied) {
+          speedKmh = 34;
+          delaySeconds = 60;
+          status = "NORMAL";
+        } else if (t >= 70 && t < 320) {
           speedKmh = 14;
           delaySeconds = 240;
           status = "DELAYED";
         }
       } else if (baseVeh.id === "P0814") {
-        // Route t88 compression alert
-        if (t >= 140 && t < 320) {
+        // Route т88 compression alert
+        const isT88Applied = this.appliedAlertIds.has("alert_0814");
+        if (isT88Applied) {
+          speedKmh = 28;
+          delaySeconds = 20;
+          status = "NORMAL";
+        } else if (t >= 90 && t < 330) {
           speedKmh = 18;
           delaySeconds = 90;
           status = "DELAYED";
@@ -347,6 +385,7 @@ export class GPSDemoEngine {
     // Alert 1: Route м3 Bus Bunching (predictive from t=0, critical at t >= 75)
     if (!this.dismissedAlertIds.has("alert_1042")) {
       const baseAlert = MOCK_ALERTS.find((a) => a.id === "alert_1042") || MOCK_ALERTS[0];
+      const isM3Applied = isHolding || this.appliedAlertIds.has("alert_1042");
       const isIncidentTime = t >= 75 && t < 340;
       
       let headwaySec = 480;
@@ -354,7 +393,7 @@ export class GPSDemoEngine {
       let title = "Прогноз сбоя интервала: T+15 мин";
       let desc = "ML-модель прогнозирует сокращение интервала на узле м. Бауманская через 15 мин.";
 
-      if (isHolding) {
+      if (isM3Applied) {
         headwaySec = 460;
         confidence = 45;
         title = "Пачкование предотвращено (Holding применён)";
@@ -384,32 +423,64 @@ export class GPSDemoEngine {
         description: desc,
         recommendation: {
           ...baseAlert.recommendation,
-          applied: isHolding,
+          applied: isM3Applied,
           action: this.appliedScenarioId
             ? `${this.appliedScenarioId.toUpperCase()}_APPLIED`
-            : isHolding
+            : isM3Applied
             ? "HOLDING_APPLIED"
             : undefined,
         },
       });
     }
 
-    // Alert 2: Route m7 Congestion
+    // Alert 2: Route м7 Congestion
     if (!this.dismissedAlertIds.has("alert_2198")) {
-      const alertM7 = MOCK_ALERTS.find((a) => a.id === "alert_2198");
-      if (alertM7) dynamicAlerts.push(alertM7);
+      const alertM7 = MOCK_ALERTS.find((a) => a.id === "alert_2198") || MOCK_ALERTS[1];
+      const isM7Applied = this.appliedAlertIds.has("alert_2198");
+      dynamicAlerts.push({
+        ...alertM7,
+        confidence: isM7Applied ? 38 : alertM7.confidence,
+        delayLabel: isM7Applied ? "+1 мин" : alertM7.delayLabel,
+        title: isM7Applied
+          ? "Зелёный коридор активен (ЦОДД Т-12)"
+          : alertM7.title,
+        description: isM7Applied
+          ? "Адаптивная фаза светофора на Таганском узле включена. Отставание борта №2198 ликвидировано."
+          : alertM7.description,
+        recommendation: {
+          ...alertM7.recommendation,
+          applied: isM7Applied,
+          action: isM7Applied ? "GREEN_CORRIDOR_APPLIED" : undefined,
+        },
+      });
     }
 
-    // Alert 3: Route t88 Headway Compression
+    // Alert 3: Route т88 Headway Compression
     if (!this.dismissedAlertIds.has("alert_0814")) {
-      const alertT88 = MOCK_ALERTS.find((a) => a.id === "alert_0814");
-      if (alertT88) dynamicAlerts.push(alertT88);
+      const alertT88 = MOCK_ALERTS.find((a) => a.id === "alert_0814") || MOCK_ALERTS[2];
+      const isT88Applied = this.appliedAlertIds.has("alert_0814");
+      dynamicAlerts.push({
+        ...alertT88,
+        confidence: isT88Applied ? 32 : alertT88.confidence,
+        delayLabel: isT88Applied ? "+0.5 мин" : alertT88.delayLabel,
+        title: isT88Applied
+          ? "Режим Skip-Stop активирован"
+          : alertT88.title,
+        description: isT88Applied
+          ? "Борт №0814 проследовал Садовую-Черногрязскую в экспресс-режиме. Такт выровнен."
+          : alertT88.description,
+        recommendation: {
+          ...alertT88.recommendation,
+          applied: isT88Applied,
+          action: isT88Applied ? "SKIP_STOP_APPLIED" : undefined,
+        },
+      });
     }
 
     // Dynamic metrics
     const activeIncidents = dynamicAlerts.filter((a) => !a.recommendation?.applied).length;
-    const preventedCount = MOCK_SYSTEM_METRICS.preventedIncidentsCount + (isHolding ? 1 : 0);
-    const punctuality = isHolding ? 97.4 : activeIncidents > 0 ? 94.2 : 96.8;
+    const preventedCount = MOCK_SYSTEM_METRICS.preventedIncidentsCount + this.appliedAlertIds.size;
+    const punctuality = this.appliedAlertIds.size > 0 ? 97.4 : activeIncidents > 0 ? 94.2 : 96.8;
 
     const mins = Math.floor(t / 60);
     const secs = Math.floor(t % 60);

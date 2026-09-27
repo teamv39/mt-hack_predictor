@@ -87,24 +87,52 @@ export const Inspector: React.FC<InspectorProps> = ({
   const recInfoText =
     recommendation?.infoText || "Интервал восстановится с 1.4 мин до 8.0 мин.";
   const actionType = recommendation?.action || (isApplied ? "HOLDING_APPLIED" : "");
+
+  const isM7 = alert?.id === "alert_2198" || alert?.routeNumberBadge === "м7";
+  const isT88 = alert?.id === "alert_0814" || alert?.routeNumberBadge === "т88";
+
+  const defaultHeader = isM7
+    ? "СППР: Зелёный коридор ЦОДД"
+    : isT88
+    ? "СППР: Режим Skip-Stop"
+    : "СППР: Рекомендация Holding";
+
+  const defaultUnappliedLabel = isM7
+    ? "Включить зелёный коридор (№2198)"
+    : isT88
+    ? "Активировать Skip-Stop (№0814)"
+    : `Применить Holding (${targetVehId})`;
+
+  const defaultAppliedLabel = isM7
+    ? "Зелёный коридор активен (ЦОДД Т-12)"
+    : isT88
+    ? "Skip-Stop активен • Экспресс-пропуск"
+    : `Holding применён • Команда на ${targetVehId}`;
+
   const appliedLabel = !isApplied
-    ? `Применить Holding (${targetVehId})`
+    ? defaultUnappliedLabel
     : actionType === "DEPOT_RESERVE_APPLIED"
-    ? "Резерв №3105 введён на линию"
+    ? "Резерв введён на линию"
     : actionType === "SKIP_STOP_APPLIED"
     ? "Режим Skip-Stop активирован"
     : actionType === "SHORT_TURNING_APPLIED"
     ? "Оперативный разворот санкционирован"
-    : `Holding применён • Команда на ${targetVehId}`;
+    : actionType === "GREEN_CORRIDOR_APPLIED"
+    ? "Зелёный коридор активен (ЦОДД Т-12)"
+    : defaultAppliedLabel;
 
   const appliedHeader = !isApplied
-    ? "СППР: Рекомендация Holding"
+    ? defaultHeader
     : actionType === "DEPOT_RESERVE_APPLIED"
     ? "СППР: Ввод резерва"
     : actionType === "SKIP_STOP_APPLIED"
     ? "СППР: Режим Skip-Stop"
     : actionType === "SHORT_TURNING_APPLIED"
     ? "СППР: Оперативный разворот"
+    : actionType === "GREEN_CORRIDOR_APPLIED" || isM7
+    ? "СППР: Зелёный коридор включён"
+    : isT88
+    ? "СППР: Skip-Stop активирован"
     : "СППР: Рекомендация Holding";
 
   return (
