@@ -119,11 +119,53 @@ func main() {
 	log.Printf("[INFO] Connected to ML service at %s", mlURL)
 
 	// 6. Initialize NDTP Emulator Controller (:18080)
+	targetHost := os.Getenv("NDTP_HOST_FOR_EMULATOR")
+	if targetHost == "" {
+		if _, err := os.Stat("/.dockerenv"); err == nil {
+			targetHost = "backend"
+		} else {
+			targetHost = "host.docker.internal"
+		}
+	}
+
 	ndtpEmuURL := os.Getenv("NDTP_EMULATOR_URL")
 	if ndtpEmuURL == "" {
-		ndtpEmuURL = "http://ndtp-emu:18080"
+		if _, err := os.Stat("/.dockerenv"); err == nil {
+			ndtpEmuURL = "http://ndtp-emu:18080"
+		} else {
+			ndtpEmuURL = "http://localhost:18080"
+		}
 	}
 	ndtpCli := ndtp.NewEmulatorClient(ndtpEmuURL)
+
+	// 6.1. Automated background bootstrap of NDTP emulation
+	autoStartNDTP := os.Getenv("AUTO_START_NDTP")
+	if autoStartNDTP != "false" {
+		go func() {
+			log.Printf("[INFO] NDTP auto-start watcher started (target=%s:9201, emu=%s)", targetHost, ndtpEmuURL)
+			// Poll emulator API for up to 30 seconds
+			for i := 0; i < 15; i++ {
+				select {
+				case <-ctx.Done():
+					return
+				case <-time.After(2 * time.Second):
+				}
+
+				pollCtx, pollCancel := context.WithTimeout(ctx, 2*time.Second)
+				err := ndtpCli.StartEmulation(pollCtx, targetHost, 9201, []int64{1166336, 122658, 131672}, 3000)
+				if err != nil {
+					// Also attempt localhost if host.docker.internal failed
+					_ = ndtpCli.StartEmulation(pollCtx, "localhost", 9201, []int64{1166336, 122658, 131672}, 3000)
+				}
+				pollCancel()
+
+				if err == nil {
+					log.Printf("[INFO] NDTP Emulation automatically bootstrapped with units [1166336, 122658, 131672]")
+					break
+				}
+			}
+		}()
+	}
 
 	// 7. Initialize NDTP Ingestion Server (:9201)
 	ndtpPort := os.Getenv("NDTP_PORT")
@@ -236,7 +278,7 @@ func main() {
 
 	var (
 		feederModeMu sync.RWMutex
-		feederMode   = "scenario" // "scenario" or "gps"
+		feederMode   = "scenario" // "scenario", "gps", or "live"
 	)
 
 	// 8. Initialize WebSocket Hub
@@ -263,6 +305,30 @@ func main() {
 				gpsFeeder.AdvanceTick(tickInterval)
 				vehicles, alert, status = gpsFeeder.GetState()
 				simTimeStr = gpsFeeder.GetSimTime().Format("15:04:05")
+			} else if mode == "live" {
+				time.Sleep(500 * time.Millisecond)
+
+				liveVehicles := fleetMgr.List()
+				if len(liveVehicles) == 0 && f != nil {
+					demo, _, _ := f.GetState()
+					vehicles = fleetMgr.MergeDemo(demo)
+				} else {
+					vehicles = liveVehicles
+				}
+
+				liveAlerts := alertMgr.GetAll()
+				if len(liveAlerts) > 0 {
+					alert = &liveAlerts[0]
+				}
+
+				status = models.SystemStatus{
+					ActiveVehiclesCount: len(vehicles),
+					ActiveAlertsCount:   len(liveAlerts),
+					PreventedIncidents:  alertMgr.PreventedCount(),
+					PunctualityRate:     computePunctuality(vehicles),
+					EngineLatencyMs:     2.5,
+				}
+				simTimeStr = time.Now().Format("15:04:05")
 			} else {
 				speed := 1.0
 				if f != nil {
@@ -397,6 +463,20 @@ func main() {
 				json.NewEncoder(w).Encode(status)
 				return
 			}
+			if mode == "live" {
+				liveVehicles := fleetMgr.List()
+				liveAlerts := alertMgr.GetAll()
+				status := models.SystemStatus{
+					ActiveVehiclesCount: len(liveVehicles),
+					ActiveAlertsCount:   len(liveAlerts),
+					PreventedIncidents:  alertMgr.PreventedCount(),
+					PunctualityRate:     computePunctuality(liveVehicles),
+					EngineLatencyMs:     2.5,
+				}
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(status)
+				return
+			}
 
 			var status models.SystemStatus
 			var demoVehicles []models.Vehicle
@@ -435,6 +515,16 @@ func main() {
 				json.NewEncoder(w).Encode(vehicles)
 				return
 			}
+			if mode == "live" {
+				liveVehicles := fleetMgr.List()
+				if len(liveVehicles) == 0 && f != nil {
+					demo, _, _ := f.GetState()
+					liveVehicles = fleetMgr.MergeDemo(demo)
+				}
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(liveVehicles)
+				return
+			}
 
 			var demoVehicles []models.Vehicle
 			if f != nil {
@@ -447,16 +537,28 @@ func main() {
 
 		// Real-time CatBoost ML inference & SHAP explanation on demand for any vehicle
 		r.Get("/vehicles/{id}/prediction", func(w http.ResponseWriter, r *http.Request) {
-			vehID := chi.URLParam(r, "id")
+			rawID := chi.URLParam(r, "id")
+			cleanID := strings.TrimPrefix(rawID, "P")
+
 			feederModeMu.RLock()
 			mode := feederMode
 			feederModeMu.RUnlock()
 
 			var veh *models.Vehicle
 			if mode == "gps" && gpsFeeder != nil {
-				veh = gpsFeeder.GetVehicle(vehID)
+				veh = gpsFeeder.GetVehicle(rawID)
+				if veh == nil {
+					veh = gpsFeeder.GetVehicle(cleanID)
+				}
+				if veh == nil {
+					veh = gpsFeeder.GetVehicle("P" + cleanID)
+				}
 			} else {
-				if v, ok := fleetMgr.Get(vehID); ok {
+				if v, ok := fleetMgr.Get(rawID); ok {
+					veh = &v
+				} else if v, ok := fleetMgr.Get(cleanID); ok {
+					veh = &v
+				} else if v, ok := fleetMgr.Get("P" + cleanID); ok {
 					veh = &v
 				}
 			}
@@ -464,7 +566,7 @@ func main() {
 			if veh == nil {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusNotFound)
-				json.NewEncoder(w).Encode(map[string]any{"error": "Vehicle not found", "id": vehID})
+				json.NewEncoder(w).Encode(map[string]any{"error": "Vehicle not found", "id": rawID})
 				return
 			}
 
@@ -484,6 +586,12 @@ func main() {
 
 			if mode == "gps" && gpsFeeder != nil {
 				alerts := gpsFeeder.GetAlerts()
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(alerts)
+				return
+			}
+			if mode == "live" {
+				alerts := alertMgr.GetAll()
 				w.Header().Set("Content-Type", "application/json")
 				json.NewEncoder(w).Encode(alerts)
 				return
@@ -516,6 +624,8 @@ func main() {
 
 			if mode == "gps" && gpsFeeder != nil {
 				gpsFeeder.ApplyHolding(targetVeh, holdSec)
+			} else if mode == "live" {
+				fleetMgr.ApplyHolding(targetVeh, holdSec)
 			}
 
 			if f != nil {
@@ -589,10 +699,21 @@ func main() {
 
 			if req.Action == "set_mode" {
 				feederModeMu.Lock()
-				if req.Mode == "gps" || req.Mode == "scenario" {
+				if req.Mode == "gps" || req.Mode == "scenario" || req.Mode == "live" {
 					feederMode = req.Mode
 				}
 				feederModeMu.Unlock()
+
+				if req.Mode == "live" {
+					go func() {
+						bgCtx, bgCancel := context.WithTimeout(context.Background(), 3*time.Second)
+						defer bgCancel()
+						err := ndtpCli.StartEmulation(bgCtx, targetHost, 9201, []int64{1166336, 122658, 131672}, 3000)
+						if err != nil {
+							_ = ndtpCli.StartEmulation(bgCtx, "localhost", 9201, []int64{1166336, 122658, 131672}, 3000)
+						}
+					}()
+				}
 			}
 
 			feederModeMu.RLock()
@@ -639,11 +760,6 @@ func main() {
 		r.Post("/simulation/ndtp/start", func(w http.ResponseWriter, r *http.Request) {
 			ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
 			defer cancel()
-
-			targetHost := os.Getenv("NDTP_HOST_FOR_EMULATOR")
-			if targetHost == "" {
-				targetHost = "backend"
-			}
 
 			err := ndtpCli.StartEmulation(ctx, targetHost, 9201, []int64{1166336, 122658, 131672}, 3000)
 			if err != nil {

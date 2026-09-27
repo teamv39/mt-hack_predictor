@@ -34,6 +34,9 @@ services:
       - PORT=8080
       - NDTP_PORT=9201
       - ML_SERVICE_URL=http://ml:8000
+      - NDTP_EMULATOR_URL=http://ndtp-emu:18080
+      - NDTP_HOST_FOR_EMULATOR=backend
+      - AUTO_START_NDTP=true
     depends_on:
       - ml
     restart: unless-stopped
@@ -41,13 +44,9 @@ services:
       - mt-network
 
   # Official NDTP Telemetry Stream Emulator (Port :18080)
-  # Требует предварительной загрузки образа организаторов: docker load -i ndtp-telemetry-emulator.tar
-  # Для запуска вместе с эмулятором используйте: docker compose --profile emulator up -d
   ndtp-emu:
     image: ndtp-telemetry-emulator:1.0
     container_name: mt-predictor-ndtp-emu
-    profiles:
-      - emulator
     ports:
       - "18080:18080"
     depends_on:

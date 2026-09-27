@@ -2,6 +2,7 @@ package fleet
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -34,7 +35,7 @@ func (m *Manager) UpsertNav(nav ndtp.NavCell) *models.Vehicle {
 	if !ok {
 		v = &models.Vehicle{
 			ID:      id,
-			RouteID: "ndtp-live",
+			RouteID: "NDTP",
 			Status:  "ON_TIME",
 		}
 		m.vehicles[id] = v
@@ -115,11 +116,17 @@ func (m *Manager) SetPrediction(vehicleID string, delaySec float64, bunchingRisk
 func (m *Manager) Get(id string) (models.Vehicle, bool) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	v, ok := m.vehicles[id]
-	if !ok {
-		return models.Vehicle{}, false
+	if v, ok := m.vehicles[id]; ok {
+		return *v, true
 	}
-	return *v, true
+	cleanID := strings.TrimPrefix(id, "P")
+	if v, ok := m.vehicles[cleanID]; ok {
+		return *v, true
+	}
+	if v, ok := m.vehicles["P"+cleanID]; ok {
+		return *v, true
+	}
+	return models.Vehicle{}, false
 }
 
 // List returns copies of all live NDTP vehicles.

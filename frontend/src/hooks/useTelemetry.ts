@@ -194,18 +194,20 @@ export function normalizeRouteId(id?: string): string {
 
 function mapBackendVehicle(bv: any, prevVeh?: Vehicle): Vehicle {
   const normalizedId = bv.id?.startsWith("P") ? bv.id : `P${bv.id}`;
+  const cleanId = (bv.id || "").replace(/^P/, "");
   const isDelayed = bv.status === "DELAYED" || (bv.delay_seconds && bv.delay_seconds > 180);
   const isBunching = bv.status === "BUNCHING_RISK";
   const status: "BUNCHING_RISK" | "NORMAL" | "DELAYED" = isBunching ? "BUNCHING_RISK" : isDelayed ? "DELAYED" : "NORMAL";
-  const routeId = normalizeRouteId(bv.route_id || prevVeh?.routeId || "м3");
+  const isNDTP = bv.route_id === "NDTP" || bv.route_id === "ndtp-live";
+  const routeId = isNDTP ? "NDTP" : normalizeRouteId(bv.route_id || prevVeh?.routeId || "м3");
 
   return {
     id: normalizedId,
-    badgeLabel: `${(bv.id || "").replace(/^P/, "")} · ${routeId}`,
-    plateNumber: prevVeh?.plateNumber || (String(bv.id).includes("1042") ? "Е 742 КХ 799" : "М 104 ВВ 777"),
-    model: prevVeh?.model || "ЛиАЗ-6213.65 (Гармошка)",
+    badgeLabel: isNDTP ? `Борт ${cleanId} · NDTP` : `${cleanId} · ${routeId}`,
+    plateNumber: prevVeh?.plateNumber || (isNDTP ? `Борт ${cleanId}` : (String(bv.id).includes("1042") ? "Е 742 КХ 799" : "М 104 ВВ 777")),
+    model: prevVeh?.model || (isNDTP ? "Бортовой терминал NDTP" : "ЛиАЗ-6213.65 (Гармошка)"),
     routeId,
-    routeName: prevVeh?.routeName || `Маршрут ${routeId}`,
+    routeName: isNDTP ? `Телематика борта ${cleanId}` : (prevVeh?.routeName || `Маршрут ${routeId}`),
     status,
     delaySeconds: Math.round(bv.delay_seconds || 0),
     predictedTerminalDelayMinutes: +(bv.delay_seconds ? (bv.delay_seconds / 60).toFixed(1) : 0),
@@ -214,7 +216,7 @@ function mapBackendVehicle(bv: any, prevVeh?: Vehicle): Vehicle {
     longitude: bv.longitude,
     heading: bv.bearing || 0,
     currentStop: bv.next_stop_name || prevVeh?.currentStop || "В пути",
-    nextStop: bv.next_stop_name || prevVeh?.nextStop || "м. Бауманская",
+    nextStop: bv.next_stop_name || prevVeh?.nextStop || "В движении",
   };
 }
 
@@ -354,12 +356,19 @@ export function useTelemetry() {
     } else {
       setSimSpeedState(1.0);
       setDatasetRoutes([]);
-      setVehicles(MOCK_VEHICLES);
-      setAlerts(MOCK_ALERTS.filter((alert) => !dismissedAlertIds.current.has(alert.id)));
+      setVehicles([]);
+      setAlerts([]);
+      setSelectedAlertId("");
+      setSelectedVehicleId("");
+      setFlyToTarget({ lat: 55.751244, lon: 37.618423, zoom: 12 });
       fetch(`${API_BASE}/simulation/control`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "set_mode", mode: "scenario" }),
+        body: JSON.stringify({ action: "set_mode", mode: "live" }),
+      }).catch(() => {});
+      fetch(`${API_BASE}/simulation/ndtp/start`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
       }).catch(() => {});
       fetch(`${API_BASE}/simulation/control`, {
         method: "POST",
@@ -538,9 +547,9 @@ export function useTelemetry() {
       setSelectedAlertId(linkedAlert.id);
       savePreferences({ selectedVehicleId: vehId, selectedAlertId: linkedAlert.id });
     } else {
-      setSelectedAlertId(null);
+      setSelectedAlertId("");
       savePreferences({ selectedVehicleId: vehId, selectedAlertId: undefined });
-      fetch(`${API_BASE}/vehicles/${encodeURIComponent(vehId)}/prediction`)
+      fetch(`${API_BASE}/vehicles/${encodeURIComponent(cleanId)}/prediction`)
         .then((res) => (res.ok ? res.json() : null))
         .then((pred) => {
           if (!pred) return;
@@ -554,12 +563,12 @@ export function useTelemetry() {
             id: `pred_${cleanId}`,
             vehicleId: vehId.startsWith("P") ? vehId : `P${cleanId}`,
             followingVehicleId: "",
-            routeNumberBadge: currentV?.routeNumber || routeId,
+            routeNumberBadge: currentV?.routeName || routeId,
             routeId: routeId,
             urgencyBadge: isBunching ? "T+15 мин" : delaySec > 180 ? "Задержка" : "Норма",
             urgencyMinutes: Math.max(1, Math.round(Math.abs(delaySec) / 60)),
             tag: isBunching ? "Схлопывание интервала" : "Прогноз графика",
-            tagType: isBunching ? "bunching" : "delay",
+            tagType: isBunching ? "bunching" : "interval",
             title: isBunching
               ? `Риск пачкования борта №${cleanId}`
               : `Прогноз движения борта №${cleanId}`,
@@ -571,7 +580,7 @@ export function useTelemetry() {
             locationName: v?.nextStop || "По маршруту",
             latitude: v?.latitude || 55.7724,
             longitude: v?.longitude || 37.6791,
-            category: isBunching || delaySec > 180 ? "critical" : "info",
+            category: isBunching || delaySec > 180 ? "critical" : "all",
             shapFactors: Array.isArray(pred.factors) && pred.factors.length > 0
               ? pred.factors.map((f: any, idx: number) => ({
                   title: f.title || f.feature,
@@ -645,13 +654,26 @@ export function useTelemetry() {
               const existing = prev.find((p) => p.id === (bv.id.startsWith("P") ? bv.id : `P${bv.id}`));
               return mapBackendVehicle(bv, existing);
             });
-            if (dataMode === "dataset") {
+            if (dataMode === "dataset" || dataMode === "live") {
               return mapped;
             }
             const incomingIds = new Set(mapped.map((v) => v.id));
             const preserved = prev.filter((p) => !incomingIds.has(p.id));
             return [...mapped, ...preserved];
           });
+
+          if (dataMode === "live" && Array.isArray(vehRes) && vehRes.length > 0) {
+            setSelectedVehicleId((prev) => {
+              if (prev && vehRes.some((bv: any) => bv.id === prev || `P${bv.id}` === prev)) {
+                return prev;
+              }
+              const firstId = vehRes[0]?.id ? `P${vehRes[0].id}` : "";
+              if (firstId) {
+                setTimeout(() => handleSelectVehicle(firstId), 0);
+              }
+              return firstId;
+            });
+          }
         }
 
         if (Array.isArray(alertRes) && alertRes.length > 0) {
@@ -698,13 +720,26 @@ export function useTelemetry() {
                     const existing = prev.find((p) => p.id === (bv.id.startsWith("P") ? bv.id : `P${bv.id}`));
                     return mapBackendVehicle(bv, existing);
                   });
-                  if (dataMode === "dataset") {
+                  if (dataMode === "dataset" || dataMode === "live") {
                     return mapped;
                   }
                   const incomingIds = new Set(mapped.map((v: Vehicle) => v.id));
                   const preserved = prev.filter((p) => !incomingIds.has(p.id));
                   return [...mapped, ...preserved];
                 });
+
+                if (dataMode === "live" && Array.isArray(data.vehicles) && data.vehicles.length > 0) {
+                  setSelectedVehicleId((prev) => {
+                    if (prev && data.vehicles.some((bv: any) => bv.id === prev || `P${bv.id}` === prev)) {
+                      return prev;
+                    }
+                    const firstId = data.vehicles[0]?.id ? `P${data.vehicles[0].id}` : "";
+                    if (firstId) {
+                      setTimeout(() => handleSelectVehicle(firstId), 0);
+                    }
+                    return firstId;
+                  });
+                }
               }
               if (data.alert) {
                 const newAlert = mapBackendAlert(data.alert);
@@ -1127,8 +1162,16 @@ export function useTelemetry() {
     dataMode,
     setDataMode,
     datasetLoadError,
-    route: dataMode === "dataset" ? (datasetRoutes[0] || (datasetLoadError ? (MOCK_ROUTE_DATA as RouteData) : null)) : (MOCK_ROUTE_DATA as RouteData),
-    allRoutes: dataMode === "dataset" ? (datasetRoutes.length > 0 ? datasetRoutes : (datasetLoadError ? (MOCK_ALL_ROUTES as RouteData[]) : [])) : (MOCK_ALL_ROUTES as RouteData[]),
+    route: dataMode === "dataset"
+      ? (datasetRoutes[0] || (datasetLoadError ? (MOCK_ROUTE_DATA as RouteData) : null))
+      : dataMode === "live"
+      ? null
+      : (MOCK_ROUTE_DATA as RouteData),
+    allRoutes: dataMode === "dataset"
+      ? (datasetRoutes.length > 0 ? datasetRoutes : (datasetLoadError ? (MOCK_ALL_ROUTES as RouteData[]) : []))
+      : dataMode === "live"
+      ? []
+      : (MOCK_ALL_ROUTES as RouteData[]),
     camera: MOCK_CAMERA,
     timeStep,
     setTimeStep,

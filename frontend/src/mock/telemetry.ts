@@ -13,14 +13,14 @@ export interface DelayChartPoint {
 }
 
 export interface Recommendation {
-  id: string;
-  targetVehicleId: string;
-  durationSeconds: number;
-  durationMinutes: number;
-  stopName: string;
-  effectPercent: number;
-  text: string;
-  infoText: string;
+  id?: string;
+  targetVehicleId?: string;
+  durationSeconds?: number;
+  durationMinutes?: number;
+  stopName?: string;
+  effectPercent?: number;
+  text?: string;
+  infoText?: string;
   applied: boolean;
   action?: string;
 }
@@ -67,7 +67,7 @@ export interface AlertItem {
   category: 'all' | 'critical' | 'bunching';
   shapFactors: ShapFactor[];
   delayChartData: DelayChartPoint[];
-  recommendation: Recommendation;
+  recommendation?: Recommendation;
   metrics?: AlertMetrics;
 }
 

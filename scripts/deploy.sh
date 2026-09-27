@@ -45,10 +45,29 @@ if ! docker ps --format '{{.Names}}' | grep -q "^mt-predictor-tileserver$"; then
       -v "$APP_DIR/map-service/data:/data" \
       -v "$APP_DIR/map-service/styles:/data/styles" \
       -v "$APP_DIR/map-service/config.json:/data/config.json" \
-      maptiler/tileserver-gl:latest --config /data/config.json -p 80 || true
 else
     echo "==> [INFO] Reloading TileServer GL container..."
     docker restart mt-predictor-tileserver 2>/dev/null || true
+fi
+
+# Ensure NDTP Telemetry Emulator container is running
+echo "==> [INFO] Checking NDTP Telemetry Emulator container..."
+if [ -f "$APP_DIR/dataset/ndtp-telemetry-emulator.tar" ]; then
+    if ! docker image inspect ndtp-telemetry-emulator:1.0 >/dev/null 2>&1; then
+        echo "==> [INFO] Loading ndtp-telemetry-emulator image into Docker..."
+        docker load -i "$APP_DIR/dataset/ndtp-telemetry-emulator.tar" || true
+    fi
+fi
+if docker image inspect ndtp-telemetry-emulator:1.0 >/dev/null 2>&1; then
+    if ! docker ps --format '{{.Names}}' | grep -q "^mt-predictor-ndtp-emu$"; then
+        echo "==> [INFO] Starting mt-predictor-ndtp-emu container..."
+        docker rm -f mt-predictor-ndtp-emu 2>/dev/null || true
+        docker run -d --name mt-predictor-ndtp-emu \
+          --restart unless-stopped \
+          -p 18080:18080 \
+          --add-host=host.docker.internal:host-gateway \
+          ndtp-telemetry-emulator:1.0 || true
+    fi
 fi
 
 # Health check
@@ -58,6 +77,12 @@ if curl -s -f http://127.0.0.1:1234/api/v1/status > /dev/null; then
     echo "==> [OK] Backend API: ONLINE"
 else
     echo "==> [WARN] Backend API returned non-200"
+fi
+
+if curl -s -f http://127.0.0.1:18080/api/cells > /dev/null; then
+    echo "==> [OK] NDTP Emulator: ONLINE"
+else
+    echo "==> [WARN] NDTP Emulator returned non-200"
 fi
 
 if curl -s -f http://127.0.0.1:8000/health > /dev/null; then

@@ -73,14 +73,23 @@ ensure-tiles: ## Проверить наличие и целостность mbt
 		docker compose restart tileserver 2>/dev/null || true; \
 	fi
 
-docker-build: ## Собрать все Docker-образы проекта
+ensure-emulator-image: ## Проверить наличие образа NDTP-эмулятора и автоматически загрузить при необходимости
+	@if ! docker image inspect ndtp-telemetry-emulator:1.0 >/dev/null 2>&1; then \
+		if [ -f "dataset/ndtp-telemetry-emulator.tar" ]; then \
+			echo "==> [NDTP] Загрузка официального Docker-образа эмулятора из dataset/ndtp-telemetry-emulator.tar..."; \
+			docker load -i dataset/ndtp-telemetry-emulator.tar; \
+		else \
+			echo "==> [WARN] Файл dataset/ndtp-telemetry-emulator.tar не найден!"; \
+		fi; \
+	fi
+
+docker-build: ensure-emulator-image ## Собрать все Docker-образы проекта
 	docker compose build
 
-docker-up: ensure-tiles ## Запустить основные сервисы в Docker (Frontend + Backend + ML + TileServer)
+docker-up: ensure-tiles ensure-emulator-image ## Запустить все сервисы в Docker включая NDTP-эмулятор
 	docker compose up -d
 
-docker-up-all: ensure-tiles ## Запустить все сервисы включая NDTP-эмулятор (требует предварительного docker load)
-	docker compose --profile emulator up -d
+docker-up-all: docker-up ## Синоним для docker-up
 
 docker-down: ## Остановить все Docker-контейнеры
 	docker compose down

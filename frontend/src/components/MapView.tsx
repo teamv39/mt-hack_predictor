@@ -358,8 +358,7 @@ export const MapView: React.FC<MapViewProps> = ({
 
   // 1. Vehicle positions — interpolate along route geometry when advancing timeline
   const displayedVehicles = useMemo(() => {
-    if (dataMode === "dataset" && !datasetLoadError) return vehicles;
-    if (timeStep === "Сейчас" || dataMode === "mock") return vehicles;
+    if (dataMode !== "mock" || timeStep === "Сейчас") return vehicles;
 
     const horizonFrac: Record<
       string,
@@ -444,11 +443,11 @@ export const MapView: React.FC<MapViewProps> = ({
 
       return veh;
     });
-  }, [vehicles, timeStep, isHoldingApplied, primaryRoute, routes, dataMode, datasetLoadError]);
+  }, [vehicles, timeStep, isHoldingApplied, primaryRoute, routes, dataMode]);
 
-  // 2. Timeline auto-play timer (disabled in mock/dataset to allow smooth continuous GPS simulation)
+  // 2. Timeline auto-play timer (only in demo/mock mode with the horizon scrubber)
   useEffect(() => {
-    if (!isPlaying || dataMode === "mock" || dataMode === "dataset") return;
+    if (!isPlaying || dataMode !== "mock") return;
     const interval = setInterval(() => {
       const idx = HORIZONS.indexOf(timeStep);
       const nextIdx = (idx + 1) % HORIZONS.length;
@@ -494,7 +493,7 @@ export const MapView: React.FC<MapViewProps> = ({
         if (r.routeGeometry.length < 2) return;
         const normId = normalizeRouteId(r.routeId);
         const srcId = `route-${normId}`;
-        const routeData: GeoJSON.Feature<GeoJSON.LineString | GeoJSON.MultiLineString> = dataMode === "dataset" && trackGeoJson[normId]
+        const routeData: GeoJSON.Feature<GeoJSON.LineString | GeoJSON.MultiLineString> = trackGeoJson[normId]
           ? trackGeoJson[normId]
           : buildRouteFeature(r.name, normId, r.routeGeometry, r.sublines);
         const source = map.getSource(srcId) as maplibregl.GeoJSONSource | undefined;
@@ -976,7 +975,7 @@ export const MapView: React.FC<MapViewProps> = ({
       const normRoute = normalizeRouteId(veh.routeId);
 
       // Skip vehicles on hidden routes
-      if (!visibleRouteIds.includes(normRoute)) {
+      if (routes.length > 0 && !visibleRouteIds.includes(normRoute)) {
         if (vehicleMarkersRef.current[veh.id]) {
           vehicleMarkersRef.current[veh.id].remove();
           delete vehicleMarkersRef.current[veh.id];
@@ -1647,7 +1646,9 @@ export const MapView: React.FC<MapViewProps> = ({
           <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-zinc-500/10 text-xs shrink-0 select-none">
             <span
               className={`w-2 h-2 rounded-full shrink-0 ${
-                isGpsMode
+                dataMode === "live"
+                  ? "bg-sky-400 animate-pulse"
+                  : isGpsMode
                   ? "bg-sky-400 animate-pulse"
                   : isHoldingApplied
                   ? "bg-emerald-400"
@@ -1655,8 +1656,10 @@ export const MapView: React.FC<MapViewProps> = ({
               }`}
             />
             <span className="font-mono font-semibold whitespace-nowrap">
-              {isGpsMode ? (
-                `GPS: ${displayedVehicles.length} ТС`
+              {dataMode === "live" ? (
+                "NDTP Эфир"
+              ) : isGpsMode ? (
+                "GPS Датасет"
               ) : isHoldingApplied ? (
                 <span className="text-emerald-500 dark:text-emerald-400 font-bold">Такт в норме</span>
               ) : (
@@ -1668,122 +1671,126 @@ export const MapView: React.FC<MapViewProps> = ({
             </span>
           </div>
 
-          <div className="h-4 w-px bg-zinc-300 dark:bg-white/10 mx-0.5 shrink-0" />
+          {routes.length > 0 && (
+            <>
+              <div className="h-4 w-px bg-zinc-300 dark:bg-white/10 mx-0.5 shrink-0" />
 
-          {/* Quick Route Focus Chips with Scroll Controls */}
-          <div className="flex items-center gap-1 min-w-0 flex-1 overflow-hidden">
-            <button
-              onClick={handleFocusNetwork}
-              className={`px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shrink-0 text-xs font-semibold ${
-                !selectedRouteId
-                  ? isDarkMode
-                    ? "bg-white/15 text-white shadow-xs"
-                    : "bg-zinc-200 text-zinc-900 shadow-xs"
-                  : isDarkMode
-                  ? "hover:bg-white/10 text-zinc-300 hover:text-white"
-                  : "hover:bg-zinc-100 text-zinc-700 hover:text-zinc-900"
-              }`}
-              title="Обзор всей маршрутной сети"
-            >
-              <Layers size={13} className="text-zinc-400" />
-              <span>Сеть</span>
-            </button>
-
-            <div className="flex items-center min-w-0 flex-1 overflow-hidden gap-0.5">
-              {canScrollLeft && (
+              {/* Quick Route Focus Chips with Scroll Controls */}
+              <div className="flex items-center gap-1 min-w-0 flex-1 overflow-hidden">
                 <button
-                  type="button"
-                  onClick={() => scrollRoutes("left")}
-                  aria-label="Прокрутить маршруты влево"
-                  className={`h-6 w-5 shrink-0 rounded-md flex items-center justify-center transition-colors cursor-pointer ${
-                    isDarkMode
-                      ? "bg-white/10 hover:bg-white/20 text-zinc-300 shadow-xs"
-                      : "bg-zinc-100 hover:bg-zinc-200 text-zinc-700 shadow-xs"
+                  onClick={handleFocusNetwork}
+                  className={`px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shrink-0 text-xs font-semibold ${
+                    !selectedRouteId
+                      ? isDarkMode
+                        ? "bg-white/15 text-white shadow-xs"
+                        : "bg-zinc-200 text-zinc-900 shadow-xs"
+                      : isDarkMode
+                      ? "hover:bg-white/10 text-zinc-300 hover:text-white"
+                      : "hover:bg-zinc-100 text-zinc-700 hover:text-zinc-900"
                   }`}
-                  title="Влево"
+                  title="Обзор всей маршрутной сети"
                 >
-                  <ChevronLeft size={13} />
+                  <Layers size={13} className="text-zinc-400" />
+                  <span>Сеть</span>
                 </button>
-              )}
 
-              <div
-                ref={routeScrollRef}
-                onScroll={checkScroll}
-                onWheel={handleRouteWheel}
-                className="flex items-center gap-1 text-xs font-semibold overflow-x-auto scroll-smooth scrollbar-none px-0.5 py-0.2 min-w-0 flex-1"
-              >
-                {routes.map((r) => {
-                  const normId = normalizeRouteId(r.routeId);
-                  const isSelected = activeRouteNormId === normId;
-                  const hasAlert =
-                    (alert?.routeId && normalizeRouteId(alert.routeId) === normId) ||
-                    vehicles.some(
-                      (v) =>
-                        normalizeRouteId(v.routeId) === normId &&
-                        (v.status === "BUNCHING_RISK" || v.status === "DELAYED")
-                    );
-
-                  const stopName =
-                    r.stops && r.stops.length > 0
-                      ? r.stops[Math.floor(r.stops.length / 2)]?.name
-                          .replace(/^м\.\s*|^Метро\s*«?/i, "")
-                          .replace(/»$/, "")
-                      : "";
-
-                  return (
+                <div className="flex items-center min-w-0 flex-1 overflow-hidden gap-0.5">
+                  {canScrollLeft && (
                     <button
-                      key={normId}
-                      data-route-id={normId}
-                      onClick={() => handleSelectRoute(normId)}
-                      className={`px-2 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer border shrink-0 ${
-                        isSelected
-                          ? isDarkMode
-                            ? "bg-white/15 text-white border-white/20 shadow-xs"
-                            : "bg-zinc-100 text-zinc-900 border-zinc-300 shadow-xs"
-                          : isDarkMode
-                          ? "border-transparent hover:bg-white/5 text-zinc-300 hover:text-white"
-                          : "border-transparent hover:bg-zinc-100 text-zinc-700 hover:text-zinc-900"
+                      type="button"
+                      onClick={() => scrollRoutes("left")}
+                      aria-label="Прокрутить маршруты влево"
+                      className={`h-6 w-5 shrink-0 rounded-md flex items-center justify-center transition-colors cursor-pointer ${
+                        isDarkMode
+                          ? "bg-white/10 hover:bg-white/20 text-zinc-300 shadow-xs"
+                          : "bg-zinc-100 hover:bg-zinc-200 text-zinc-700 shadow-xs"
                       }`}
-                      title={`Маршрут ${normId} (${r.name || stopName})`}
+                      title="Влево"
                     >
-                      <span
-                        className="w-2.5 h-2.5 rounded-full shrink-0 shadow-2xs"
-                        style={{ backgroundColor: r.color }}
-                      />
-                      <span className="font-mono">{normId}</span>
-                      {stopName && (
-                        <span className="text-[10px] text-zinc-400 font-normal hidden lg:inline max-w-[85px] truncate">
-                          {stopName}
-                        </span>
-                      )}
-                      {hasAlert && (
-                        <span
-                          className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shrink-0"
-                          title="Активный риск на маршруте"
-                        />
-                      )}
+                      <ChevronLeft size={13} />
                     </button>
-                  );
-                })}
-              </div>
+                  )}
 
-              {canScrollRight && (
-                <button
-                  type="button"
-                  onClick={() => scrollRoutes("right")}
-                  aria-label="Прокрутить маршруты вправо"
-                  className={`h-6 w-5 shrink-0 rounded-md flex items-center justify-center transition-colors cursor-pointer ${
-                    isDarkMode
-                      ? "bg-white/10 hover:bg-white/20 text-zinc-300 shadow-xs"
-                      : "bg-zinc-100 hover:bg-zinc-200 text-zinc-700 shadow-xs"
-                  }`}
-                  title="Вправо"
-                >
-                  <ChevronRight size={13} />
-                </button>
-              )}
-            </div>
-          </div>
+                  <div
+                    ref={routeScrollRef}
+                    onScroll={checkScroll}
+                    onWheel={handleRouteWheel}
+                    className="flex items-center gap-1 text-xs font-semibold overflow-x-auto scroll-smooth scrollbar-none px-0.5 py-0.2 min-w-0 flex-1"
+                  >
+                    {routes.map((r) => {
+                      const normId = normalizeRouteId(r.routeId);
+                      const isSelected = activeRouteNormId === normId;
+                      const hasAlert =
+                        (alert?.routeId && normalizeRouteId(alert.routeId) === normId) ||
+                        vehicles.some(
+                          (v) =>
+                            normalizeRouteId(v.routeId) === normId &&
+                            (v.status === "BUNCHING_RISK" || v.status === "DELAYED")
+                        );
+
+                      const stopName =
+                        r.stops && r.stops.length > 0
+                          ? r.stops[Math.floor(r.stops.length / 2)]?.name
+                              .replace(/^м\.\s*|^Метро\s*«?/i, "")
+                              .replace(/»$/, "")
+                          : "";
+
+                      return (
+                        <button
+                          key={normId}
+                          data-route-id={normId}
+                          onClick={() => handleSelectRoute(normId)}
+                          className={`px-2 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer border shrink-0 ${
+                            isSelected
+                              ? isDarkMode
+                                ? "bg-white/15 text-white border-white/20 shadow-xs"
+                                : "bg-zinc-100 text-zinc-900 border-zinc-300 shadow-xs"
+                              : isDarkMode
+                              ? "border-transparent hover:bg-white/5 text-zinc-300 hover:text-white"
+                              : "border-transparent hover:bg-zinc-100 text-zinc-700 hover:text-zinc-900"
+                          }`}
+                          title={`Маршрут ${normId} (${r.name || stopName})`}
+                        >
+                          <span
+                            className="w-2.5 h-2.5 rounded-full shrink-0 shadow-2xs"
+                            style={{ backgroundColor: r.color }}
+                          />
+                          <span className="font-mono">{normId}</span>
+                          {stopName && (
+                            <span className="text-[10px] text-zinc-400 font-normal hidden lg:inline max-w-[85px] truncate">
+                              {stopName}
+                            </span>
+                          )}
+                          {hasAlert && (
+                            <span
+                              className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shrink-0"
+                              title="Активный риск на маршруте"
+                            />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {canScrollRight && (
+                    <button
+                      type="button"
+                      onClick={() => scrollRoutes("right")}
+                      aria-label="Прокрутить маршруты вправо"
+                      className={`h-6 w-5 shrink-0 rounded-md flex items-center justify-center transition-colors cursor-pointer ${
+                        isDarkMode
+                          ? "bg-white/10 hover:bg-white/20 text-zinc-300 shadow-xs"
+                          : "bg-zinc-100 hover:bg-zinc-200 text-zinc-700 shadow-xs"
+                      }`}
+                      title="Вправо"
+                    >
+                      <ChevronRight size={13} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -1928,11 +1935,12 @@ export const MapView: React.FC<MapViewProps> = ({
       )}
 
       {/* 4. Route Filter Panel */}
-      <div
-        className={`absolute top-[248px] z-20 pointer-events-auto transition-all ${
-          isRadarOpen ? "left-[356px]" : "left-4"
-        }`}
-      >
+      {routes.length > 0 && (
+        <div
+          className={`absolute top-[248px] z-20 pointer-events-auto transition-all ${
+            isRadarOpen ? "left-[356px]" : "left-4"
+          }`}
+        >
         {isRoutesCollapsed ? (
           <button
             onClick={() => setIsRoutesCollapsed(false)}
@@ -2175,201 +2183,224 @@ export const MapView: React.FC<MapViewProps> = ({
           </div>
         )}
       </div>
+      )}
 
-      {/* 5. Floating Bottom Center Horizon Scrubber Capsule */}
-      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 pointer-events-auto flex flex-col items-center gap-1.5">
-        {/* ML Horizon Mode Indicator Badge */}
-        {timeStep === "+15 мин" ? (
-          <div
-            className={`px-3 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5 shadow-lg border backdrop-blur-md transition-all ${
-              isHoldingApplied
-                ? "bg-emerald-950/80 text-emerald-300 border-emerald-800/60"
-                : "bg-rose-950/80 text-rose-300 border-rose-800/60 animate-pulse"
-            }`}
-          >
-            {isHoldingApplied ? <CheckCircle2 size={13} /> : <AlertTriangle size={13} />}
-            <span>
-              {isHoldingApplied
-                ? "ГОРИЗОНТ T+15 мин: ИНТЕРВАЛ СТАБИЛИЗИРОВАН (HOLDING ПРИМЕНЕН)"
-                : "ГОРИЗОНТ ПРЕДИКТА ML T+15 мин: ПРОГНОЗ СХЛОПЫВАНИЯ ИНТЕРВАЛА"}
-            </span>
-          </div>
-        ) : timeStep === "Сейчас" ? (
-          <div className="px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1.5 shadow border backdrop-blur-md bg-[#18181b]/95 text-zinc-300 border-white/10">
-            <Radio size={11} className="text-emerald-500 shrink-0" />
-            <span>ОНЛАЙН ТЕЛЕМЕТРИЯ NDTP • ТЕКУЩИЙ МОМЕНТ</span>
-          </div>
-        ) : (
-          <div className="px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 shadow border backdrop-blur-md bg-[#18181b]/95 text-zinc-400 border-white/10">
-            <span>ПРОГНОЗНЫЙ ГОРИЗОНТ ДВИЖЕНИЯ {timeStep}</span>
-          </div>
-        )}
-
-        <div className="rounded-2xl border border-white/10 shadow-2xl shadow-black/35 px-4 py-2.5 flex items-center gap-3 w-[460px] max-w-[calc(100vw-32px)] backdrop-blur-xl bg-[#18181b]/95 text-zinc-200 transition-colors">
-          {/* Play/Pause Button */}
-          <button
-            onClick={() => setIsPlaying(!isPlaying)}
-            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm shrink-0 cursor-pointer ${
-              isPlaying
-                ? isDarkMode
-                  ? "bg-zinc-700 text-white"
-                  : "bg-zinc-800 text-white"
-                : isDarkMode
-                ? "bg-zinc-800 hover:bg-zinc-700 text-white"
-                : "bg-zinc-900 hover:bg-zinc-800 text-white"
-            }`}
-            title={isPlaying ? "Остановить анимацию" : "Запустить просмотр во времени"}
-          >
-            {isPlaying ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
-          </button>
-
-          {/* Rewind */}
-          <button
-            onClick={() => onTimeStepChange("Сейчас")}
-            className={`transition-colors shrink-0 cursor-pointer ${
-              timeStep === "Сейчас"
-                ? "text-zinc-200 font-bold"
-                : "text-zinc-400 hover:text-zinc-200"
-            }`}
-            title="К текущему моменту (Сейчас)"
-          >
-            <SkipBack size={15} />
-          </button>
-
-          {/* Step Back */}
-          <button
-            onClick={handlePrevStep}
-            className="text-zinc-400 hover:text-zinc-200 transition-colors shrink-0 cursor-pointer"
-            title="Предыдущий горизонт"
-          >
-            <ChevronLeft size={16} />
-          </button>
-
-          {/* Time Steps and Track */}
-          <div className="flex-1 flex flex-col gap-1.5 px-1">
-            {/* Slider track with active thumb - CLICKABLE */}
+      {/* 5. Floating Bottom Center Horizon Scrubber Capsule (Demo mode only) */}
+      {dataMode === "mock" ? (
+        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 pointer-events-auto flex flex-col items-center gap-1.5">
+          {/* ML Horizon Mode Indicator Badge */}
+          {timeStep === "+15 мин" ? (
             <div
-              onClick={handleTrackClick}
-              className={`relative w-full h-2 rounded-full flex items-center cursor-pointer ${
-                isDarkMode ? "bg-zinc-700/80" : "bg-zinc-200"
+              className={`px-3 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5 shadow-lg border backdrop-blur-md transition-all ${
+                isHoldingApplied
+                  ? "bg-emerald-950/80 text-emerald-300 border-emerald-800/60"
+                  : "bg-rose-950/80 text-rose-300 border-rose-800/60 animate-pulse"
               }`}
             >
+              {isHoldingApplied ? <CheckCircle2 size={13} /> : <AlertTriangle size={13} />}
+              <span>
+                {isHoldingApplied
+                  ? "ГОРИЗОНТ T+15 мин: ИНТЕРВАЛ СТАБИЛИЗИРОВАН (HOLDING ПРИМЕНЕН)"
+                  : "ГОРИЗОНТ ПРЕДИКТА ML T+15 мин: ПРОГНОЗ СХЛОПЫВАНИЯ ИНТЕРВАЛА"}
+              </span>
+            </div>
+          ) : timeStep === "Сейчас" ? (
+            <div className="px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1.5 shadow border backdrop-blur-md bg-[#18181b]/95 text-zinc-300 border-white/10">
+              <Radio size={11} className="text-emerald-500 shrink-0" />
+              <span>ДЕМО-СЦЕНАРИЙ • ТЕКУЩИЙ МОМЕНТ</span>
+            </div>
+          ) : (
+            <div className="px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 shadow border backdrop-blur-md bg-[#18181b]/95 text-zinc-400 border-white/10">
+              <span>ПРОГНОЗНЫЙ ГОРИЗОНТ ДВИЖЕНИЯ {timeStep}</span>
+            </div>
+          )}
+
+          <div className="rounded-2xl border border-white/10 shadow-2xl shadow-black/35 px-4 py-2.5 flex items-center gap-3 w-[460px] max-w-[calc(100vw-32px)] backdrop-blur-xl bg-[#18181b]/95 text-zinc-200 transition-colors">
+            {/* Play/Pause Button */}
+            <button
+              onClick={() => setIsPlaying(!isPlaying)}
+              className={`w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm shrink-0 cursor-pointer ${
+                isPlaying
+                  ? isDarkMode
+                    ? "bg-zinc-700 text-white"
+                    : "bg-zinc-800 text-white"
+                  : isDarkMode
+                  ? "bg-zinc-800 hover:bg-zinc-700 text-white"
+                  : "bg-zinc-900 hover:bg-zinc-800 text-white"
+              }`}
+              title={isPlaying ? "Остановить анимацию" : "Запустить просмотр во времени"}
+            >
+              {isPlaying ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
+            </button>
+
+            {/* Rewind */}
+            <button
+              onClick={() => onTimeStepChange("Сейчас")}
+              className={`transition-colors shrink-0 cursor-pointer ${
+                timeStep === "Сейчас"
+                  ? "text-zinc-200 font-bold"
+                  : "text-zinc-400 hover:text-zinc-200"
+              }`}
+              title="К текущему моменту (Сейчас)"
+            >
+              <SkipBack size={15} />
+            </button>
+
+            {/* Step Back */}
+            <button
+              onClick={handlePrevStep}
+              className="text-zinc-400 hover:text-zinc-200 transition-colors shrink-0 cursor-pointer"
+              title="Предыдущий горизонт"
+            >
+              <ChevronLeft size={16} />
+            </button>
+
+            {/* Time Steps and Track */}
+            <div className="flex-1 flex flex-col gap-1.5 px-1">
+              {/* Slider track with active thumb - CLICKABLE */}
               <div
-                className="h-full bg-zinc-400 dark:bg-zinc-500 rounded-full transition-all"
-                style={{
-                  width:
-                    timeStep === "Сейчас"
-                      ? "8%"
-                      : timeStep === "+15 мин"
-                      ? "42%"
-                      : timeStep === "+30 мин"
-                      ? "75%"
-                      : "100%",
-                }}
-              />
-              <div
-                className={`absolute w-3.5 h-3.5 rounded-full border-2 border-zinc-400 dark:border-zinc-300 shadow-md transition-all ${
-                  isDarkMode ? "bg-zinc-900" : "bg-white"
+                onClick={handleTrackClick}
+                className={`relative w-full h-2 rounded-full flex items-center cursor-pointer ${
+                  isDarkMode ? "bg-zinc-700/80" : "bg-zinc-200"
                 }`}
-                style={{
-                  left:
+              >
+                <div
+                  className="h-full bg-zinc-400 dark:bg-zinc-500 rounded-full transition-all"
+                  style={{
+                    width:
+                      timeStep === "Сейчас"
+                        ? "8%"
+                        : timeStep === "+15 мин"
+                        ? "42%"
+                        : timeStep === "+30 мин"
+                        ? "75%"
+                        : "100%",
+                  }}
+                />
+                <div
+                  className={`absolute w-3.5 h-3.5 rounded-full border-2 border-zinc-400 dark:border-zinc-300 shadow-md transition-all ${
+                    isDarkMode ? "bg-zinc-900" : "bg-white"
+                  }`}
+                  style={{
+                    left:
+                      timeStep === "Сейчас"
+                        ? "8%"
+                        : timeStep === "+15 мин"
+                        ? "42%"
+                        : timeStep === "+30 мин"
+                        ? "75%"
+                        : "100%",
+                    transform: "translateX(-50%)",
+                  }}
+                />
+              </div>
+
+              {/* Step buttons row */}
+              <div className="flex justify-between items-center text-[10px] font-semibold">
+                <button
+                  onClick={() => onTimeStepChange("Сейчас")}
+                  className={`cursor-pointer transition-colors ${
                     timeStep === "Сейчас"
-                      ? "8%"
-                      : timeStep === "+15 мин"
-                      ? "42%"
-                      : timeStep === "+30 мин"
-                      ? "75%"
-                      : "100%",
-                  transform: "translateX(-50%)",
-                }}
-              />
+                      ? isDarkMode
+                        ? "text-zinc-100 font-extrabold"
+                        : "text-zinc-900 font-extrabold"
+                      : isDarkMode
+                      ? "text-zinc-400 hover:text-zinc-200"
+                      : "text-zinc-500 hover:text-zinc-800"
+                  }`}
+                >
+                  Сейчас
+                </button>
+
+                <button
+                  onClick={() => onTimeStepChange("+15 мин")}
+                  className={`px-1.5 py-0.5 rounded cursor-pointer transition-all ${
+                    timeStep === "+15 мин"
+                      ? isDarkMode
+                        ? "bg-amber-950/50 text-amber-300 font-extrabold border border-amber-600/50"
+                        : "bg-amber-50 text-amber-900 font-extrabold border border-amber-300"
+                      : isDarkMode
+                      ? "text-zinc-400 hover:text-zinc-200"
+                      : "text-zinc-500 hover:text-zinc-800"
+                  }`}
+                >
+                  +15м (ML)
+                </button>
+
+                <button
+                  onClick={() => onTimeStepChange("+30 мин")}
+                  className={`cursor-pointer transition-colors ${
+                    timeStep === "+30 мин"
+                      ? isDarkMode
+                        ? "text-white font-extrabold"
+                        : "text-zinc-900 font-extrabold"
+                      : isDarkMode
+                      ? "text-zinc-400 hover:text-zinc-200"
+                      : "text-zinc-500 hover:text-zinc-800"
+                  }`}
+                >
+                  +30м
+                </button>
+
+                <button
+                  onClick={() => onTimeStepChange("+45 мин")}
+                  className={`cursor-pointer transition-colors ${
+                    timeStep === "+45 мин"
+                      ? isDarkMode
+                        ? "text-white font-extrabold"
+                        : "text-zinc-900 font-extrabold"
+                      : isDarkMode
+                      ? "text-zinc-400 hover:text-zinc-200"
+                      : "text-zinc-500 hover:text-zinc-800"
+                  }`}
+                >
+                  +45м
+                </button>
+              </div>
             </div>
 
-            {/* Step buttons row */}
-            <div className="flex justify-between items-center text-[10px] font-semibold">
-              <button
-                onClick={() => onTimeStepChange("Сейчас")}
-                className={`cursor-pointer transition-colors ${
-                  timeStep === "Сейчас"
-                    ? isDarkMode
-                      ? "text-zinc-100 font-extrabold"
-                      : "text-zinc-900 font-extrabold"
-                    : isDarkMode
-                    ? "text-zinc-400 hover:text-zinc-200"
-                    : "text-zinc-500 hover:text-zinc-800"
-                }`}
-              >
-                Сейчас
-              </button>
-
-              <button
-                onClick={() => onTimeStepChange("+15 мин")}
-                className={`px-1.5 py-0.5 rounded cursor-pointer transition-all ${
-                  timeStep === "+15 мин"
-                    ? isDarkMode
-                      ? "bg-amber-950/50 text-amber-300 font-extrabold border border-amber-600/50"
-                      : "bg-amber-50 text-amber-900 font-extrabold border border-amber-300"
-                    : isDarkMode
-                    ? "text-zinc-400 hover:text-zinc-200"
-                    : "text-zinc-500 hover:text-zinc-800"
-                }`}
-              >
-                +15м (ML)
-              </button>
-
-              <button
-                onClick={() => onTimeStepChange("+30 мин")}
-                className={`cursor-pointer transition-colors ${
-                  timeStep === "+30 мин"
-                    ? isDarkMode
-                      ? "text-white font-extrabold"
-                      : "text-zinc-900 font-extrabold"
-                    : isDarkMode
-                    ? "text-zinc-400 hover:text-zinc-200"
-                    : "text-zinc-500 hover:text-zinc-800"
-                }`}
-              >
-                +30м
-              </button>
-
-              <button
-                onClick={() => onTimeStepChange("+45 мин")}
-                className={`cursor-pointer transition-colors ${
-                  timeStep === "+45 мин"
-                    ? isDarkMode
-                      ? "text-white font-extrabold"
-                      : "text-zinc-900 font-extrabold"
-                    : isDarkMode
-                    ? "text-zinc-400 hover:text-zinc-200"
-                    : "text-zinc-500 hover:text-zinc-800"
-                }`}
-              >
-                +45м
-              </button>
-            </div>
+            {/* Next Arrow */}
+            <button
+              onClick={handleNextStep}
+              className="text-zinc-400 hover:text-zinc-200 transition-colors shrink-0 cursor-pointer"
+              title="Следующий горизонт"
+            >
+              <ChevronRight size={16} />
+            </button>
           </div>
 
-          {/* Next Arrow */}
-          <button
-            onClick={handleNextStep}
-            className="text-zinc-400 hover:text-zinc-200 transition-colors shrink-0 cursor-pointer"
-            title="Следующий горизонт"
+          {/* Subtle source attribution */}
+          <div
+            className={`text-[9px] text-center font-medium ${
+              isDarkMode ? "text-zinc-500" : "text-zinc-400"
+            }`}
           >
-            <ChevronRight size={16} />
-          </button>
+            {isTileServerAvailable
+              ? "Автономная векторная карта Москвы (TileServer GL • Planetiler) • СППР Мосгортранс"
+              : "Резервная карта CartoDB Positron (TileServer GL offline) • СППР Мосгортранс"}
+          </div>
         </div>
-
-        {/* Subtle source attribution */}
-        <div
-          className={`text-[9px] text-center font-medium ${
-            isDarkMode ? "text-zinc-500" : "text-zinc-400"
-          }`}
-        >
-          {isTileServerAvailable
-            ? "Автономная векторная карта Москвы (TileServer GL • Planetiler) • СППР Мосгортранс"
-            : "Резервная карта CartoDB Positron (TileServer GL offline) • СППР Мосгортранс"}
+      ) : (
+        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 pointer-events-auto flex flex-col items-center gap-1.5">
+          <div className="px-3 py-1.5 rounded-full text-[10.5px] font-bold flex items-center gap-2 shadow-lg border backdrop-blur-xl bg-[#18181b]/95 text-zinc-300 border-white/10">
+            <Radio size={11} className="text-sky-400 animate-pulse shrink-0" />
+            <span>
+              {dataMode === "live"
+                ? `NDTP ТЕЛЕМЕТРИЯ • ${displayedVehicles.length} ТС • ML CatBoost в реальном времени`
+                : `GPS ДАТАСЕТ • ${displayedVehicles.length} ТС • ML CatBoost Batch`}
+            </span>
+          </div>
+          <div
+            className={`text-[9px] text-center font-medium ${
+              isDarkMode ? "text-zinc-500" : "text-zinc-400"
+            }`}
+          >
+            {isTileServerAvailable
+              ? "Автономная векторная карта Москвы (TileServer GL • Planetiler) • СППР Мосгортранс"
+              : "Резервная карта CartoDB Positron (TileServer GL offline) • СППР Мосгортранс"}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
