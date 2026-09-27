@@ -12,7 +12,7 @@ import {
 } from "../mock/telemetry";
 import { loadPreferences, savePreferences } from "../utils/storage";
 
-const API_BASE = "http://localhost:8080/api/v1";
+const API_BASE = "/api/v1";
 
 export interface ToastMessage {
   id: string;
@@ -348,8 +348,9 @@ export function useTelemetry() {
     };
 
     const setupWebSocket = () => {
-      const host = window.location.hostname || "localhost";
-      const wsUrl = `ws://${host}:8080/ws`;
+      const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const wsHost = window.location.host || "localhost:8080";
+      const wsUrl = `${wsProtocol}//${wsHost}/ws`;
       try {
         ws = new WebSocket(wsUrl);
 

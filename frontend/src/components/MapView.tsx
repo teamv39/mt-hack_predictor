@@ -436,7 +436,7 @@ export const MapView: React.FC<MapViewProps> = ({
       let localOk = false;
       try {
         const ctrl = new AbortController();
-        const tid = setTimeout(() => ctrl.abort(), 600);
+        const tid = setTimeout(() => ctrl.abort(), 2000);
         const res = await fetch(TILESERVER_LIGHT, { signal: ctrl.signal });
         clearTimeout(tid);
         if (res.ok) {
@@ -472,25 +472,59 @@ export const MapView: React.FC<MapViewProps> = ({
         attributionControl: false,
         renderWorldCopies: false,
         transformRequest: (url: string) => {
-          const match = url.match(/^https?:\/\/[^/]+(\/(?:data|fonts|styles|sprites)\/.*)$/);
-          if (match && isTileServerAvailableRef.current) {
-            return { url: `/tiles${match[1]}` };
+          if (!isTileServerAvailableRef.current) {
+            return { url };
+          }
+          try {
+            const parsed = new URL(url, window.location.origin);
+            const pathname = parsed.pathname;
+
+            // 1. If URL already points to /tiles/... (relative or absolute on any port/host)
+            if (pathname.startsWith("/tiles/")) {
+              return { url: `${pathname}${parsed.search}` };
+            }
+
+            // 2. If URL points to TileServer sub-resources (/data/..., /fonts/..., /styles/..., /sprites/...)
+            if (/^\/(?:data|fonts|styles|sprites)\//.test(pathname)) {
+              return { url: `/tiles${pathname}${parsed.search}` };
+            }
+          } catch {
+            if (url.startsWith("/tiles/")) return { url };
+            if (/^\/(?:data|fonts|styles|sprites)\//.test(url)) return { url: `/tiles${url}` };
           }
           return { url };
         },
       });
 
-      // Runtime error watchdog: if local TileServer style/tiles fail, switch to fallback
+      let consecutiveFatalErrors = 0;
+
+      // Runtime error watchdog: only trigger fallback on true server outage, NOT on normal 404s for missing boundary tiles
       map.on("error", (e) => {
-        console.warn("[MapLibre] Tile/resource error:", e?.error?.message);
-        const errEvt = e as { status?: number; error?: { message?: string } };
+        const errEvt = e as { status?: number; error?: { message?: string; status?: number } };
+        const errMsg = errEvt?.error?.message || "";
+        const status = errEvt?.status || errEvt?.error?.status;
+
+        // Normal 404s for boundary/out-of-range tiles or missing fonts should NOT trigger fallback
+        if (status === 404) {
+          return;
+        }
+
+        console.warn("[MapLibre] Resource error:", errMsg, "Status:", status);
+
+        const isFatalOutage =
+          status === 503 ||
+          errMsg.includes("tileserver_offline") ||
+          errMsg.includes("ECONNREFUSED") ||
+          errMsg.includes("Failed to fetch");
+
+        if (isFatalOutage) {
+          consecutiveFatalErrors++;
+        }
+
         if (
           !fallbackTriggered &&
           isTileServerAvailableRef.current &&
-          (errEvt?.error?.message?.includes("tiles") ||
-            errEvt?.error?.message?.includes("Failed to fetch") ||
-            errEvt?.error?.message?.includes("404") ||
-            errEvt?.status === 404)
+          (consecutiveFatalErrors >= 5 || (errMsg.includes("style") && isFatalOutage))
         ) {
           fallbackTriggered = true;
           isTileServerAvailableRef.current = false;

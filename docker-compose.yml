@@ -83,12 +83,22 @@ services:
       - |
         set -eu
         TARGET="/data/moscow_transport.mbtiles"
+        TARGET_TMP="/data/moscow_transport.mbtiles.tmp"
         OSM_FILE="/data/moscow.osm.pbf"
         URL="https://download.bbbike.org/osm/bbbike/Moscow/Moscow.osm.pbf"
 
+        rm -f "$$TARGET_TMP"
+
         if [ -f "$$TARGET" ] && [ -s "$$TARGET" ]; then
-          echo "==> [Map Builder] Found existing vector tiles: $$TARGET. Skipping build."
-          exit 0
+          HEADER=$$(head -c 15 "$$TARGET" 2>/dev/null || echo "")
+          SIZE=$$(wc -c < "$$TARGET" 2>/dev/null | tr -d ' ' || echo 0)
+          if [ "$$HEADER" = "SQLite format 3" ] && [ "$$SIZE" -gt 10000000 ]; then
+            echo "==> [Map Builder] Found valid vector tiles ($$SIZE bytes). Skipping build."
+            exit 0
+          else
+            echo "==> [Map Builder] Corrupted or incomplete .mbtiles detected ($$SIZE bytes). Removing..."
+            rm -f "$$TARGET"
+          fi
         fi
 
         echo "==> [Map Builder] Vector tiles not found! Starting automated map preparation..."
@@ -106,13 +116,14 @@ services:
         echo "==> [Map Builder] Step 2/2: Building vector tiles via Planetiler..."
         java -Xmx4g -cp @/app/jib-classpath-file com.onthegomap.planetiler.Main \
           --osm-path=$$OSM_FILE \
-          --output=$$TARGET \
+          --output=$$TARGET_TMP \
           --maxzoom=14 \
           --exclude-layers=building \
           --download \
           --fetch-wikidata=false \
           --force
 
+        mv "$$TARGET_TMP" "$$TARGET"
         chmod 666 "$$TARGET" 2>/dev/null || true
         echo "==> [Map Builder] Vector tiles successfully built: $$(du -h "$$TARGET" | cut -f1)! TileServer can start now."
 

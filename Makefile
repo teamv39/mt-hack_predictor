@@ -50,11 +50,25 @@ status: ## Проверить доступность и сквозную свя�
 	@./scripts/check_live.sh
 
 
-ensure-tiles: ## Проверить наличие mbtiles и при необходимости скачать и собрать
-	@if [ ! -f "map-service/data/moscow_transport.mbtiles" ] || [ ! -s "map-service/data/moscow_transport.mbtiles" ]; then \
-		echo "==> [Map] Векторные тайлы не найдены, запускаем автоматическую подготовку..."; \
+ensure-tiles: ## Проверить наличие и целостность mbtiles, при необходимости скачать и собрать
+	@REBUILD=0; \
+	TARGET="map-service/data/moscow_transport.mbtiles"; \
+	if [ ! -f "$$TARGET" ] || [ ! -s "$$TARGET" ]; then \
+		REBUILD=1; \
+	else \
+		HEADER=$$(head -c 15 "$$TARGET" 2>/dev/null || echo ""); \
+		SIZE=$$(wc -c < "$$TARGET" 2>/dev/null | tr -d ' ' || echo 0); \
+		if [ "$$HEADER" != "SQLite format 3" ] || [ "$$SIZE" -lt 10000000 ]; then \
+			echo "==> [Map] Обнаружен повреждённый или неполный файл тайлов ($$SIZE байт). Пересобираем..."; \
+			rm -f "$$TARGET"; \
+			REBUILD=1; \
+		fi; \
+	fi; \
+	if [ "$$REBUILD" -eq 1 ]; then \
+		echo "==> [Map] Запуск автоматической сборки векторных тайлов..."; \
 		./map-service/scripts/download_osm.sh; \
 		./map-service/scripts/build_tiles.sh; \
+		docker compose restart tileserver 2>/dev/null || true; \
 	fi
 
 docker-build: ## Собрать все Docker-образы проекта
