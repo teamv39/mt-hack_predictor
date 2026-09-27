@@ -663,106 +663,169 @@ export function useTelemetry() {
     };
   }, [dataMode]);
 
-  const applyHolding = useCallback(async (alertId: string) => {
-    try {
-      await fetch(`${API_BASE}/recommendations/${alertId}/apply`, {
-        method: "POST",
-      });
-    } catch {
-      // Backend standalone fallback
-    }
+  const applyHolding = useCallback(
+    async (alertId: string) => {
+      const isAlreadyApplied = appliedHoldingIds.includes(alertId);
 
-    demoEngine.applyHolding(alertId);
+      if (isAlreadyApplied) {
+        // Toggle OFF / Reset holding
+        const next = appliedHoldingIds.filter((id) => id !== alertId);
+        setAppliedHoldingIds(next);
+        savePreferences({ appliedHoldingIds: next });
 
-    setAppliedHoldingIds((prev) => {
-      const next = prev.includes(alertId) ? prev : [...prev, alertId];
-      savePreferences({ appliedHoldingIds: next });
-      return next;
-    });
+        setAlerts((prevAlerts) =>
+          prevAlerts.map((alt) => {
+            if (alt.id === alertId) {
+              return {
+                ...alt,
+                recommendation: alt.recommendation
+                  ? { ...alt.recommendation, applied: false }
+                  : undefined,
+              };
+            }
+            return alt;
+          })
+        );
 
-    setAlerts((prevAlerts) =>
-      prevAlerts.map((alt) => {
-        if (alt.id === alertId) {
-          return {
-            ...alt,
-            recommendation: {
-              ...alt.recommendation,
-              applied: true,
-            },
-          };
+        if (alertId === "alert_1042" || alertId.includes("1042")) {
+          setVehicles((prevVehs) =>
+            prevVehs.map((veh) => {
+              if (veh.id === "P1042" || veh.id === "1042") {
+                return {
+                  ...veh,
+                  status: "BUNCHING_RISK",
+                  delaySeconds: 348,
+                  predictedTerminalDelayMinutes: 5.8,
+                };
+              }
+              if (veh.id === "P1043" || veh.id === "1043") {
+                return {
+                  ...veh,
+                  status: "NORMAL",
+                  delaySeconds: -72,
+                  predictedTerminalDelayMinutes: -1.2,
+                };
+              }
+              return veh;
+            })
+          );
         }
-        return alt;
-      })
-    );
 
-    const currentAlert = alerts.find((a) => a.id === alertId);
-    const affectedVehIds = new Set<string>();
-    if (currentAlert) {
-      if (currentAlert.vehicleId) {
-        affectedVehIds.add(currentAlert.vehicleId);
-        affectedVehIds.add(currentAlert.vehicleId.replace(/^P/, ""));
-      }
-      if (currentAlert.followingVehicleId) {
-        affectedVehIds.add(currentAlert.followingVehicleId);
-        affectedVehIds.add(currentAlert.followingVehicleId.replace(/^P/, ""));
-      }
-      if (currentAlert.recommendation?.targetVehicleId) {
-        const tid = currentAlert.recommendation.targetVehicleId.replace(/^[№P]/, "");
-        affectedVehIds.add(tid);
-        affectedVehIds.add(`P${tid}`);
-      }
-    }
-    if (alertId.includes("1042")) {
-      affectedVehIds.add("P1042");
-      affectedVehIds.add("P1043");
-    }
+        setMetrics((prev) => ({
+          ...prev,
+          preventedIncidentsCount: Math.max(0, prev.preventedIncidentsCount - 1),
+          activeIncidentsCount: prev.activeIncidentsCount + 1,
+        }));
 
-    setVehicles((prevVehs) =>
-      prevVehs.map((veh) => {
-        const cleanId = veh.id.replace(/^P/, "");
-        if (affectedVehIds.has(veh.id) || affectedVehIds.has(cleanId)) {
-          return {
-            ...veh,
-            status: "NORMAL",
-            delaySeconds: 120,
-            predictedTerminalDelayMinutes: 2,
-          };
+        addToast({
+          type: "info",
+          title: "Меры СППР сброшены",
+          description: `Действие для инцидента сброшено. Восстановлен исходный прогноз риска.`,
+        });
+        return;
+      }
+
+      try {
+        await fetch(`${API_BASE}/recommendations/${alertId}/apply`, {
+          method: "POST",
+        });
+      } catch {
+        // Backend standalone fallback
+      }
+
+      demoEngine.applyHolding(alertId);
+
+      setAppliedHoldingIds((prev) => {
+        const next = prev.includes(alertId) ? prev : [...prev, alertId];
+        savePreferences({ appliedHoldingIds: next });
+        return next;
+      });
+
+      setAlerts((prevAlerts) =>
+        prevAlerts.map((alt) => {
+          if (alt.id === alertId) {
+            return {
+              ...alt,
+              recommendation: {
+                ...alt.recommendation,
+                applied: true,
+              },
+            };
+          }
+          return alt;
+        })
+      );
+
+      const currentAlert = alerts.find((a) => a.id === alertId);
+      const affectedVehIds = new Set<string>();
+      if (currentAlert) {
+        if (currentAlert.vehicleId) {
+          affectedVehIds.add(currentAlert.vehicleId);
+          affectedVehIds.add(currentAlert.vehicleId.replace(/^P/, ""));
         }
-        return veh;
-      })
-    );
+        if (currentAlert.followingVehicleId) {
+          affectedVehIds.add(currentAlert.followingVehicleId);
+          affectedVehIds.add(currentAlert.followingVehicleId.replace(/^P/, ""));
+        }
+        if (currentAlert.recommendation?.targetVehicleId) {
+          const tid = currentAlert.recommendation.targetVehicleId.replace(/^[№P]/, "");
+          affectedVehIds.add(tid);
+          affectedVehIds.add(`P${tid}`);
+        }
+      }
+      if (alertId.includes("1042")) {
+        affectedVehIds.add("P1042");
+        affectedVehIds.add("P1043");
+      }
 
-    setMetrics((prev) => ({
-      ...prev,
-      preventedIncidentsCount: prev.preventedIncidentsCount + 1,
-      activeIncidentsCount: Math.max(0, prev.activeIncidentsCount - 1),
-      punctualityRate: 96.2,
-    }));
+      setVehicles((prevVehs) =>
+        prevVehs.map((veh) => {
+          const cleanId = veh.id.replace(/^P/, "");
+          if (affectedVehIds.has(veh.id) || affectedVehIds.has(cleanId)) {
+            return {
+              ...veh,
+              status: "NORMAL",
+              delaySeconds: 120,
+              predictedTerminalDelayMinutes: 2,
+            };
+          }
+          return veh;
+        })
+      );
 
-    const targetVehName = currentAlert?.recommendation?.targetVehicleId || "№1043";
-    const stopName = currentAlert?.recommendation?.stopName || "«Метро Бауманская»";
-    const duration = currentAlert?.recommendation?.durationMinutes || 2.5;
+      setMetrics((prev) => ({
+        ...prev,
+        preventedIncidentsCount: prev.preventedIncidentsCount + 1,
+        activeIncidentsCount: Math.max(0, prev.activeIncidentsCount - 1),
+        punctualityRate: 96.2,
+      }));
 
-    if (alertId === "alert_2198" || alertId.includes("2198")) {
-      addToast({
-        type: "success",
-        title: "Зелёный коридор активирован в АСУ-ДД ЦОДД",
-        description: "Адаптивная фаза на узле Таганская площадь включена. Борт №2198 ускорен, отставание ликвидировано.",
-      });
-    } else if (alertId === "alert_0814" || alertId.includes("0814")) {
-      addToast({
-        type: "success",
-        title: "Команда Skip-Stop передана в АСУ-РДС",
-        description: "Борт №0814 следует в экспресс-режиме без остановки «Садовая-Черногрязская». Такт стабилизирован.",
-      });
-    } else {
-      addToast({
-        type: "success",
-        title: "Команда Holding успешно передана в АСУ-РДС",
-        description: `Борт ${targetVehName} придержан на ${duration} мин на остановке ${stopName}. Интервал восстанавливается до планового.`,
-      });
-    }
-  }, [addToast, alerts]);
+      const targetVehName = currentAlert?.recommendation?.targetVehicleId || "№1043";
+      const stopName = currentAlert?.recommendation?.stopName || "«Метро Бауманская»";
+      const duration = currentAlert?.recommendation?.durationMinutes || 2.5;
+
+      if (alertId === "alert_2198" || alertId.includes("2198")) {
+        addToast({
+          type: "success",
+          title: "Зелёный коридор активирован в АСУ-ДД ЦОДД",
+          description: "Адаптивная фаза на узле Таганская площадь включена. Борт №2198 ускорен, отставание ликвидировано.",
+        });
+      } else if (alertId === "alert_0814" || alertId.includes("0814")) {
+        addToast({
+          type: "success",
+          title: "Команда Skip-Stop передана в АСУ-РДС",
+          description: "Борт №0814 следует в экспресс-режиме без остановки «Садовая-Черногрязская». Такт стабилизирован.",
+        });
+      } else {
+        addToast({
+          type: "success",
+          title: "Команда Holding успешно передана в АСУ-РДС",
+          description: `Борт ${targetVehName} придержан на ${duration} мин на остановке ${stopName}. Интервал восстанавливается до планового.`,
+        });
+      }
+    },
+    [addToast, alerts, appliedHoldingIds]
+  );
 
   const applyScenario = useCallback(
     (scenarioId: string, _title?: string) => {
@@ -903,6 +966,20 @@ export function useTelemetry() {
         demoEngine.reset();
         setIsSimPlaying(true);
         setTimeStepState("Сейчас");
+        setAppliedHoldingIds([]);
+        setAppliedScenarios({});
+        savePreferences({ appliedHoldingIds: [], appliedScenarios: {}, timeStep: "Сейчас" });
+        setAlerts((prevAlerts) =>
+          prevAlerts.map((alt) => ({
+            ...alt,
+            recommendation: alt.recommendation ? { ...alt.recommendation, applied: false } : undefined,
+          }))
+        );
+        addToast({
+          type: "info",
+          title: "Сценарий сброшен",
+          description: "Телеметрия возвращена в исходное состояние t=0, управляющие меры обнулены.",
+        });
       }
 
       try {

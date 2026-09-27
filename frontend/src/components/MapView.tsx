@@ -443,61 +443,13 @@ export const MapView: React.FC<MapViewProps> = ({
         return;
       }
 
-      // B. Congestion zones — primary (м3 Бауманская) and secondary (м7 Николоямская)
+      // B. Congestion zones — dynamically populated based on active alerts and visible routes
       if (!map.getSource("congestion-zones")) {
-        const primaryRoute = routes.find((r) => normalizeRouteId(r.routeId) === "м3");
-        const segM3 = primaryRoute?.congestionSegment || [
-          [37.6791, 55.7724],
-          [37.697, 55.7785],
-          [37.7082, 55.7818],
-        ];
-
-        const buf = 0.004;
-        const amberCoordsM3 = [
-          [segM3[0][0] - buf, segM3[0][1] - buf * 0.6],
-          [segM3[0][0] - buf * 0.5, segM3[0][1] + buf * 0.8],
-          [segM3[segM3.length - 1][0] + buf, segM3[segM3.length - 1][1] + buf * 0.6],
-          [segM3[segM3.length - 1][0] + buf * 0.5, segM3[segM3.length - 1][1] - buf * 0.8],
-          [segM3[0][0] - buf, segM3[0][1] - buf * 0.6],
-        ];
-        const redCoordsM3 = [
-          [segM3[0][0] - buf * 0.4, segM3[0][1] - buf * 0.3],
-          [segM3[0][0] - buf * 0.2, segM3[0][1] + buf * 0.5],
-          [segM3[segM3.length - 1][0] + buf * 0.4, segM3[segM3.length - 1][1] + buf * 0.3],
-          [segM3[segM3.length - 1][0] + buf * 0.2, segM3[segM3.length - 1][1] - buf * 0.5],
-          [segM3[0][0] - buf * 0.4, segM3[0][1] - buf * 0.3],
-        ];
-
-        // M7 Congestion Zone (Николоямская)
-        const amberCoordsM7 = [
-          [37.653, 55.753],
-          [37.655, 55.756],
-          [37.671, 55.748],
-          [37.669, 55.745],
-          [37.653, 55.753],
-        ];
-
         map.addSource("congestion-zones", {
           type: "geojson",
           data: {
             type: "FeatureCollection",
-            features: [
-              {
-                type: "Feature",
-                properties: { level: "amber", title: "Затор Бауманская — Электрозаводская" },
-                geometry: { type: "Polygon", coordinates: [amberCoordsM3] },
-              },
-              {
-                type: "Feature",
-                properties: { level: "red", title: "Критический затор Бауманская" },
-                geometry: { type: "Polygon", coordinates: [redCoordsM3] },
-              },
-              {
-                type: "Feature",
-                properties: { level: "amber", title: "Затор Николоямская — Таганская" },
-                geometry: { type: "Polygon", coordinates: [amberCoordsM7] },
-              },
-            ],
+            features: [],
           },
         });
 
@@ -1292,6 +1244,83 @@ export const MapView: React.FC<MapViewProps> = ({
     });
   }, [visibleRouteIds, routes, layers.routes, layers.congestion]);
 
+  // Dynamically update Congestion / Risk Zones GeoJSON based on active state and visible routes
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !map.isStyleLoaded()) return;
+
+    const source = map.getSource("congestion-zones") as maplibregl.GeoJSONSource | undefined;
+    if (!source) return;
+
+    if (!layers.congestion || (dataMode === "dataset" && !datasetLoadError)) {
+      source.setData({ type: "FeatureCollection", features: [] });
+      return;
+    }
+
+    const features: GeoJSON.Feature[] = [];
+
+    // M3 Congestion Corridor: ONLY when M3 is visible AND Holding is NOT applied!
+    // Once Holding is applied, the incident is mitigated and the risk corridor is cleared!
+    if (!isHoldingApplied && visibleRouteIds.includes("м3")) {
+      const primaryRoute = routes.find((r) => normalizeRouteId(r.routeId) === "м3");
+      const segM3 = primaryRoute?.congestionSegment || [
+        [37.6791, 55.7724],
+        [37.697, 55.7785],
+        [37.7082, 55.7818],
+      ];
+      const buf = 0.0018;
+      const amberCoordsM3 = [
+        [segM3[0][0] - buf, segM3[0][1] - buf * 0.4],
+        [segM3[0][0] - buf * 0.5, segM3[0][1] + buf * 0.6],
+        [segM3[segM3.length - 1][0] + buf, segM3[segM3.length - 1][1] + buf * 0.4],
+        [segM3[segM3.length - 1][0] + buf * 0.5, segM3[segM3.length - 1][1] - buf * 0.6],
+        [segM3[0][0] - buf, segM3[0][1] - buf * 0.4],
+      ];
+      const redCoordsM3 = [
+        [segM3[0][0] - buf * 0.5, segM3[0][1] - buf * 0.2],
+        [segM3[0][0] - buf * 0.2, segM3[0][1] + buf * 0.3],
+        [segM3[segM3.length - 1][0] + buf * 0.5, segM3[segM3.length - 1][1] + buf * 0.2],
+        [segM3[segM3.length - 1][0] + buf * 0.2, segM3[segM3.length - 1][1] - buf * 0.3],
+        [segM3[0][0] - buf * 0.5, segM3[0][1] - buf * 0.2],
+      ];
+
+      features.push(
+        {
+          type: "Feature",
+          properties: { level: "amber", title: "Замедление Бауманская — Электрозаводская" },
+          geometry: { type: "Polygon", coordinates: [amberCoordsM3] },
+        },
+        {
+          type: "Feature",
+          properties: { level: "red", title: "Критическая зона пачкования м3" },
+          geometry: { type: "Polygon", coordinates: [redCoordsM3] },
+        }
+      );
+    }
+
+    // M7 Congestion Zone: ONLY when M7 is visible and M7 alert is not mitigated
+    const isM7Mitigated = alert?.id === "alert_2198" ? isHoldingApplied : false;
+    if (!isM7Mitigated && visibleRouteIds.includes("м7")) {
+      const amberCoordsM7 = [
+        [37.653, 55.753],
+        [37.655, 55.756],
+        [37.671, 55.748],
+        [37.669, 55.745],
+        [37.653, 55.753],
+      ];
+      features.push({
+        type: "Feature",
+        properties: { level: "amber", title: "Затор Николоямская — Таганская" },
+        geometry: { type: "Polygon", coordinates: [amberCoordsM7] },
+      });
+    }
+
+    source.setData({
+      type: "FeatureCollection",
+      features,
+    });
+  }, [isHoldingApplied, visibleRouteIds, layers.congestion, dataMode, datasetLoadError, routes, alert]);
+
   // Quick camera presets
   const handleFocusRoute = (routeId: string) => {
     const map = mapInstanceRef.current;
@@ -1382,84 +1411,103 @@ export const MapView: React.FC<MapViewProps> = ({
       {/* 1. MapLibre GL Map Viewport */}
       <div ref={mapContainerRef} className="absolute inset-0 w-full h-full z-0" />
 
-      {/* 2. Top Situational HUD Bar */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 pointer-events-auto flex items-center gap-2">
+      {/* 2. Top Situational HUD Bar: Sleek Unified Navigation & Live Status */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 pointer-events-auto flex items-center">
         <div
-          className={`flex items-center gap-3 px-3.5 py-1.5 rounded-xl border backdrop-blur-xl shadow-xl text-xs font-semibold ${
+          className={`flex items-center gap-1.5 p-1 rounded-xl border backdrop-blur-xl shadow-2xl transition-all ${
             isDarkMode
-              ? "border-white/10 bg-[#18181b]/90 text-zinc-200 shadow-black/25"
-              : "border-zinc-200 bg-white/95 text-zinc-800 shadow-zinc-300/40"
+              ? "border-white/10 bg-[#141416]/90 text-zinc-200 shadow-black/40"
+              : "border-zinc-200/90 bg-white/95 text-zinc-800 shadow-zinc-400/25"
           }`}
         >
-          <div className="flex items-center gap-1.5 text-emerald-500 dark:text-emerald-400 font-bold">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse"></span>
-            <span>
-              {isGpsMode
-                ? `GPS-треков: ${displayedVehicles.length}`
-                : `Выпуск: ${displayedVehicles.length}/${vehicles.length} ТС (100%)`}
+          {/* Active Status Badge */}
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-zinc-500/10 text-xs">
+            <span
+              className={`w-2 h-2 rounded-full ${
+                isGpsMode
+                  ? "bg-sky-400 animate-pulse"
+                  : isHoldingApplied
+                  ? "bg-emerald-400"
+                  : "bg-rose-500 animate-pulse"
+              }`}
+            />
+            <span className="font-mono font-semibold">
+              {isGpsMode ? (
+                `GPS: ${displayedVehicles.length} ТС`
+              ) : isHoldingApplied ? (
+                <span className="text-emerald-500 dark:text-emerald-400 font-bold">Такт в норме</span>
+              ) : (
+                <span className="text-rose-500 dark:text-rose-400 font-bold">Риск пачкования</span>
+              )}
+            </span>
+            <span className="text-zinc-400 dark:text-zinc-500 font-mono text-[11px]">
+              {displayedVehicles.length} ТС
             </span>
           </div>
-          {!isGpsMode && (
-            <>
-              <span className="text-zinc-300 dark:text-zinc-600">|</span>
-              <div className="flex items-center gap-1.5 text-rose-500 dark:text-rose-400 font-bold">
-                <AlertTriangle size={13} />
-                <span>Пачкование: 1 (м3)</span>
-              </div>
-              <span className="text-zinc-300 dark:text-zinc-600">|</span>
-              <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-300 font-bold">
-                <Flame size={13} />
-                <span>Заторы: 2 зоны</span>
-              </div>
-              <span className="text-zinc-300 dark:text-zinc-600">|</span>
-              <div className="flex items-center gap-1.5 text-sky-600 dark:text-sky-400 font-bold">
-                <Activity size={13} />
-                <span>Такт: 96.2%</span>
-              </div>
-            </>
-          )}
-        </div>
 
-        {/* Quick Camera Presets */}
-        <div
-          className={`flex items-center gap-1 p-1 rounded-xl border backdrop-blur-xl shadow-xl text-xs font-bold ${
-            isDarkMode
-              ? "border-white/10 bg-[#18181b]/90 shadow-black/25"
-              : "border-zinc-200 bg-white/95 shadow-zinc-300/40"
-          }`}
-        >
-          {!isGpsMode && (
-            <>
-              <button
-                onClick={() => handleFocusRoute("м3")}
-                className="px-2 py-0.5 rounded-lg text-emerald-600 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 transition-all cursor-pointer"
-                title="Фокус на перегоне м3 Бауманская"
-              >
-                м3 Бауманская
-              </button>
-              <button
-                onClick={() => handleFocusRoute("м7")}
-                className="px-2 py-0.5 rounded-lg text-orange-600 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-950/60 transition-all cursor-pointer"
-                title="Фокус на маршруте м7 Таганская"
-              >
-                м7 Таганская
-              </button>
-              <button
-                onClick={() => handleFocusRoute("т88")}
-                className="px-2 py-0.5 rounded-lg text-purple-600 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950/60 transition-all cursor-pointer"
-                title="Фокус на маршруте т88 Басманная"
-              >
-                т88 Басманная
-              </button>
-            </>
-          )}
-          <button
-            onClick={handleFocusNetwork}
-            className="px-2 py-0.5 rounded-lg text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all cursor-pointer"
-            title="Обзор всей маршрутной сети"
-          >
-            Обзор
-          </button>
+          <div className="h-4 w-px bg-zinc-300 dark:bg-white/10 mx-0.5" />
+
+          {/* Quick Route Focus Chips */}
+          <div className="flex items-center gap-1 text-xs font-semibold">
+            <button
+              onClick={handleFocusNetwork}
+              className={`px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                isDarkMode
+                  ? "hover:bg-white/10 text-zinc-300 hover:text-white"
+                  : "hover:bg-zinc-100 text-zinc-700 hover:text-zinc-900"
+              }`}
+              title="Обзор всей маршрутной сети"
+            >
+              <Layers size={13} className="text-zinc-400" />
+              <span>Сеть</span>
+            </button>
+
+            {!isGpsMode && (
+              <>
+                <button
+                  onClick={() => handleFocusRoute("м3")}
+                  className={`px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                    isDarkMode
+                      ? "hover:bg-emerald-950/40 text-emerald-300"
+                      : "hover:bg-emerald-50 text-emerald-700"
+                  }`}
+                  title="Фокус на маршруте м3 (Бауманская)"
+                >
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                  <span>м3</span>
+                  <span className="text-[10px] text-zinc-400 font-normal">Бауманская</span>
+                </button>
+
+                <button
+                  onClick={() => handleFocusRoute("м7")}
+                  className={`px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                    isDarkMode
+                      ? "hover:bg-orange-950/40 text-orange-300"
+                      : "hover:bg-orange-50 text-orange-700"
+                  }`}
+                  title="Фокус на маршруте м7 (Таганская)"
+                >
+                  <span className="w-2 h-2 rounded-full bg-orange-500 shrink-0" />
+                  <span>м7</span>
+                  <span className="text-[10px] text-zinc-400 font-normal">Таганская</span>
+                </button>
+
+                <button
+                  onClick={() => handleFocusRoute("т88")}
+                  className={`px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                    isDarkMode
+                      ? "hover:bg-purple-950/40 text-purple-300"
+                      : "hover:bg-purple-50 text-purple-700"
+                  }`}
+                  title="Фокус на маршруте т88 (Басманная)"
+                >
+                  <span className="w-2 h-2 rounded-full bg-purple-500 shrink-0" />
+                  <span>т88</span>
+                  <span className="text-[10px] text-zinc-400 font-normal">Басманная</span>
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
 

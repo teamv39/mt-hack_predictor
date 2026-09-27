@@ -164,6 +164,7 @@ export default function App() {
                 <Inspector
                   vehicle={selectedVehicle}
                   alert={selectedAlert}
+                  appliedHoldingIds={appliedHoldingIds}
                   onApplyHolding={applyHolding}
                   onOpenScenarios={() => setIsScenariosOpen(true)}
                   onClose={() => handleSetInspectorOpen(false)}

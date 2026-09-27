@@ -22,6 +22,7 @@ import { Vehicle, AlertItem } from "../mock/telemetry";
 export interface InspectorProps {
   vehicle?: Vehicle | null;
   alert?: AlertItem | null;
+  appliedHoldingIds?: string[];
   onApplyHolding?: (alertId: string) => void;
   onOpenScenarios?: () => void;
   onClose?: () => void;
@@ -31,6 +32,7 @@ export interface InspectorProps {
 export const Inspector: React.FC<InspectorProps> = ({
   vehicle,
   alert,
+  appliedHoldingIds,
   onApplyHolding,
   onOpenScenarios,
   onClose,
@@ -51,9 +53,9 @@ export const Inspector: React.FC<InspectorProps> = ({
         { stop: "м. Семёновская", plan: 45, withoutAction: 145, withHolding: 58 },
       ];
 
-  const recommendation = alert?.recommendation;
-  const isApplied = recommendation?.applied || false;
   const alertId = alert?.id || "alert_1042";
+  const recommendation = alert?.recommendation;
+  const isApplied = appliedHoldingIds ? appliedHoldingIds.includes(alertId) : (recommendation?.applied || false);
 
   const shapFactors = alert?.shapFactors?.length
     ? alert.shapFactors.map((f, i) => ({
@@ -386,16 +388,16 @@ export const Inspector: React.FC<InspectorProps> = ({
 
         {/* Primary Action Button */}
         <button
-          onClick={() => !isApplied && onApplyHolding && onApplyHolding(alertId)}
-          disabled={isApplied}
+          onClick={() => onApplyHolding && onApplyHolding(alertId)}
           className={`w-full h-9 px-3 rounded-lg text-white font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5 uppercase tracking-wider cursor-pointer ${
             isApplied
-              ? "bg-zinc-700 text-zinc-300 cursor-default"
+              ? "bg-zinc-700 hover:bg-zinc-600 text-zinc-100 border border-zinc-500/40 active:scale-98"
               : "bg-emerald-600 hover:bg-emerald-500 active:scale-98 shadow-emerald-900/20"
           }`}
+          title={isApplied ? "Меры активированы. Нажмите для отмены и сброса" : "Применить директиву СППР"}
         >
-          <CheckCircle2 size={14} />
-          <span>{appliedLabel}</span>
+          <CheckCircle2 size={14} className={isApplied ? "text-emerald-400" : ""} />
+          <span>{isApplied ? `${appliedLabel} (Сбросить)` : appliedLabel}</span>
         </button>
 
         {/* Secondary: Scenarios Matrix */}

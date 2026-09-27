@@ -869,11 +869,18 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
                     </div>
                   </div>
                 ) : (
-                  <div className="absolute left-[440px] top-[210px] bg-emerald-700 text-white text-[11px] font-mono font-semibold px-3 py-1.5 rounded-lg shadow-md z-20 flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  <div className="absolute left-[440px] top-[210px] bg-emerald-700 text-white text-[11px] font-mono font-semibold px-3 py-1.5 rounded-lg shadow-md z-20 flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                     <span>
                       {routeConfig.actionAppliedText} ({routeConfig.actionStop})
                     </span>
+                    <button
+                      onClick={handleApply}
+                      className="ml-1 text-[10px] font-sans font-bold bg-emerald-900/80 hover:bg-emerald-950 text-emerald-200 px-1.5 py-0.5 rounded cursor-pointer transition-colors border border-emerald-500/30"
+                      title="Сбросить статус меры"
+                    >
+                      Сброс
+                    </button>
                   </div>
                 )}
               </div>
@@ -1097,17 +1104,21 @@ export const MareyDiagram: React.FC<MareyDiagramProps> = ({
 
             <button
               onClick={handleApply}
-              disabled={isRouteApplied}
               className={`w-full h-8 px-2.5 rounded-lg text-white font-bold text-[11px] shadow-xs transition-all flex items-center justify-center gap-1.5 uppercase cursor-pointer ${
                 isRouteApplied
-                  ? "bg-zinc-700 text-zinc-300 cursor-default"
+                  ? "bg-zinc-700 hover:bg-zinc-600 text-zinc-100 border border-zinc-500/40 active:scale-95"
                   : "bg-emerald-600 hover:bg-emerald-500 active:scale-95 shadow-emerald-900/20"
               }`}
+              title={
+                isRouteApplied
+                  ? "Меры активированы. Нажмите, чтобы отменить и сбросить"
+                  : "Применить директиву СППР"
+              }
             >
-              <CheckCircle2 className="w-3.5 h-3.5" />
+              <CheckCircle2 className={`w-3.5 h-3.5 ${isRouteApplied ? "text-emerald-400" : ""}`} />
               <span>
                 {isRouteApplied
-                  ? `${routeConfig.actionAppliedText}`
+                  ? `${routeConfig.actionAppliedText} (Сбросить)`
                   : routeConfig.actionBtnText}
               </span>
             </button>
